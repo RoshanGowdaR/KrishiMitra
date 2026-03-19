@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { analyzeCropDiseaseImage } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function CropDisease() {
-  const [language, setLanguage] = useState('en');
+  const { t } = useTranslation();
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [imagePreview, setImagePreview] = useState('');
   const [imageBase64, setImageBase64] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -33,7 +36,7 @@ export default function CropDisease() {
 
   const handleAnalyze = async () => {
     if (!imageBase64) {
-      toast.error('Please upload an image first.');
+      toast.error(t('cropDisease.messages.uploadFirst'));
       return;
     }
 
@@ -44,7 +47,7 @@ export default function CropDisease() {
       const data = await analyzeCropDiseaseImage({ imageBase64, language });
       setResult(data);
     } catch (analyzeError) {
-      toast.error('Unable to analyze this crop image. Please try again.');
+      toast.error(t('cropDisease.messages.analyzeError'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -52,7 +55,7 @@ export default function CropDisease() {
 
   return (
     <div className="page-wrap crop-disease-page">
-      <h2>Crop Disease Detection</h2>
+      <h2>{t('cropDisease.title')}</h2>
 
       <div className="panel crop-disease-panel">
         <div
@@ -63,7 +66,7 @@ export default function CropDisease() {
             handleFile(event.dataTransfer.files?.[0]);
           }}
         >
-          <p>Drag & drop crop image here, or click to upload</p>
+          <p>{t('cropDisease.uploadHint')}</p>
           <input
             type="file"
             accept="image/*"
@@ -75,31 +78,31 @@ export default function CropDisease() {
 
         <div className="crop-controls">
           <label>
-            Language
+            {t('common.language')}
             <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
-              <option value="kn">Kannada</option>
+              {supportedLanguages.map((item) => (
+                <option key={item.code} value={item.code}>{item.native}</option>
+              ))}
             </select>
           </label>
           <button type="button" className="primary-btn" onClick={handleAnalyze} disabled={isAnalyzing}>
-            Analyze Crop
+            {t('cropDisease.analyze')}
           </button>
         </div>
 
-        {isAnalyzing ? <LoadingSpinner label="Analyzing your crop..." /> : null}
+        {isAnalyzing ? <LoadingSpinner label={t('cropDisease.analyzing')} /> : null}
 
         {result && !isAnalyzing ? (
           <div className="crop-result">
             <div className="crop-result-head">
-              <p><strong>Crop Type:</strong> {result.crop_type || 'Unknown'}</p>
-              <p><strong>Disease:</strong> {result.disease_name || 'Not identified'}</p>
-              <span className={severityClass}>{result.severity || 'Mild'}</span>
+              <p><strong>{t('cropDisease.result.cropType')}:</strong> {result.crop_type || t('common.unknown')}</p>
+              <p><strong>{t('cropDisease.result.disease')}:</strong> {result.disease_name || t('cropDisease.result.notIdentified')}</p>
+              <span className={severityClass}>{result.severity || t('cropDisease.result.mild')}</span>
             </div>
 
             <div className="crop-result-grid">
               <section>
-                <h4>Symptoms</h4>
+                <h4>{t('cropDisease.sections.symptoms')}</h4>
                 <ul>
                   {(result.symptoms || []).map((item, index) => (
                     <li key={`${item}-${index}`}>{item}</li>
@@ -108,7 +111,7 @@ export default function CropDisease() {
               </section>
 
               <section>
-                <h4>Treatment Steps</h4>
+                <h4>{t('cropDisease.sections.treatment')}</h4>
                 <ul>
                   {(result.treatment || result.treatments || []).map((item, index) => (
                     <li key={`${item}-${index}`}>{item}</li>
@@ -117,7 +120,7 @@ export default function CropDisease() {
               </section>
 
               <section>
-                <h4>Prevention Tips</h4>
+                <h4>{t('cropDisease.sections.prevention')}</h4>
                 <ul>
                   {(result.prevention || []).map((item, index) => (
                     <li key={`${item}-${index}`}>{item}</li>

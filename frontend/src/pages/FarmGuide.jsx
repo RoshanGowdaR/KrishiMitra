@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 
-const guideTabs = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'planting', label: 'Planting' },
-  { key: 'irrigation', label: 'Irrigation' },
-  { key: 'fertilization', label: 'Fertilization' },
-  { key: 'pest_management', label: 'Pest Control' },
-  { key: 'harvesting', label: 'Harvesting' },
-  { key: 'market_info', label: 'Market' },
-];
+const guideTabs = ['overview', 'planting', 'irrigation', 'fertilization', 'pest_management', 'harvesting', 'market_info'];
 
 const cropEmojis = {
   rice: '🌾',
@@ -38,7 +32,38 @@ const sampleCrops = [
   { name: 'soybean', category: 'pulse', season: 'kharif', difficulty: 'intermediate', profit_potential: 'high', water_requirement: 'moderate' },
 ];
 
+const cropNameMap = {
+  kn: {
+    rice: 'ಅಕ್ಕಿ',
+    wheat: 'ಗೋಧಿ',
+    maize: 'ಮೆಕ್ಕೆಜೋಳ',
+    tomato: 'ಟೊಮೇಟೊ',
+    onion: 'ಈರುಳ್ಳಿ',
+    potato: 'ಆಲೂಗಡ್ಡೆ',
+    cotton: 'ಹತ್ತಿ',
+    sugarcane: 'ಕಬ್ಬು',
+    ragi: 'ರಾಗಿ',
+    soybean: 'ಸೋಯಾಬೀನ್',
+    turmeric: 'ಅರಿಶಿನ',
+  },
+  hi: {
+    rice: 'धान',
+    wheat: 'गेहूं',
+    maize: 'मक्का',
+    tomato: 'टमाटर',
+    onion: 'प्याज',
+    potato: 'आलू',
+    cotton: 'कपास',
+    sugarcane: 'गन्ना',
+    ragi: 'रागी',
+    soybean: 'सोयाबीन',
+    turmeric: 'हल्दी',
+  },
+};
+
 export default function FarmGuide() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [search, setSearch] = useState('');
   const [season, setSeason] = useState('all');
   const [category, setCategory] = useState('all');
@@ -54,7 +79,7 @@ export default function FarmGuide() {
     async function loadCrops() {
       setIsLoading(true);
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/v1/farm-guide/crops?language=en');
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops?language=${language}`);
         const data = await response.json();
         const cropList = data?.crops || [];
 
@@ -64,7 +89,7 @@ export default function FarmGuide() {
       } catch (error) {
         if (!ignore) {
           setCrops(sampleCrops);
-          toast.error('Unable to fetch farm guide data. Showing sample crops.');
+          toast.error(t('farmGuide.messages.fetchError'));
         }
       } finally {
         if (!ignore) {
@@ -77,7 +102,7 @@ export default function FarmGuide() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [language, t]);
 
   const filteredCrops = useMemo(() => {
     return crops.filter((crop) => {
@@ -91,27 +116,71 @@ export default function FarmGuide() {
     });
   }, [category, crops, search, season]);
 
+  const toCropKey = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, '_');
+
+  const getLocalizedCropName = (name) => {
+    const original = String(name || '').trim();
+    const normalized = toCropKey(original);
+    const langMap = cropNameMap[language] || {};
+    return langMap[normalized] || original.charAt(0).toUpperCase() + original.slice(1);
+  };
+
+  const getLocalizedSeason = (seasonValue) => {
+    const normalized = toCropKey(seasonValue);
+    const seasonKeyMap = {
+      kharif: 'kharif',
+      rabi: 'rabi',
+      annual: 'annual',
+      all: 'all_season',
+      all_season: 'all_season',
+      zaid: 'all_season',
+    };
+    const key = seasonKeyMap[normalized];
+    if (!key) {
+      return seasonValue || t('farmGuide.defaults.allSeason');
+    }
+    return t(`farmGuide.seasons.${key}`, { defaultValue: seasonValue || t('farmGuide.defaults.allSeason') });
+  };
+
+  const getLocalizedDifficulty = (difficultyValue) => {
+    const normalized = toCropKey(difficultyValue);
+    const difficultyKeyMap = {
+      easy: 'easy',
+      medium: 'medium',
+      hard: 'hard',
+      beginner: 'easy',
+      intermediate: 'medium',
+      advanced: 'hard',
+    };
+    const key = difficultyKeyMap[normalized];
+    if (!key) {
+      return difficultyValue || t('farmGuide.defaults.beginner');
+    }
+    return t(`farmGuide.difficulty.${key}`, { defaultValue: difficultyValue || t('farmGuide.defaults.beginner') });
+  };
+
   const openGuide = async (crop) => {
     setSelectedCrop(crop);
     setGuideDetails(null);
     setActiveGuideTab('overview');
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops/${crop.name.toLowerCase()}?language=en`);
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops/${crop.name.toLowerCase()}?language=${language}`);
+
       const details = await response.json();
 
       if (response.ok) {
         setGuideDetails(details);
       }
     } catch (error) {
-      toast.error('Guide details unavailable. Showing basic crop information.');
+      toast.error(t('farmGuide.messages.guideError'));
     }
   };
 
   const getGuideSection = () => {
     if (guideDetails) {
       const section = guideDetails[activeGuideTab];
-      if (!section) return 'No information available for this section.';
+      if (!section) return t('farmGuide.messages.noSection');
       if (typeof section === 'string') return section;
       if (Array.isArray(section)) return section.join(', ');
       return section.description || section.summary || JSON.stringify(section, null, 2);
@@ -120,42 +189,47 @@ export default function FarmGuide() {
     if (!selectedCrop) return null;
 
     const fallbackMap = {
-      overview: `Crop: ${selectedCrop.name}\nSeason: ${selectedCrop.season || 'All season'}\nCategory: ${selectedCrop.category || 'General'}\nDifficulty: ${selectedCrop.difficulty || 'beginner'}`,
-      planting: 'Prepare fine seedbed, use quality seeds, and maintain recommended spacing.',
-      irrigation: `Water requirement: ${selectedCrop.water_requirement || 'Moderate'}. Avoid over-irrigation.` ,
-      fertilization: 'Apply balanced NPK in split doses and add organic matter where possible.',
-      pest_management: 'Inspect crop regularly, use integrated pest management, and spray only when required.',
-      harvesting: 'Harvest at physiological maturity and avoid excess moisture during storage.',
-      market_info: `Profit potential: ${selectedCrop.profit_potential || 'Medium'}. Track mandi prices before sale.`,
+      overview: t('farmGuide.fallback.overview', {
+        crop: getLocalizedCropName(selectedCrop.name),
+        season: getLocalizedSeason(selectedCrop.season),
+        category: selectedCrop.category || t('farmGuide.defaults.general'),
+        difficulty: getLocalizedDifficulty(selectedCrop.difficulty),
+      }),
+      planting: t('farmGuide.fallback.planting'),
+      irrigation: t('farmGuide.fallback.irrigation', { water: selectedCrop.water_requirement || t('farmGuide.defaults.moderate') }),
+      fertilization: t('farmGuide.fallback.fertilization'),
+      pest_management: t('farmGuide.fallback.pestManagement'),
+      harvesting: t('farmGuide.fallback.harvesting'),
+      market_info: t('farmGuide.fallback.marketInfo', { profit: selectedCrop.profit_potential || t('farmGuide.defaults.medium') }),
     };
 
-    return fallbackMap[activeGuideTab] || 'No information available for this section.';
+    return fallbackMap[activeGuideTab] || t('farmGuide.messages.noSection');
   };
 
-  if (isLoading) return <div className="panel">Loading farm guide...</div>;
+  if (isLoading) return <div className="panel">{t('farmGuide.loading')}</div>;
 
   return (
     <div className="page-wrap farm-guide-page">
-      <h2>Farm Guide</h2>
+      <h2>{t('farmGuide.title')}</h2>
 
       <div className="panel farm-guide-search-row">
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search crops" />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('farmGuide.searchPlaceholder')} />
       </div>
 
       <div className="panel farm-guide-filter-row">
         <label>
-          Season
+          {t('farmGuide.season')}
           <select value={season} onChange={(event) => setSeason(event.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{t('common.all')}</option>
             <option value="kharif">Kharif</option>
             <option value="rabi">Rabi</option>
             <option value="zaid">Zaid</option>
           </select>
         </label>
         <label>
-          Category
+          {t('farmGuide.category')}
           <select value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{t('common.all')}</option>
             <option value="cereal">Cereal</option>
             <option value="pulse">Pulse</option>
             <option value="cash_crop">Cash Crop</option>
@@ -167,17 +241,17 @@ export default function FarmGuide() {
         {filteredCrops.map((crop) => (
           <article key={crop.name} className="farm-crop-card">
             <span className="crop-icon">{cropEmojis[String(crop.name).toLowerCase()] || '🌱'}</span>
-            <h3>{String(crop.name).charAt(0).toUpperCase() + String(crop.name).slice(1)}</h3>
+            <h3>{getLocalizedCropName(crop.name)}</h3>
             <div className="crop-tag-row">
-              <span className="scheme-ministry">{crop.season || 'All Season'}</span>
+              <span className="scheme-ministry">{getLocalizedSeason(crop.season)}</span>
               <span className={crop.difficulty === 'advanced' ? 'difficulty-badge advanced' : crop.difficulty === 'intermediate' ? 'difficulty-badge intermediate' : 'difficulty-badge beginner'}>
-                {crop.difficulty || 'beginner'}
+                {getLocalizedDifficulty(crop.difficulty)}
               </span>
             </div>
-            <p>Water: {crop.water_requirement || 'Moderate'}</p>
-            <p className="profit-tag">Profit: {crop.profit_potential || 'Medium'}</p>
+            <p>{t('farmGuide.water')}: {crop.water_requirement || t('farmGuide.defaults.moderate')}</p>
+            <p className="profit-tag">{t('farmGuide.profit')}: {crop.profit_potential || t('farmGuide.defaults.medium')}</p>
             <button type="button" className="primary-btn" onClick={() => openGuide(crop)}>
-              View Guide
+              {t('common.viewGuide')}
             </button>
           </article>
         ))}
@@ -185,7 +259,7 @@ export default function FarmGuide() {
 
       {filteredCrops.length === 0 ? (
         <div className="panel">
-          <p className="page-muted">No crops found for selected filters.</p>
+          <p className="page-muted">{t('farmGuide.messages.noCrops')}</p>
         </div>
       ) : null}
 
@@ -220,14 +294,14 @@ export default function FarmGuide() {
             }}
           >
             <div className="scheme-modal-header">
-              <h3>{selectedCrop.name || guideDetails?.name || 'Crop Guide'}</h3>
+              <h3>{getLocalizedCropName(selectedCrop.name || guideDetails?.name || t('farmGuide.cropGuide'))}</h3>
               <button type="button" className="ghost-btn" onClick={() => setSelectedCrop(null)}>X</button>
             </div>
 
             <div className="guide-tabs-row">
               {guideTabs.map((tab) => (
-                <button key={tab.key} type="button" className={activeGuideTab === tab.key ? 'soil-tab active' : 'soil-tab'} onClick={() => setActiveGuideTab(tab.key)}>
-                  {tab.label}
+                <button key={tab} type="button" className={activeGuideTab === tab ? 'soil-tab active' : 'soil-tab'} onClick={() => setActiveGuideTab(tab)}>
+                  {t(`farmGuide.tabs.${tab}`)}
                 </button>
               ))}
             </div>

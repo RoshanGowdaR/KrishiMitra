@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { getSchemes, getSchemeDetails } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Schemes() {
-  const [language, setLanguage] = useState('en');
+  const { t } = useTranslation();
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [schemes, setSchemes] = useState([]);
   const [selectedScheme, setSelectedScheme] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +28,7 @@ export default function Schemes() {
         }
       } catch (fetchError) {
         if (!ignore) {
-          const message = 'Unable to load government schemes right now.';
+          const message = t('schemes.messages.fetchError');
           setError(message);
           toast.error(message);
           setSchemes([]);
@@ -51,27 +54,27 @@ export default function Schemes() {
       const details = await getSchemeDetails(scheme.id, language);
       setSelectedScheme(details);
     } catch (fetchError) {
-      toast.error('Unable to load scheme details.');
+      toast.error(t('schemes.messages.detailsError'));
     } finally {
       setIsModalLoading(false);
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner label="Loading schemes..." />;
+    return <LoadingSpinner label={t('schemes.loading')} />;
   }
 
   return (
     <div className="page-wrap schemes-page">
-      <h2>Government Schemes</h2>
+      <h2>{t('schemes.title')}</h2>
 
       <div className="schemes-toolbar">
         <label>
-          Language
+          {t('common.language')}
           <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="kn">Kannada</option>
+            {supportedLanguages.map((item) => (
+              <option key={item.code} value={item.code}>{item.native}</option>
+            ))}
           </select>
         </label>
       </div>
@@ -79,18 +82,19 @@ export default function Schemes() {
       {error ? <p className="page-error">{error}</p> : null}
 
       <div className="schemes-grid">
-        {schemes.length === 0 ? <p className="page-muted">No schemes found.</p> : null}
+        {schemes.length === 0 ? <p className="page-muted">{t('schemes.messages.empty')}</p> : null}
 
         {schemes.map((scheme) => (
           <article key={scheme.id} className="scheme-card">
             <div className="scheme-card-tags">
-              <span className="scheme-ministry">{scheme.ministry || 'Government'}</span>
-              <span className="scheme-type">{scheme.scheme_type || 'General'}</span>
+              <span className="scheme-ministry">{scheme.ministry || t('schemes.defaults.government')}</span>
+              <span className="scheme-type">{scheme.scheme_type || t('schemes.defaults.general')}</span>
             </div>
             <h3>{scheme.name}</h3>
-            <p>{scheme.description || 'Support scheme for farmers and agri workers.'}</p>
+            <p>{scheme.description || t('schemes.defaults.description')}</p>
+            <p className="page-muted">{t('schemes.messages.regionalLanguageSoon')}</p>
             <button type="button" className="primary-btn" onClick={() => openSchemeDetails(scheme)}>
-              View Details
+              {t('common.viewDetails')}
             </button>
           </article>
         ))}
@@ -102,16 +106,16 @@ export default function Schemes() {
             <div className="scheme-modal-header">
               <h3>{selectedScheme.name}</h3>
               <button type="button" className="ghost-btn" onClick={() => setSelectedScheme(null)}>
-                Close
+                {t('common.close')}
               </button>
             </div>
 
             {isModalLoading ? (
-              <LoadingSpinner label="Loading details..." />
+              <LoadingSpinner label={t('schemes.loadingDetails')} />
             ) : (
               <div className="scheme-modal-content">
                 <div>
-                  <h4>Eligibility</h4>
+                  <h4>{t('schemes.sections.eligibility')}</h4>
                   <ul>
                     {(selectedScheme.eligibility || []).map((item, index) => (
                       <li key={`${item}-${index}`}>{item}</li>
@@ -120,7 +124,7 @@ export default function Schemes() {
                 </div>
 
                 <div>
-                  <h4>Benefits</h4>
+                  <h4>{t('schemes.sections.benefits')}</h4>
                   <ul>
                     {(selectedScheme.benefits || []).map((item, index) => (
                       <li key={`${item}-${index}`}>{item}</li>
@@ -129,8 +133,8 @@ export default function Schemes() {
                 </div>
 
                 <div>
-                  <h4>Application Process</h4>
-                  <p>{selectedScheme.application_process || 'Visit nearest agri office for assistance.'}</p>
+                  <h4>{t('schemes.sections.applicationProcess')}</h4>
+                  <p>{selectedScheme.application_process || t('schemes.defaults.applicationProcess')}</p>
                 </div>
               </div>
             )}

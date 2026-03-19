@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import i18n from '../i18n';
 
 const STORAGE_KEY = 'krishimitra_language';
@@ -14,18 +14,27 @@ const SUPPORTED_LANGUAGES = [
   { code: 'bn', label: 'Bengali', native: 'বাংলা', icon: 'IN' },
   { code: 'pa', label: 'Punjabi', native: 'ਪੰਜਾਬੀ', icon: 'IN' },
   { code: 'ml', label: 'Malayalam', native: 'മലയാളം', icon: 'IN' },
+  { code: 'or', label: 'Odia', native: 'ଓଡ଼ିଆ', icon: 'IN' },
+  { code: 'as', label: 'Assamese', native: 'অসমীয়া', icon: 'IN' },
 ];
 
 const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(localStorage.getItem(STORAGE_KEY) || 'en');
+  const [language, setLanguageState] = useState(() => localStorage.getItem(STORAGE_KEY) || 'en');
 
-  const setLanguage = (code) => {
+  useEffect(() => {
+    i18n.changeLanguage(language);
+  }, [language]);
+
+  const setLanguage = useCallback((code) => {
+    if (!SUPPORTED_LANGUAGES.some((item) => item.code === code)) {
+      return;
+    }
     setLanguageState(code);
     localStorage.setItem(STORAGE_KEY, code);
     i18n.changeLanguage(code);
-  };
+  }, []);
 
   const value = useMemo(() => ({
     language,

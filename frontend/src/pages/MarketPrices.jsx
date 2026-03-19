@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { getMarketPricesWithFilters } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -12,6 +13,7 @@ const districtOptions = {
 };
 
 export default function MarketPrices() {
+  const { t } = useTranslation();
   const [stateName, setStateName] = useState('Karnataka');
   const [districtName, setDistrictName] = useState('Bengaluru');
   const [commodity, setCommodity] = useState('');
@@ -36,7 +38,7 @@ export default function MarketPrices() {
       });
       setPrices(data?.prices || []);
     } catch (fetchError) {
-      const message = 'Unable to load market prices right now.';
+      const message = t('marketPrices.messages.fetchError');
       setError(message);
       toast.error(message);
       setPrices([]);
@@ -61,16 +63,16 @@ export default function MarketPrices() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner label="Loading market prices..." />;
+    return <LoadingSpinner label={t('marketPrices.loading')} />;
   }
 
   return (
     <div className="page-wrap market-page">
-      <h2>Market Prices</h2>
+      <h2>{t('marketPrices.title')}</h2>
 
       <form className="market-filters" onSubmit={handleSearchSubmit}>
         <label>
-          State
+          {t('common.state')}
           <select value={stateName} onChange={(event) => setStateName(event.target.value)}>
             {stateOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
@@ -79,7 +81,7 @@ export default function MarketPrices() {
         </label>
 
         <label>
-          District
+          {t('common.district')}
           <select value={districtName} onChange={(event) => setDistrictName(event.target.value)}>
             {availableDistricts.map((option) => (
               <option key={option} value={option}>{option}</option>
@@ -88,16 +90,16 @@ export default function MarketPrices() {
         </label>
 
         <label>
-          Commodity
+          {t('common.commodity')}
           <input
             value={commodity}
             onChange={(event) => setCommodity(event.target.value)}
-            placeholder="Search commodity"
+            placeholder={t('marketPrices.searchPlaceholder')}
           />
         </label>
 
-        <button type="submit" className="primary-btn">Search</button>
-        <button type="button" className="ghost-btn" onClick={fetchPrices}>Refresh</button>
+        <button type="submit" className="primary-btn">{t('common.search')}</button>
+        <button type="button" className="ghost-btn" onClick={fetchPrices}>{t('common.refresh')}</button>
       </form>
 
       {error ? <p className="page-error">{error}</p> : null}
@@ -107,18 +109,18 @@ export default function MarketPrices() {
           <table className="market-table">
             <thead>
               <tr>
-                <th>Commodity</th>
-                <th>Market</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th>Modal Price</th>
-                <th>Date</th>
+                <th>{t('common.commodity')}</th>
+                <th>{t('marketPrices.columns.market')}</th>
+                <th>{t('marketPrices.columns.min')}</th>
+                <th>{t('marketPrices.columns.max')}</th>
+                <th>{t('marketPrices.columns.modalPrice')}</th>
+                <th>{t('marketPrices.columns.date')}</th>
               </tr>
             </thead>
             <tbody>
               {prices.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="market-empty">No results found for selected filters.</td>
+                  <td colSpan={6} className="market-empty">{t('marketPrices.messages.noResults')}</td>
                 </tr>
               ) : (
                 prices.map((item, index) => (

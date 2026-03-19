@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { createForumPost, getPosts } from '../services/api';
 
 export default function Forum() {
+  const { t, i18n } = useTranslation();
+  const { language: appLanguage, supportedLanguages } = useLanguage();
   const [category, setCategory] = useState('all');
   const [language, setLanguage] = useState('all');
   const [posts, setPosts] = useState([]);
@@ -13,10 +17,10 @@ export default function Forum() {
     title: '',
     content: '',
     category: 'crop_issues',
-    language: 'en',
+    language: appLanguage,
   });
 
-  const fallbackPosts = useMemo(
+  const defaultEnglishPosts = useMemo(
     () => [
       {
         id: 'sample-1',
@@ -45,8 +49,8 @@ export default function Forum() {
         author_name: 'Suresh',
         state: 'Maharashtra',
         category: 'weather',
-        title: 'Unexpected rainfall alert in Nashik',
-        content: 'Forecast says heavy rain in two days. What precautions should grape farmers take immediately?',
+        title: 'Kharif crop planning',
+        content: 'Ragi performed well this season. Which fertilizer schedule worked best for your fields?',
         created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
         likes: 21,
         replies: [{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }],
@@ -54,6 +58,25 @@ export default function Forum() {
     ],
     []
   );
+
+  const fallbackPosts = useMemo(() => {
+    const localizedPosts = t('forum.samplePosts', { returnObjects: true });
+    if (!Array.isArray(localizedPosts) || localizedPosts.length === 0) {
+      return defaultEnglishPosts;
+    }
+
+    return localizedPosts.map((post, index) => ({
+      id: `sample-${index + 1}`,
+      author_name: post.author || defaultEnglishPosts[index]?.author_name || t('forum.defaults.farmer'),
+      state: post.state || defaultEnglishPosts[index]?.state || t('forum.defaults.india'),
+      category: defaultEnglishPosts[index]?.category || 'general',
+      title: post.title || defaultEnglishPosts[index]?.title || '',
+      content: post.content || defaultEnglishPosts[index]?.content || '',
+      created_at: defaultEnglishPosts[index]?.created_at || new Date().toISOString(),
+      likes: defaultEnglishPosts[index]?.likes || 0,
+      replies: defaultEnglishPosts[index]?.replies || [],
+    }));
+  }, [defaultEnglishPosts, i18n.language, t]);
 
   const visiblePosts = posts.length ? posts : fallbackPosts;
 
@@ -74,7 +97,7 @@ export default function Forum() {
       } catch (error) {
         if (!ignore) {
           setPosts([]);
-          toast.error('Unable to load forum posts. Showing sample discussions.');
+          toast.error(t('forum.messages.fetchError'));
         }
       } finally {
         if (!ignore) {
@@ -87,7 +110,7 @@ export default function Forum() {
     return () => {
       ignore = true;
     };
-  }, [category, language]);
+  }, [category, language, t]);
 
   const timeAgo = (isoDate) => {
     const diffMs = Date.now() - new Date(isoDate).getTime();
@@ -118,9 +141,9 @@ export default function Forum() {
         image_base64: '',
       });
 
-      toast.success('Post created successfully.');
+      toast.success(t('forum.messages.createSuccess'));
       setIsCreateModalOpen(false);
-      setFormData({ title: '', content: '', category: 'crop_issues', language: 'en' });
+      setFormData({ title: '', content: '', category: 'crop_issues', language: appLanguage });
 
       const refreshed = await getPosts({
         category: category === 'all' ? undefined : category,
@@ -128,38 +151,38 @@ export default function Forum() {
       });
       setPosts(refreshed?.posts || []);
     } catch (error) {
-      toast.error('Unable to create post right now.');
+      toast.error(t('forum.messages.createError'));
     }
   };
 
-  if (isLoading) return <div className="panel">Loading forum posts...</div>;
+  if (isLoading) return <div className="panel">{t('forum.loading')}</div>;
 
   return (
     <div className="page-wrap forum-page">
       <div className="section-header-row">
-        <h2>Community Forum</h2>
+        <h2>{t('forum.title')}</h2>
         <button type="button" className="primary-btn" onClick={() => setIsCreateModalOpen(true)}>
-          Create Post
+          {t('forum.createPost')}
         </button>
       </div>
 
       <div className="panel forum-filters-row">
         <label>
-          Category
+          {t('forum.category')}
           <select value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option value="all">All</option>
-            <option value="crop_issues">Crop Issues</option>
-            <option value="weather">Weather</option>
-            <option value="market">Market</option>
+            <option value="all">{t('common.all')}</option>
+            <option value="crop_issues">{t('forum.categories.cropIssues')}</option>
+            <option value="weather">{t('forum.categories.weather')}</option>
+            <option value="market">{t('forum.categories.market')}</option>
           </select>
         </label>
         <label>
-          Language
+          {t('common.language')}
           <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-            <option value="all">All</option>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="kn">Kannada</option>
+            <option value="all">{t('common.all')}</option>
+            {supportedLanguages.map((item) => (
+              <option key={item.code} value={item.code}>{item.native}</option>
+            ))}
           </select>
         </label>
       </div>
@@ -171,14 +194,14 @@ export default function Forum() {
               <div className="forum-author-block">
                 <span className="forum-avatar">{initials(post.author_name || 'Farmer')}</span>
                 <div>
-                  <strong>{post.author_name || 'Farmer'}</strong>
+                  <strong>{post.author_name || t('forum.defaults.farmer')}</strong>
                   <div className="forum-author-sub">
-                    <span className="forum-state-badge">{post.state || 'India'}</span>
+                    <span className="forum-state-badge">{post.state || t('forum.defaults.india')}</span>
                     <span>{timeAgo(post.created_at || new Date().toISOString())}</span>
                   </div>
                 </div>
               </div>
-              <span className="forum-category-badge">{post.category || 'general'}</span>
+              <span className="forum-category-badge">{post.category || t('forum.defaults.general')}</span>
             </div>
 
             <h3>{post.title}</h3>
@@ -190,7 +213,7 @@ export default function Forum() {
                 <span>💬 {post.replies?.length || 0}</span>
               </div>
               <button type="button" className="ghost-btn" onClick={() => setSelectedPost(post)}>
-                View Post
+                {t('forum.viewPost')}
               </button>
             </div>
           </article>
@@ -200,25 +223,25 @@ export default function Forum() {
       {isCreateModalOpen ? (
         <div className="scheme-modal-backdrop" role="presentation" onClick={() => setIsCreateModalOpen(false)}>
           <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h3>Create Post</h3>
+            <h3>{t('forum.createPost')}</h3>
             <form className="soil-form-grid" onSubmit={submitPost}>
-              <label>Title<input value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} required /></label>
-              <label>Content<textarea value={formData.content} onChange={(event) => setFormData((prev) => ({ ...prev, content: event.target.value }))} rows={4} required /></label>
-              <label>Category
+              <label>{t('forum.form.title')}<input value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} required /></label>
+              <label>{t('forum.form.content')}<textarea value={formData.content} onChange={(event) => setFormData((prev) => ({ ...prev, content: event.target.value }))} rows={4} required /></label>
+              <label>{t('forum.category')}
                 <select value={formData.category} onChange={(event) => setFormData((prev) => ({ ...prev, category: event.target.value }))}>
-                  <option value="crop_issues">Crop Issues</option>
-                  <option value="weather">Weather</option>
-                  <option value="market">Market</option>
+                  <option value="crop_issues">{t('forum.categories.cropIssues')}</option>
+                  <option value="weather">{t('forum.categories.weather')}</option>
+                  <option value="market">{t('forum.categories.market')}</option>
                 </select>
               </label>
-              <label>Language
+              <label>{t('common.language')}
                 <select value={formData.language} onChange={(event) => setFormData((prev) => ({ ...prev, language: event.target.value }))}>
-                  <option value="en">English</option>
-                  <option value="hi">Hindi</option>
-                  <option value="kn">Kannada</option>
+                  {supportedLanguages.map((item) => (
+                    <option key={item.code} value={item.code}>{item.native}</option>
+                  ))}
                 </select>
               </label>
-              <button type="submit" className="primary-btn">Submit</button>
+              <button type="submit" className="primary-btn">{t('common.submit')}</button>
             </form>
           </section>
         </div>
@@ -229,7 +252,7 @@ export default function Forum() {
           <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="scheme-modal-header">
               <h3>{selectedPost.title}</h3>
-              <button type="button" className="ghost-btn" onClick={() => setSelectedPost(null)}>Close</button>
+              <button type="button" className="ghost-btn" onClick={() => setSelectedPost(null)}>{t('common.close')}</button>
             </div>
             <p>{selectedPost.content}</p>
           </section>

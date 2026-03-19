@@ -5,8 +5,9 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const { t } = useTranslation();
-  const { language } = useLanguage();
+  const { language, supportedLanguages } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
+  const activeLanguage = supportedLanguages.find((item) => item.code === language);
 
   useEffect(() => {
     const onScroll = () => {
@@ -36,14 +37,14 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
       <button type="button" className="brand-block brand-button" onClick={scrollToTop}>
         <RiLeafFill className="brand-icon" />
         <div>
-          <h1>KrishiMitra</h1>
+          <h1>{t('appName')}</h1>
           <p>{t('tagline')}</p>
         </div>
       </button>
 
       <button className="language-switch" type="button" onClick={onOpenLanguageModal}>
         <RiTranslate2 />
-        <span>{language.toUpperCase()}</span>
+        <span>{activeLanguage?.native || language.toUpperCase()}</span>
       </button>
     </header>
   );

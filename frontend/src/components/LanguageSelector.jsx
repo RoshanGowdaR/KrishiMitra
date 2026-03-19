@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { RiLeafFill } from 'react-icons/ri';
+import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function LanguageSelector({ onSelect }) {
+  const { t } = useTranslation();
   const { supportedLanguages } = useLanguage();
 
   return (
@@ -14,8 +16,8 @@ export default function LanguageSelector({ onSelect }) {
       >
         <div className="language-header">
           <RiLeafFill className="brand-icon" />
-          <h1>KrishiMitra</h1>
-          <p>Grow better with trusted guidance in your language</p>
+          <h1>{t('appName')}</h1>
+          <p>{t('common.selectLanguageSubtitle')}</p>
         </div>
 
         <div className="language-grid">

@@ -1,74 +1,58 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-const dashboardStats = [
-  { icon: '🌤️', title: 'Weather', value: '30°C Clear Sky', subtext: 'Bengaluru' },
-  { icon: '📈', title: "Today's Rice Price", value: '₹2,100/q', subtext: '↑ 2.3%' },
-  { icon: '🏛️', title: 'Active Schemes', value: '8 Available', subtext: '2 new' },
-  { icon: '🆘', title: 'Expert Status', value: '3 Online', subtext: 'Ready to help' },
-];
-
-const quickActions = [
+const quickActionMeta = [
   {
     icon: '🔬',
-    title: 'Diagnose Crop',
-    description: 'Upload crop images to detect disease instantly.',
     path: '/app/crop-disease',
   },
   {
     icon: '🤖',
-    title: 'Ask Chatbot',
-    description: 'Chat in your language for farming advice.',
     path: '/app/chatbot',
   },
   {
     icon: '📈',
-    title: 'Check Prices',
-    description: 'See mandi prices with filters and trends.',
     path: '/app/market',
   },
   {
     icon: '🌤️',
-    title: 'Weather',
-    description: 'Track live conditions and 5-day forecast.',
     path: '/app/weather',
   },
   {
     icon: '🆘',
-    title: 'SOS Help',
-    description: 'Connect to experts for urgent assistance.',
     path: '/app/sos',
   },
   {
     icon: '🛒',
-    title: 'Marketplace',
-    description: 'Buy and sell produce and farm inputs.',
     path: '/app/marketplace',
   },
 ];
 
-const recentUpdates = [
-  {
-    text: 'Rain expected in Bengaluru over the next 24 hours.',
-    time: '10 min ago',
-  },
-  {
-    text: 'PM-KISAN application window opened for this month.',
-    time: '1 hour ago',
-  },
-  {
-    text: 'Rice modal price moved up by 2.3% in nearby mandis.',
-    time: '3 hours ago',
-  },
-];
-
 export default function Home() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const dashboardStats = [
+    { icon: '🌤️', title: t('home.stats.weather.title'), value: t('home.stats.weather.value'), subtext: t('home.stats.weather.subtext') },
+    { icon: '📈', title: t('home.stats.price.title'), value: t('home.stats.price.value'), subtext: t('home.stats.price.subtext') },
+    { icon: '🏛️', title: t('home.stats.schemes.title'), value: t('home.stats.schemes.value'), subtext: t('home.stats.schemes.subtext') },
+    { icon: '🆘', title: t('home.stats.expert.title'), value: t('home.stats.expert.value'), subtext: t('home.stats.expert.subtext') },
+  ];
+  const quickActions = quickActionMeta.map((action, index) => ({
+    ...action,
+    title: t(`home.quickActions.${index}.title`),
+    description: t(`home.quickActions.${index}.description`),
+  }));
+  const recentUpdates = [
+    { text: t('home.updates.0.text'), time: t('home.updates.0.time') },
+    { text: t('home.updates.1.text'), time: t('home.updates.1.time') },
+    { text: t('home.updates.2.text'), time: t('home.updates.2.time') },
+  ];
 
   return (
     <div className="dashboard-home">
       <section className="dashboard-home-header">
-        <h2>Good Morning, Farmer 👋</h2>
-        <p>Here&apos;s what&apos;s happening on your farm today</p>
+        <h2>{t('home.greeting')}</h2>
+        <p>{t('home.subtitle')}</p>
       </section>
 
       <section className="dashboard-stat-grid">
@@ -82,7 +66,7 @@ export default function Home() {
       </section>
 
       <section className="dashboard-quick-actions">
-        <h3>Quick Actions</h3>
+        <h3>{t('home.quickActionsTitle')}</h3>
         <div className="dashboard-actions-grid">
           {quickActions.map((action) => (
             <button
@@ -100,7 +84,7 @@ export default function Home() {
       </section>
 
       <section className="dashboard-updates">
-        <h3>Recent Updates</h3>
+        <h3>{t('home.recentUpdatesTitle')}</h3>
         <div className="dashboard-update-list">
           {recentUpdates.map((item) => (
             <article key={item.text} className="dashboard-update-item">

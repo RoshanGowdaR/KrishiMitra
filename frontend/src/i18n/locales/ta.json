@@ -1,14 +1,14 @@
 {
-  "appName": "KrishiMitra",
+  "appName": "கிரிஷிமித்ரா",
   "tagline": "Smart farming decisions, powered by AI",
   "nav": {
-    "home": "Home",
-    "weather": "Weather",
-    "market": "Market Prices",
+    "home": "முகப்பு",
+    "weather": "வானிலை",
+    "market": "சந்தை விலைகள்",
     "marketPrices": "Market Prices",
-    "schemes": "Schemes",
-    "cropDisease": "Crop Disease",
-    "chatbot": "Chatbot",
+    "schemes": "அரசு திட்டங்கள்",
+    "cropDisease": "பயிர் நோய்",
+    "chatbot": "AI சாட்பாட்",
     "marketplace": "Marketplace",
     "quiz": "Quiz",
     "soilHealth": "Soil Health",
@@ -17,7 +17,7 @@
     "farmGuide": "Farm Guide"
   },
   "common": {
-    "loading": "Loading...",
+    "loading": "ஏற்றுகிறது...",
     "error": "Something went wrong",
     "success": "Success",
     "changeLanguage": "Change Language",
@@ -25,7 +25,7 @@
     "selectLanguage": "Choose your language",
     "selectLanguageSubtitle": "Grow better with trusted guidance in your language",
     "dashboard": "Krishi Stack",
-    "language": "Language",
+    "language": "மொழி",
     "state": "State",
     "district": "District",
     "commodity": "Commodity",
@@ -45,7 +45,7 @@
   },
   "landing": {
     "getStarted": "Get Started",
-    "getStartedFree": "Get Started Free",
+    "getStartedFree": "இலவசமாக தொடங்கு",
     "seeFeatures": "See Features",
     "badge": "AI for Indian Agriculture",
     "heroMain": "Your Smart Farming",
@@ -128,7 +128,7 @@
     }
   },
   "home": {
-    "greeting": "Good Morning, Farmer ??",
+    "greeting": "காலை வணக்கம், விவசாயி 👋",
     "subtitle": "Here's what's happening on your farm today",
     "quickActionsTitle": "Quick Actions",
     "recentUpdatesTitle": "Recent Updates",
@@ -253,9 +253,9 @@
     }
   },
   "cropDisease": {
-    "title": "Crop Disease Detection",
+    "title": "பயிர் நோய் கண்டறிதல்",
     "uploadHint": "Drag and drop crop image here, or click to upload",
-    "analyze": "Analyze Crop",
+    "analyze": "பயிரை பகுப்பாய்வு செய்",
     "analyzing": "Analyzing your crop...",
     "sections": {
       "symptoms": "Symptoms",

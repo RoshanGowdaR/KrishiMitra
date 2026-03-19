@@ -1,29 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-function ScoreScreen({ score, total, onTryAgain, onBack }) {
+function ScoreScreen({ score, total, onTryAgain, onBack, t }) {
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
   const passed = percentage >= 60;
 
   return (
     <section className="panel quiz-score-screen">
-      <h3>Quiz Complete</h3>
+      <h3>{t('quiz.complete')}</h3>
       <p className="quiz-score-value">{percentage}%</p>
       <span className={passed ? 'difficulty-badge beginner' : 'difficulty-badge advanced'}>
-        {passed ? 'Pass' : 'Fail'}
+        {passed ? t('quiz.pass') : t('quiz.fail')}
       </span>
       <p>
-        You answered {score} out of {total} correctly.
+        {t('quiz.scoreText', { score, total })}
       </p>
       <div className="quiz-score-actions">
-        <button type="button" className="primary-btn" onClick={onTryAgain}>Try Again</button>
-        <button type="button" className="ghost-btn" onClick={onBack}>Back to Quizzes</button>
+        <button type="button" className="primary-btn" onClick={onTryAgain}>{t('quiz.tryAgain')}</button>
+        <button type="button" className="ghost-btn" onClick={onBack}>{t('quiz.backToQuizzes')}</button>
       </div>
     </section>
   );
 }
 
-function QuizList({ quizzes, onStart }) {
+function QuizList({ quizzes, onStart, t }) {
   return (
     <div className="quiz-grid">
       {quizzes.map((quiz) => (
@@ -42,8 +42,8 @@ function QuizList({ quizzes, onStart }) {
             </span>
           </div>
           <h3>{quiz.title}</h3>
-          <p>{quiz.questions?.length || 0} Questions</p>
-          <button type="button" className="primary-btn" onClick={() => onStart(quiz)}>Start Quiz</button>
+          <p>{t('quiz.questionsCount', { count: quiz.questions?.length || 0 })}</p>
+          <button type="button" className="primary-btn" onClick={() => onStart(quiz)}>{t('quiz.startQuiz')}</button>
         </article>
       ))}
     </div>
@@ -57,6 +57,7 @@ function QuizMode({
   showExplanation,
   onSelect,
   onNext,
+  t,
 }) {
   const question = quiz.questions[currentQ];
   const total = quiz.questions.length;
@@ -99,13 +100,13 @@ function QuizMode({
 
       {showExplanation ? (
         <div className="quiz-explanation">
-          <strong>{selected === question.correct_answer ? 'Correct!' : 'Not quite.'}</strong>
-          <p>{question.explanation || 'Review this concept before moving to the next question.'}</p>
+          <strong>{selected === question.correct_answer ? t('quiz.correct') : t('quiz.notQuite')}</strong>
+          <p>{question.explanation || t('quiz.reviewConcept')}</p>
         </div>
       ) : null}
 
       {selected !== null ? (
-        <button type="button" className="primary-btn" onClick={onNext}>Next Question</button>
+        <button type="button" className="primary-btn" onClick={onNext}>{t('quiz.nextQuestion')}</button>
       ) : null}
     </section>
   );
@@ -133,9 +134,9 @@ export default function Quiz() {
       })
       .catch(() => {
         setLoading(false);
-        setError('Failed');
+        setError(t('quiz.failed'));
       });
-  }, []);
+  }, [t]);
 
   const totalQuestions = useMemo(
     () => activeQuiz?.questions?.length || 0,
@@ -196,15 +197,15 @@ export default function Quiz() {
     setCurrentQ(0);
   };
 
-  if (loading) return <div className="panel">Loading...</div>;
-  if (error) return <div className="panel">Error: {error}</div>;
+  if (loading) return <div className="panel">{t('quiz.loading')}</div>;
+  if (error) return <div className="panel">{t('quiz.error', { message: error })}</div>;
 
   return (
     <div className="page-wrap quiz-page">
       <h2>{t('nav.quiz', 'Farming Quiz')}</h2>
 
       {finished ? (
-        <ScoreScreen score={score} total={totalQuestions} onTryAgain={tryAgain} onBack={backToList} />
+        <ScoreScreen score={score} total={totalQuestions} onTryAgain={tryAgain} onBack={backToList} t={t} />
       ) : activeQuiz ? (
         <QuizMode
           quiz={activeQuiz}
@@ -213,9 +214,10 @@ export default function Quiz() {
           showExplanation={showExplanation}
           onSelect={selectAnswer}
           onNext={nextQuestion}
+          t={t}
         />
       ) : (
-        <QuizList quizzes={quizzes} onStart={startQuiz} />
+        <QuizList quizzes={quizzes} onStart={startQuiz} t={t} />
       )}
     </div>
   );

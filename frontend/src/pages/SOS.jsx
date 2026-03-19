@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { createSosRequest, getSosHelplines } from '../services/api';
 
 const urgencyOptions = ['low', 'medium', 'high', 'critical'];
@@ -10,6 +11,7 @@ const fallbackHelplines = [
 ];
 
 export default function SOS() {
+  const { t } = useTranslation();
   const [urgency, setUrgency] = useState('high');
   const [description, setDescription] = useState('');
   const [imageBase64, setImageBase64] = useState('');
@@ -58,9 +60,9 @@ export default function SOS() {
         urgency,
       });
       setResult(request);
-      toast.success('SOS request submitted successfully.');
+      toast.success(t('sos.messages.submitSuccess'));
     } catch (error) {
-      toast.error('Unable to submit SOS request.');
+      toast.error(t('sos.messages.submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -70,12 +72,12 @@ export default function SOS() {
 
   return (
     <div className="page-wrap sos-page">
-      <h2>SOS Expert Connect</h2>
+      <h2>{t('sos.title')}</h2>
 
       <section className="panel sos-main-panel">
         <button type="button" className="sos-emergency-button" onClick={triggerSos}>
           <span>🆘</span>
-          <span>Tap for Emergency Help</span>
+          <span>{t('sos.tapEmergency')}</span>
         </button>
 
         <div className="urgency-pill-row">
@@ -86,52 +88,52 @@ export default function SOS() {
               className={urgency === level ? `urgency-pill ${level} active` : `urgency-pill ${level}`}
               onClick={() => setUrgency(level)}
             >
-              {level[0].toUpperCase() + level.slice(1)}
+              {t(`sos.urgency.${level}`)}
             </button>
           ))}
         </div>
 
         <label>
-          Problem Description
+          {t('sos.problemDescription')}
           <textarea
             rows={4}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Describe your crop issue in detail"
+            placeholder={t('sos.problemPlaceholder')}
           />
         </label>
 
         <label>
-          Upload Crop Photo
+          {t('sos.uploadPhoto')}
           <input type="file" accept="image/*" onChange={(event) => readImage(event.target.files?.[0])} />
         </label>
 
         <button type="button" className="danger-btn" onClick={triggerSos} disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Submit SOS Request'}
+          {isSubmitting ? t('sos.submitting') : t('sos.submitRequest')}
         </button>
       </section>
 
       {result ? (
         <section className="panel sos-result-panel">
-          <h3>Emergency Response</h3>
+          <h3>{t('sos.emergencyResponse')}</h3>
 
           {showExpert ? (
             <article className="sos-expert-card">
-              <h4>{result.assigned_expert?.name || 'Assigned Expert'}</h4>
-              <p><strong>Phone:</strong> {result.assigned_expert?.phone || 'N/A'}</p>
-              <p><strong>Specialization:</strong> {result.assigned_expert?.specialization || 'Crop Support'}</p>
-              <p><strong>Rating:</strong> {'⭐'.repeat(Math.round(result.assigned_expert?.rating || 4))}</p>
-              <a className="primary-btn" href={`tel:${result.assigned_expert?.phone || '18001801551'}`}>Call Now</a>
+              <h4>{result.assigned_expert?.name || t('sos.assignedExpert')}</h4>
+              <p><strong>{t('sos.phone')}:</strong> {result.assigned_expert?.phone || 'N/A'}</p>
+              <p><strong>{t('sos.specialization')}:</strong> {result.assigned_expert?.specialization || t('sos.cropSupport')}</p>
+              <p><strong>{t('sos.rating')}:</strong> {'⭐'.repeat(Math.round(result.assigned_expert?.rating || 4))}</p>
+              <a className="primary-btn" href={`tel:${result.assigned_expert?.phone || '18001801551'}`}>{t('common.callNow')}</a>
             </article>
           ) : (
             <article className="sos-ai-card">
-              <h4>AI Emergency Advice</h4>
-              <p><strong>Medicine:</strong> {result.ai_response?.medicine_name || 'Consult nearest input center'}</p>
-              <p><strong>Dosage:</strong> {result.ai_response?.dosage || 'As per label instruction'}</p>
+              <h4>{t('sos.aiAdvice')}</h4>
+              <p><strong>{t('sos.medicine')}:</strong> {result.ai_response?.medicine_name || t('sos.defaults.medicine')}</p>
+              <p><strong>{t('sos.dosage')}:</strong> {result.ai_response?.dosage || t('sos.defaults.dosage')}</p>
               <ol>
-                <li>{result.ai_response?.action_plan_24hr || 'Start isolation and remove infected leaves.'}</li>
-                <li>{result.ai_response?.action_plan_48hr || 'Apply first treatment spray.'}</li>
-                <li>{result.ai_response?.action_plan_72hr || 'Reassess spread and repeat spray if needed.'}</li>
+                <li>{result.ai_response?.action_plan_24hr || t('sos.defaults.step1')}</li>
+                <li>{result.ai_response?.action_plan_48hr || t('sos.defaults.step2')}</li>
+                <li>{result.ai_response?.action_plan_72hr || t('sos.defaults.step3')}</li>
               </ol>
             </article>
           )}
@@ -139,13 +141,13 @@ export default function SOS() {
       ) : null}
 
       <section className="panel sos-helpline-panel">
-        <h3>Helplines</h3>
+        <h3>{t('sos.helplines')}</h3>
         <div className="sos-helpline-grid">
           {helplines.map((line) => (
             <article key={line.number} className="sos-helpline-card">
               <h4>{line.name}</h4>
               <p>{line.number}</p>
-              <a className="primary-btn" href={`tel:${line.number}`}>Call</a>
+              <a className="primary-btn" href={`tel:${line.number}`}>{t('sos.call')}</a>
             </article>
           ))}
         </div>

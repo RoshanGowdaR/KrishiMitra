@@ -36,7 +36,7 @@ export default function Sidebar({ open, onClose }) {
   return (
     <aside className={open ? 'sidebar open' : 'sidebar'}>
       <div className="sidebar-header">
-        <h2>Krishi Stack</h2>
+        <h2>{t('common.dashboard')}</h2>
       </div>
 
       <nav className="sidebar-nav">
@@ -50,7 +50,7 @@ export default function Sidebar({ open, onClose }) {
               onClick={onClose}
             >
               <Icon />
-              <span>{t('nav.' + item.key)}</span>
+              <span>{t(`nav.${item.key === 'marketPrices' ? 'market' : item.key}`)}</span>
             </NavLink>
           );
         })}

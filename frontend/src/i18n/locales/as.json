@@ -1,13 +1,13 @@
 {
-  "appName": "KrishiMitra",
+  "appName": "কৃষিমিত্ৰ",
   "tagline": "Smart farming decisions, powered by AI",
   "nav": {
-    "home": "Home",
-    "weather": "Weather",
-    "market": "Market Prices",
+    "home": "হোম",
+    "weather": "বতাহ",
+    "market": "বজাৰ দাম",
     "marketPrices": "Market Prices",
-    "schemes": "Schemes",
-    "cropDisease": "Crop Disease",
+    "schemes": "চৰকাৰী আঁচনি",
+    "cropDisease": "শস্য ৰোগ",
     "chatbot": "Chatbot",
     "marketplace": "Marketplace",
     "quiz": "Quiz",
@@ -17,7 +17,7 @@
     "farmGuide": "Farm Guide"
   },
   "common": {
-    "loading": "Loading...",
+    "loading": "লোড হৈ আছে...",
     "error": "Something went wrong",
     "success": "Success",
     "changeLanguage": "Change Language",
@@ -25,7 +25,7 @@
     "selectLanguage": "Choose your language",
     "selectLanguageSubtitle": "Grow better with trusted guidance in your language",
     "dashboard": "Krishi Stack",
-    "language": "Language",
+    "language": "ভাষা",
     "state": "State",
     "district": "District",
     "commodity": "Commodity",
@@ -45,7 +45,7 @@
   },
   "landing": {
     "getStarted": "Get Started",
-    "getStartedFree": "Get Started Free",
+    "getStartedFree": "বিনামূল্যে আৰম্ভ কৰক",
     "seeFeatures": "See Features",
     "badge": "AI for Indian Agriculture",
     "heroMain": "Your Smart Farming",
@@ -128,7 +128,7 @@
     }
   },
   "home": {
-    "greeting": "Good Morning, Farmer ??",
+    "greeting": "শুভ প্ৰভাত, কৃষক 👋",
     "subtitle": "Here's what's happening on your farm today",
     "quickActionsTitle": "Quick Actions",
     "recentUpdatesTitle": "Recent Updates",
@@ -253,9 +253,9 @@
     }
   },
   "cropDisease": {
-    "title": "Crop Disease Detection",
+    "title": "শস্য ৰোগ চিনাক্তকৰণ",
     "uploadHint": "Drag and drop crop image here, or click to upload",
-    "analyze": "Analyze Crop",
+    "analyze": "শস্য বিশ্লেষণ কৰক",
     "analyzing": "Analyzing your crop...",
     "sections": {
       "symptoms": "Symptoms",

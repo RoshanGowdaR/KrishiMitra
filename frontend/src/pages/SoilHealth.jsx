@@ -1,12 +1,7 @@
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import api, { analyzeSoil, getSoilCalendar } from '../services/api';
-
-const tabs = [
-  { key: 'soil-card', label: 'Soil Card' },
-  { key: 'appearance', label: 'By Appearance' },
-  { key: 'location', label: 'By Location' },
-];
 
 const statusClassMap = {
   poor: 'soil-status poor',
@@ -16,6 +11,12 @@ const statusClassMap = {
 };
 
 export default function SoilHealth() {
+  const { t } = useTranslation();
+  const tabs = [
+    { key: 'soil-card', label: t('soil.tabs.soilCard') },
+    { key: 'appearance', label: t('soil.tabs.appearance') },
+    { key: 'location', label: t('soil.tabs.location') },
+  ];
   const [activeTab, setActiveTab] = useState('soil-card');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [report, setReport] = useState(null);
@@ -74,7 +75,7 @@ export default function SoilHealth() {
       });
       setReport(result);
     } catch (error) {
-      toast.error('Unable to analyze soil card details.');
+      toast.error(t('soil.messages.cardError'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -95,7 +96,7 @@ export default function SoilHealth() {
       });
       setReport(response.data);
     } catch (error) {
-      toast.error('Unable to analyze by appearance right now.');
+      toast.error(t('soil.messages.appearanceError'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -110,7 +111,7 @@ export default function SoilHealth() {
       });
       setReport(result);
     } catch (error) {
-      toast.error('Unable to fetch location-based soil info.');
+      toast.error(t('soil.messages.locationError'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -125,13 +126,13 @@ export default function SoilHealth() {
       });
       setCostBreakdown(response.data);
     } catch (error) {
-      toast.error('Unable to calculate cost for this crop.');
+      toast.error(t('soil.messages.costError'));
     }
   };
 
   return (
     <div className="page-wrap soil-page">
-      <h2>Soil Health</h2>
+      <h2>{t('soil.title')}</h2>
 
       <section className="panel soil-tabs-panel">
         <div className="soil-tabs-row">
@@ -149,18 +150,18 @@ export default function SoilHealth() {
 
         {activeTab === 'soil-card' ? (
           <div className="soil-form-grid">
-            <label>pH (0-14)<input type="number" min="0" max="14" step="0.1" value={soilCardForm.pH} onChange={(event) => setForm(setSoilCardForm, 'pH', event.target.value)} /></label>
-            <label>Nitrogen (kg/ha)<input type="number" value={soilCardForm.nitrogen} onChange={(event) => setForm(setSoilCardForm, 'nitrogen', event.target.value)} /></label>
-            <label>Phosphorus (kg/ha)<input type="number" value={soilCardForm.phosphorus} onChange={(event) => setForm(setSoilCardForm, 'phosphorus', event.target.value)} /></label>
-            <label>Potassium (kg/ha)<input type="number" value={soilCardForm.potassium} onChange={(event) => setForm(setSoilCardForm, 'potassium', event.target.value)} /></label>
-            <label>Organic Carbon (%)<input type="number" step="0.1" value={soilCardForm.organic_carbon} onChange={(event) => setForm(setSoilCardForm, 'organic_carbon', event.target.value)} /></label>
-            <button type="button" className="primary-btn" onClick={analyzeSoilCard} disabled={isAnalyzing}>Analyze Soil</button>
+            <label>{t('soil.fields.ph')}<input type="number" min="0" max="14" step="0.1" value={soilCardForm.pH} onChange={(event) => setForm(setSoilCardForm, 'pH', event.target.value)} /></label>
+            <label>{t('soil.fields.nitrogen')}<input type="number" value={soilCardForm.nitrogen} onChange={(event) => setForm(setSoilCardForm, 'nitrogen', event.target.value)} /></label>
+            <label>{t('soil.fields.phosphorus')}<input type="number" value={soilCardForm.phosphorus} onChange={(event) => setForm(setSoilCardForm, 'phosphorus', event.target.value)} /></label>
+            <label>{t('soil.fields.potassium')}<input type="number" value={soilCardForm.potassium} onChange={(event) => setForm(setSoilCardForm, 'potassium', event.target.value)} /></label>
+            <label>{t('soil.fields.organicCarbon')}<input type="number" step="0.1" value={soilCardForm.organic_carbon} onChange={(event) => setForm(setSoilCardForm, 'organic_carbon', event.target.value)} /></label>
+            <button type="button" className="primary-btn" onClick={analyzeSoilCard} disabled={isAnalyzing}>{t('soil.actions.analyzeSoil')}</button>
           </div>
         ) : null}
 
         {activeTab === 'appearance' ? (
           <div className="soil-form-grid">
-            <label>Soil Color
+            <label>{t('soil.fields.soilColor')}
               <select value={appearanceForm.soil_color} onChange={(event) => setForm(setAppearanceForm, 'soil_color', event.target.value)}>
                 <option>Red</option>
                 <option>Black</option>
@@ -168,60 +169,60 @@ export default function SoilHealth() {
                 <option>Sandy</option>
               </select>
             </label>
-            <label>Water Drainage
+            <label>{t('soil.fields.waterDrainage')}
               <select value={appearanceForm.water_drainage} onChange={(event) => setForm(setAppearanceForm, 'water_drainage', event.target.value)}>
                 <option>Fast</option>
                 <option>Moderate</option>
                 <option>Slow</option>
               </select>
             </label>
-            <label>Previous Crops<input value={appearanceForm.previous_crops} onChange={(event) => setForm(setAppearanceForm, 'previous_crops', event.target.value)} placeholder="Rice, Maize" /></label>
-            <label>State
+            <label>{t('soil.fields.previousCrops')}<input value={appearanceForm.previous_crops} onChange={(event) => setForm(setAppearanceForm, 'previous_crops', event.target.value)} placeholder={t('soil.fields.previousCropsPlaceholder')} /></label>
+            <label>{t('common.state')}
               <select value={appearanceForm.state} onChange={(event) => setForm(setAppearanceForm, 'state', event.target.value)}>
                 <option>Karnataka</option>
                 <option>Maharashtra</option>
                 <option>Tamil Nadu</option>
               </select>
             </label>
-            <label>District
+            <label>{t('common.district')}
               <select value={appearanceForm.district} onChange={(event) => setForm(setAppearanceForm, 'district', event.target.value)}>
                 <option>Hassan</option>
                 <option>Bengaluru</option>
                 <option>Mysuru</option>
               </select>
             </label>
-            <button type="button" className="primary-btn" onClick={analyzeByAppearance} disabled={isAnalyzing}>Analyze</button>
+            <button type="button" className="primary-btn" onClick={analyzeByAppearance} disabled={isAnalyzing}>{t('soil.actions.analyze')}</button>
           </div>
         ) : null}
 
         {activeTab === 'location' ? (
           <div className="soil-form-grid">
-            <label>State
+            <label>{t('common.state')}
               <select value={locationForm.state} onChange={(event) => setForm(setLocationForm, 'state', event.target.value)}>
                 <option>Karnataka</option>
                 <option>Maharashtra</option>
                 <option>Tamil Nadu</option>
               </select>
             </label>
-            <label>District
+            <label>{t('common.district')}
               <select value={locationForm.district} onChange={(event) => setForm(setLocationForm, 'district', event.target.value)}>
                 <option>Hassan</option>
                 <option>Bengaluru</option>
                 <option>Mysuru</option>
               </select>
             </label>
-            <button type="button" className="primary-btn" onClick={analyzeByLocation} disabled={isAnalyzing}>Get Soil Info</button>
+            <button type="button" className="primary-btn" onClick={analyzeByLocation} disabled={isAnalyzing}>{t('soil.actions.getInfo')}</button>
           </div>
         ) : null}
       </section>
 
       {report ? (
         <section className="panel soil-results-panel">
-          <h3>Results</h3>
+          <h3>{t('common.results')}</h3>
           <span className={statusClassMap[normalizedStatus] || statusClassMap.moderate}>{normalizedStatus}</span>
 
           <div>
-            <h4>Recommended Crops</h4>
+            <h4>{t('soil.recommendedCrops')}</h4>
             <div className="soil-tag-list">
               {recommendedCrops.map((crop) => (
                 <span key={crop} className="soil-tag">{crop}</span>
@@ -230,7 +231,7 @@ export default function SoilHealth() {
           </div>
 
           <div>
-            <h4>Fertilizer Recommendations</h4>
+            <h4>{t('soil.fertilizerRecommendations')}</h4>
             <ul className="simple-list">
               {fertilizerRecommendations.map((item, index) => (
                 <li key={`${item}-${index}`}>{item}</li>
@@ -241,9 +242,9 @@ export default function SoilHealth() {
       ) : null}
 
       <section className="panel soil-cost-panel">
-        <h3>Cost Calculator</h3>
+        <h3>{t('soil.costCalculator')}</h3>
         <div className="soil-form-grid">
-          <label>Crop
+          <label>{t('soil.crop')}
             <select value={costForm.crop} onChange={(event) => setForm(setCostForm, 'crop', event.target.value)}>
               <option value="rice">Rice</option>
               <option value="wheat">Wheat</option>
@@ -251,20 +252,20 @@ export default function SoilHealth() {
               <option value="cotton">Cotton</option>
             </select>
           </label>
-          <label>Area (acres)<input type="number" step="0.1" value={costForm.area_acres} onChange={(event) => setForm(setCostForm, 'area_acres', event.target.value)} /></label>
-          <button type="button" className="primary-btn" onClick={calculateCost}>Calculate Cost</button>
+          <label>{t('soil.area')}<input type="number" step="0.1" value={costForm.area_acres} onChange={(event) => setForm(setCostForm, 'area_acres', event.target.value)} /></label>
+          <button type="button" className="primary-btn" onClick={calculateCost}>{t('soil.actions.calculateCost')}</button>
         </div>
 
         {costBreakdown ? (
           <div className="market-table-wrap">
             <table className="market-table">
               <tbody>
-                <tr><th>Seeds</th><td>{costBreakdown.seeds_cost ?? '-'}</td></tr>
-                <tr><th>Fertilizer</th><td>{costBreakdown.fertilizer_cost ?? '-'}</td></tr>
-                <tr><th>Pesticide</th><td>{costBreakdown.pesticide_cost ?? '-'}</td></tr>
-                <tr><th>Irrigation</th><td>{costBreakdown.irrigation_cost ?? '-'}</td></tr>
-                <tr><th>Labor</th><td>{costBreakdown.labor_cost ?? '-'}</td></tr>
-                <tr><th>Total</th><td><strong>{costBreakdown.total_cost ?? '-'}</strong></td></tr>
+                <tr><th>{t('soil.cost.seeds')}</th><td>{costBreakdown.seeds_cost ?? '-'}</td></tr>
+                <tr><th>{t('soil.cost.fertilizer')}</th><td>{costBreakdown.fertilizer_cost ?? '-'}</td></tr>
+                <tr><th>{t('soil.cost.pesticide')}</th><td>{costBreakdown.pesticide_cost ?? '-'}</td></tr>
+                <tr><th>{t('soil.cost.irrigation')}</th><td>{costBreakdown.irrigation_cost ?? '-'}</td></tr>
+                <tr><th>{t('soil.cost.labor')}</th><td>{costBreakdown.labor_cost ?? '-'}</td></tr>
+                <tr><th>{t('soil.cost.total')}</th><td><strong>{costBreakdown.total_cost ?? '-'}</strong></td></tr>
               </tbody>
             </table>
           </div>

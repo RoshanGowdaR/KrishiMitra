@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { sendChatbotMessage } from '../services/api';
 
 export default function Chatbot() {
-  const [language, setLanguage] = useState('en');
+  const { t } = useTranslation();
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -45,7 +48,7 @@ export default function Chatbot() {
         language,
       });
 
-      const botText = response.reply || response.message || response.response || 'I am here to help you with farming queries.';
+      const botText = response.reply || response.message || response.response || t('chatbot.defaults.reply');
       const botMessage = {
         role: 'assistant',
         content: botText,
@@ -54,29 +57,43 @@ export default function Chatbot() {
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (sendError) {
-      toast.error('Unable to send message right now.');
+      toast.error(t('chatbot.messages.sendError'));
     } finally {
       setIsTyping(false);
     }
   };
 
   const handleVoiceInput = () => {
+    const speechLocaleMap = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      kn: 'kn-IN',
+      ta: 'ta-IN',
+      te: 'te-IN',
+      mr: 'mr-IN',
+      gu: 'gu-IN',
+      bn: 'bn-IN',
+      pa: 'pa-IN',
+      ml: 'ml-IN',
+      or: 'or-IN',
+      as: 'as-IN',
+    };
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      toast.error('Voice input is not supported in this browser.');
+      toast.error(t('chatbot.messages.voiceUnsupported'));
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : 'en-IN';
+    recognition.lang = speechLocaleMap[language] || 'en-IN';
     recognition.interimResults = false;
 
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => {
       setIsListening(false);
-      toast.error('Voice capture failed. Please try again.');
+      toast.error(t('chatbot.messages.voiceFailed'));
     };
     recognition.onresult = (event) => {
       const transcript = event.results?.[0]?.[0]?.transcript || '';
@@ -88,15 +105,15 @@ export default function Chatbot() {
 
   return (
     <div className="page-wrap chatbot-page">
-      <h2>AI Chatbot</h2>
+      <h2>{t('chatbot.title')}</h2>
 
       <div className="chat-toolbar">
         <label>
-          Language
+          {t('common.language')}
           <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="kn">Kannada</option>
+            {supportedLanguages.map((item) => (
+              <option key={item.code} value={item.code}>{item.native}</option>
+            ))}
           </select>
         </label>
       </div>
@@ -119,7 +136,7 @@ export default function Chatbot() {
           {isTyping ? (
             <div className="chat-row bot">
               <span className="chat-avatar">KM</span>
-              <div className="chat-bubble typing">Typing...</div>
+              <div className="chat-bubble typing">{t('chatbot.typing')}</div>
             </div>
           ) : null}
         </div>
@@ -128,12 +145,12 @@ export default function Chatbot() {
           <input
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="Ask about crops, soil, or markets"
+            placeholder={t('chatbot.placeholder')}
           />
           <button type="button" className="ghost-btn" onClick={handleVoiceInput}>
-            {isListening ? 'Listening...' : '🎤'}
+            {isListening ? t('chatbot.listening') : '🎤'}
           </button>
-          <button type="submit" className="primary-btn">Send</button>
+          <button type="submit" className="primary-btn">{t('common.send')}</button>
         </form>
       </div>
     </div>

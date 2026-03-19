@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { getWeather, getForecast } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Weather() {
+  const { t } = useTranslation();
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +35,7 @@ export default function Weather() {
           return;
         }
 
-        const message = 'Unable to fetch weather data right now.';
+        const message = t('weather.messages.fetchError');
         setError(message);
         toast.error(message);
       } finally {
@@ -60,12 +62,12 @@ export default function Weather() {
         : '☀️';
 
   if (isLoading) {
-    return <LoadingSpinner label="Loading weather data..." />;
+    return <LoadingSpinner label={t('weather.loading')} />;
   }
 
   return (
     <div className="page-wrap weather-page">
-      <h2>Weather</h2>
+      <h2>{t('weather.title')}</h2>
 
       {error ? <p className="page-error">{error}</p> : null}
 
@@ -74,40 +76,40 @@ export default function Weather() {
           <span className="weather-emoji" aria-hidden="true">{weatherIcon}</span>
           <div>
             <h3>{weather?.city_name || 'Bengaluru'}</h3>
-            <p>{weather?.description || 'Clear sky'}</p>
+            <p>{weather?.description || t('weather.defaults.condition')}</p>
           </div>
         </div>
 
         <div className="weather-metrics-grid">
           <div>
-            <span>Temperature</span>
+            <span>{t('weather.metrics.temperature')}</span>
             <strong>{Math.round(weather?.temperature ?? 30)}°C</strong>
           </div>
           <div>
-            <span>Feels Like</span>
+            <span>{t('weather.metrics.feelsLike')}</span>
             <strong>{Math.round(weather?.feels_like ?? weather?.temperature ?? 30)}°C</strong>
           </div>
           <div>
-            <span>Humidity</span>
+            <span>{t('weather.metrics.humidity')}</span>
             <strong>{weather?.humidity ?? 60}%</strong>
           </div>
           <div>
-            <span>Wind Speed</span>
+            <span>{t('weather.metrics.windSpeed')}</span>
             <strong>{weather?.wind_speed ?? 6} km/h</strong>
           </div>
         </div>
       </div>
 
       <div className="panel weather-forecast-panel">
-        <h3>5-Day Forecast</h3>
+        <h3>{t('weather.forecastTitle')}</h3>
         <div className="weather-forecast-row">
-          {forecast.length === 0 ? <p className="page-muted">No forecast data available.</p> : null}
+          {forecast.length === 0 ? <p className="page-muted">{t('weather.messages.noForecast')}</p> : null}
 
           {forecast.map((item, idx) => (
             <article key={item.date || idx} className="weather-forecast-card">
-              <span>{item.date || `Day ${idx + 1}`}</span>
+              <span>{item.date || t('weather.dayLabel', { day: idx + 1 })}</span>
               <strong>{Math.round(item.temperature ?? 0)}°C</strong>
-              <p>{item.description || 'Weather update'}</p>
+              <p>{item.description || t('weather.defaults.update')}</p>
             </article>
           ))}
         </div>
