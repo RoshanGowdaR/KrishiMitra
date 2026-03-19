@@ -1,0 +1,33 @@
+{
+  "appName": "कृषि मित्र",
+  "tagline": "एआई के साथ स्मार्ट खेती के फैसले",
+  "nav": {
+    "home": "होम",
+    "weather": "मौसम",
+    "marketPrices": "बाजार भाव",
+    "schemes": "योजनाएं",
+    "cropDisease": "फसल रोग",
+    "chatbot": "चैटबॉट",
+    "marketplace": "मार्केटप्लेस",
+    "quiz": "क्विज",
+    "soilHealth": "मिट्टी स्वास्थ्य",
+    "forum": "फोरम",
+    "sos": "एसओएस",
+    "farmGuide": "फार्म गाइड"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हुआ",
+    "success": "सफल",
+    "changeLanguage": "भाषा बदलें",
+    "comingSoon": "फीचर UI तैयार है। डेटा इंटीग्रेशन जारी है।",
+    "selectLanguage": "अपनी भाषा चुनें"
+  },
+  "home": {
+    "title": "कृषि मित्र में आपका स्वागत है",
+    "subtitle": "खेती के लिए एकीकृत स्मार्ट डैशबोर्ड",
+    "quickStats": "त्वरित आंकड़े",
+    "schemesAvailable": "उपलब्ध योजनाएं",
+    "marketUpdates": "बाजार भाव अपडेट"
+  }
+}

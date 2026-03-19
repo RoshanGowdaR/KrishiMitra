@@ -1,0 +1,33 @@
+{
+  "appName": "KrishiMitra",
+  "tagline": "Smart farming decisions, powered by AI",
+  "nav": {
+    "home": "Home",
+    "weather": "Weather",
+    "marketPrices": "Market Prices",
+    "schemes": "Schemes",
+    "cropDisease": "Crop Disease",
+    "chatbot": "Chatbot",
+    "marketplace": "Marketplace",
+    "quiz": "Quiz",
+    "soilHealth": "Soil Health",
+    "forum": "Forum",
+    "sos": "SOS",
+    "farmGuide": "Farm Guide"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "changeLanguage": "Change Language",
+    "comingSoon": "Feature UI ready. Data integration in progress.",
+    "selectLanguage": "Choose your language"
+  },
+  "home": {
+    "title": "Welcome to KrishiMitra",
+    "subtitle": "Your all-in-one farming intelligence dashboard",
+    "quickStats": "Quick Stats",
+    "schemesAvailable": "Schemes available",
+    "marketUpdates": "Market price updates"
+  }
+}
