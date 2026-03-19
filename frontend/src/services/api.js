@@ -6,31 +6,92 @@ const api = axios.create({
   timeout: 20000,
 });
 
+const normalizeApiError = (error) => {
+  if (axios.isCancel(error)) {
+    return 'Request cancelled.';
+  }
+
+  if (error.code === 'ECONNABORTED') {
+    return 'Request timed out. Please try again.';
+  }
+
+  return error.response?.data?.detail || 'Request failed. Please try again.';
+};
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.detail || 'Request failed. Please try again.';
+    const message = normalizeApiError(error);
     toast.error(String(message));
     return Promise.reject(error);
   }
 );
 
-export const getWeather = async (lat, lon) => (await api.get('/weather', { params: { lat, lon } })).data;
-export const getForecast = async (lat, lon) => (await api.get('/weather/forecast', { params: { lat, lon } })).data;
+export const getWeather = async (lat, lon) => {
+  const response = await api.get('/weather', { params: { lat, lon } });
+  return response.data;
+};
+
+export const getForecast = async (lat, lon) => {
+  const response = await api.get('/weather/forecast', { params: { lat, lon } });
+  return response.data;
+};
 
 export const getMarketPrices = async (state, district, commodity) => (
   await api.get('/market/prices', { params: { state, district, commodity } })
 ).data;
+
+export const getMarketPricesWithFilters = async ({
+  state = 'Karnataka',
+  district = 'Bengaluru',
+  commodity = '',
+}) => {
+  const response = await api.get('/market/prices', {
+    params: {
+      state,
+      district,
+      commodity: commodity || undefined,
+    },
+  });
+  return response.data;
+};
 
 export const getAllSchemes = async (language = 'en') => (await api.get('/schemes', { params: { language } })).data;
 export const getSchemeById = async (schemeId, language = 'en') => (
   await api.get('/schemes/' + schemeId, { params: { language } })
 ).data;
 
+export const getSchemes = async (language = 'en') => {
+  const response = await api.get('/schemes', { params: { language } });
+  return response.data;
+};
+
+export const getSchemeDetails = async (schemeId, language = 'en') => {
+  const response = await api.get('/schemes/' + schemeId, { params: { language } });
+  return response.data;
+};
+
 export const analyzeCropDisease = async (payload) => (await api.post('/crop-disease/analyze', payload)).data;
+
+export const analyzeCropDiseaseImage = async ({ imageBase64, language = 'en' }) => {
+  const response = await api.post('/crop-disease/analyze', {
+    image_base64: imageBase64,
+    language,
+  });
+  return response.data;
+};
 
 export const sendChatMessage = async (payload) => (await api.post('/chatbot/message', payload)).data;
 export const translateChatText = async (payload) => (await api.post('/chatbot/translate', payload)).data;
+
+export const sendChatbotMessage = async ({ message, language = 'en', conversationHistory = [] }) => {
+  const response = await api.post('/chatbot/message', {
+    message,
+    language,
+    conversation_history: conversationHistory,
+  });
+  return response.data;
+};
 
 export const getListings = async (params) => (await api.get('/marketplace/listings', { params })).data;
 export const createListing = async (payload) => (await api.post('/marketplace/listings', payload)).data;

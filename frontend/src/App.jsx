@@ -69,6 +69,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route index element={<Home />} />
               <Route path="weather" element={<Weather />} />
               <Route path="market-prices" element={<MarketPrices />} />
+              <Route path="market" element={<MarketPrices />} />
               <Route path="schemes" element={<Schemes />} />
               <Route path="crop-disease" element={<CropDisease />} />
               <Route path="chatbot" element={<Chatbot />} />

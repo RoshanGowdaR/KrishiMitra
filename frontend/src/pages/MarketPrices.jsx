@@ -1,29 +1,140 @@
-import { useQuery } from '@tanstack/react-query';
-import { getMarketPrices } from '../services/api';
+import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { getMarketPricesWithFilters } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+const stateOptions = ['Karnataka', 'Maharashtra', 'Tamil Nadu', 'Andhra Pradesh'];
+const districtOptions = {
+  Karnataka: ['Bengaluru', 'Mysuru', 'Mandya'],
+  Maharashtra: ['Pune', 'Nagpur', 'Nashik'],
+  'Tamil Nadu': ['Coimbatore', 'Madurai', 'Thanjavur'],
+  'Andhra Pradesh': ['Guntur', 'Vijayawada', 'Kurnool'],
+};
+
 export default function MarketPrices() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['market-prices'],
-    queryFn: () => getMarketPrices('Karnataka', 'Udupi'),
-    retry: 0,
-  });
+  const [stateName, setStateName] = useState('Karnataka');
+  const [districtName, setDistrictName] = useState('Bengaluru');
+  const [commodity, setCommodity] = useState('');
+  const [prices, setPrices] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const availableDistricts = useMemo(
+    () => districtOptions[stateName] || ['Bengaluru'],
+    [stateName]
+  );
+
+  const fetchPrices = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const data = await getMarketPricesWithFilters({
+        state: stateName,
+        district: districtName,
+        commodity,
+      });
+      setPrices(data?.prices || []);
+    } catch (fetchError) {
+      const message = 'Unable to load market prices right now.';
+      setError(message);
+      toast.error(message);
+      setPrices([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrices();
+  }, [stateName, districtName]);
+
+  useEffect(() => {
+    if (!availableDistricts.includes(districtName)) {
+      setDistrictName(availableDistricts[0]);
+    }
+  }, [availableDistricts, districtName]);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    fetchPrices();
+  };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading market prices..." />;
   }
 
   return (
-    <div className="page-wrap">
+    <div className="page-wrap market-page">
       <h2>Market Prices</h2>
+
+      <form className="market-filters" onSubmit={handleSearchSubmit}>
+        <label>
+          State
+          <select value={stateName} onChange={(event) => setStateName(event.target.value)}>
+            {stateOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          District
+          <select value={districtName} onChange={(event) => setDistrictName(event.target.value)}>
+            {availableDistricts.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Commodity
+          <input
+            value={commodity}
+            onChange={(event) => setCommodity(event.target.value)}
+            placeholder="Search commodity"
+          />
+        </label>
+
+        <button type="submit" className="primary-btn">Search</button>
+        <button type="button" className="ghost-btn" onClick={fetchPrices}>Refresh</button>
+      </form>
+
+      {error ? <p className="page-error">{error}</p> : null}
+
       <div className="panel">
-        <ul className="simple-list">
-          {(data?.prices || []).map((item, index) => (
-            <li key={index}>
-              {item.commodity} | {item.market} | Modal {item.modal_price}
-            </li>
-          ))}
-        </ul>
+        <div className="market-table-wrap">
+          <table className="market-table">
+            <thead>
+              <tr>
+                <th>Commodity</th>
+                <th>Market</th>
+                <th>Min</th>
+                <th>Max</th>
+                <th>Modal Price</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prices.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="market-empty">No results found for selected filters.</td>
+                </tr>
+              ) : (
+                prices.map((item, index) => (
+                  <tr key={item.id || `${item.commodity}-${index}`}>
+                    <td>{item.commodity || '-'}</td>
+                    <td>{item.market || '-'}</td>
+                    <td>{item.min_price ?? '-'}</td>
+                    <td>{item.max_price ?? '-'}</td>
+                    <td>{item.modal_price ?? '-'}</td>
+                    <td>{item.arrival_date || item.date || '-'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
