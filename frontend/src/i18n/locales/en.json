@@ -442,10 +442,27 @@
     "loading": "Loading farm guide...",
     "searchPlaceholder": "Search crops",
     "season": "Season",
+    "month": "Month",
     "category": "Category",
     "water": "Water",
     "profit": "Profit",
     "cropGuide": "Crop Guide",
+    "seasonalCalendar": "Seasonal Calendar",
+    "checkCalendar": "Check Calendar",
+    "cropsToSow": "Crops to Sow",
+    "cropsToHarvest": "Crops to Harvest",
+    "activitiesThisMonth": "Activities this month",
+    "weatherAdvisory": "Weather Advisory",
+    "compareTwoCrops": "Compare Two Crops",
+    "cropOne": "Crop 1",
+    "cropTwo": "Crop 2",
+    "compare": "Compare",
+    "metric": "Metric",
+    "difficultyLabel": "Difficulty",
+    "waterNeed": "Water Need",
+    "daysToHarvest": "Days to Harvest",
+    "costPerAcre": "Cost per Acre",
+    "profitPotential": "Profit Potential",
     "tabs": {
       "overview": "Overview",
       "planting": "Planting",
@@ -454,6 +471,20 @@
       "pest_management": "Pest Control",
       "harvesting": "Harvesting",
       "market_info": "Market"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
     },
     "defaults": {
       "allSeason": "All Season",
@@ -475,7 +506,10 @@
       "fetchError": "Unable to fetch farm guide data. Showing sample crops.",
       "guideError": "Guide details unavailable. Showing basic crop information.",
       "noSection": "No information available for this section.",
-      "noCrops": "No crops found for selected filters."
+      "noCrops": "No crops found for selected filters.",
+      "calendarError": "Unable to load seasonal calendar right now.",
+      "compareError": "Unable to compare crops right now.",
+      "compareSameCrop": "Please select two different crops to compare."
     }
   }
 }

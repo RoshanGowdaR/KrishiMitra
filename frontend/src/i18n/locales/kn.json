@@ -463,10 +463,27 @@
     "loading": "ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
     "searchPlaceholder": "ಬೆಳೆ ಹುಡುಕಿ",
     "season": "ಸೀಸನ್",
+    "month": "ತಿಂಗಳು",
     "category": "ವರ್ಗ",
     "water": "ನೀರು",
     "profit": "ಲಾಭ",
     "cropGuide": "ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ",
+    "seasonalCalendar": "ಋತು ಕ್ಯಾಲೆಂಡರ್",
+    "checkCalendar": "ಕ್ಯಾಲೆಂಡರ್ ನೋಡಿ",
+    "cropsToSow": "ಬಿತ್ತಲು ಬೆಳೆಗಳು",
+    "cropsToHarvest": "ಕೊಯ್ಯಲು ಬೆಳೆಗಳು",
+    "activitiesThisMonth": "ಈ ತಿಂಗಳ ಚಟುವಟಿಕೆಗಳು",
+    "weatherAdvisory": "ಹವಾಮಾನ ಸಲಹೆ",
+    "compareTwoCrops": "ಎರಡು ಬೆಳೆಗಳನ್ನು ಹೋಲಿಸಿ",
+    "cropOne": "ಬೆಳೆ 1",
+    "cropTwo": "ಬೆಳೆ 2",
+    "compare": "ಹೋಲಿಸಿ",
+    "metric": "ಮಾಪಕ",
+    "difficultyLabel": "ಕಷ್ಟಮಟ್ಟ",
+    "waterNeed": "ನೀರಿನ ಅವಶ್ಯಕತೆ",
+    "daysToHarvest": "ಕೊಯ್ಲಿಗೆ ದಿನಗಳು",
+    "costPerAcre": "ಪ್ರತಿ ಎಕರೆಗೆ ವೆಚ್ಚ",
+    "profitPotential": "ಲಾಭ ಸಾಧ್ಯತೆ",
     "tabs": {
       "overview": "ಒಳನೋಟ",
       "planting": "ನೆಡುವಿಕೆ",
@@ -475,6 +492,20 @@
       "pest_management": "ಕೀಟ ನಿಯಂತ್ರಣ",
       "harvesting": "ಕೊಯ್ಲು",
       "market_info": "ಮಾರುಕಟ್ಟೆ"
+    },
+    "months": {
+      "january": "ಜನವರಿ",
+      "february": "ಫೆಬ್ರವರಿ",
+      "march": "ಮಾರ್ಚ್",
+      "april": "ಏಪ್ರಿಲ್",
+      "may": "ಮೇ",
+      "june": "ಜೂನ್",
+      "july": "ಜುಲೈ",
+      "august": "ಆಗಸ್ಟ್",
+      "september": "ಸೆಪ್ಟೆಂಬರ್",
+      "october": "ಅಕ್ಟೋಬರ್",
+      "november": "ನವೆಂಬರ್",
+      "december": "ಡಿಸೆಂಬರ್"
     },
     "seasons": {
       "kharif": "ಖಾರಿಫ್",
@@ -507,7 +538,10 @@
       "fetchError": "ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ ಡೇಟಾ ಪಡೆಯಲಾಗಲಿಲ್ಲ. ಮಾದರಿ ಬೆಳೆಗಳು ತೋರಿಸಲಾಗುತ್ತಿದೆ.",
       "guideError": "ಮಾರ್ಗದರ್ಶಿ ವಿವರ ಲಭ್ಯವಿಲ್ಲ. ಮೂಲ ಮಾಹಿತಿ ತೋರಿಸಲಾಗುತ್ತಿದೆ.",
       "noSection": "ಈ ವಿಭಾಗಕ್ಕೆ ಮಾಹಿತಿ ಲಭ್ಯವಿಲ್ಲ.",
-      "noCrops": "ಆಯ್ದ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಬೆಳೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ."
+      "noCrops": "ಆಯ್ದ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಬೆಳೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+      "calendarError": "ಈಗ ಋತು ಕ್ಯಾಲೆಂಡರ್ ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+      "compareError": "ಈಗ ಬೆಳೆಗಳನ್ನು ಹೋಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+      "compareSameCrop": "ಹೋಲಿಕೆಗೆ ಎರಡು ವಿಭಿನ್ನ ಬೆಳೆಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ."
     }
   }
 }

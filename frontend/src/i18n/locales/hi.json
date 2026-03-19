@@ -463,10 +463,27 @@
     "loading": "खेती मार्गदर्शिका लोड हो रही है...",
     "searchPlaceholder": "फसल खोजें",
     "season": "मौसम",
+    "month": "महीना",
     "category": "श्रेणी",
     "water": "पानी",
     "profit": "लाभ",
     "cropGuide": "फसल मार्गदर्शिका",
+    "seasonalCalendar": "मौसमी कैलेंडर",
+    "checkCalendar": "कैलेंडर देखें",
+    "cropsToSow": "बोने योग्य फसलें",
+    "cropsToHarvest": "कटाई योग्य फसलें",
+    "activitiesThisMonth": "इस महीने की गतिविधियां",
+    "weatherAdvisory": "मौसम सलाह",
+    "compareTwoCrops": "दो फसलों की तुलना करें",
+    "cropOne": "फसल 1",
+    "cropTwo": "फसल 2",
+    "compare": "तुलना करें",
+    "metric": "मानदंड",
+    "difficultyLabel": "कठिनाई",
+    "waterNeed": "पानी की जरूरत",
+    "daysToHarvest": "कटाई तक दिन",
+    "costPerAcre": "प्रति एकड़ लागत",
+    "profitPotential": "लाभ संभावना",
     "tabs": {
       "overview": "अवलोकन",
       "planting": "रोपण",
@@ -475,6 +492,20 @@
       "pest_management": "कीट नियंत्रण",
       "harvesting": "कटाई",
       "market_info": "बाजार"
+    },
+    "months": {
+      "january": "जनवरी",
+      "february": "फरवरी",
+      "march": "मार्च",
+      "april": "अप्रैल",
+      "may": "मई",
+      "june": "जून",
+      "july": "जुलाई",
+      "august": "अगस्त",
+      "september": "सितंबर",
+      "october": "अक्टूबर",
+      "november": "नवंबर",
+      "december": "दिसंबर"
     },
     "seasons": {
       "kharif": "खरीफ",
@@ -507,7 +538,10 @@
       "fetchError": "खेती मार्गदर्शिका डेटा प्राप्त नहीं हो सका। नमूना फसलें दिखाई जा रही हैं।",
       "guideError": "मार्गदर्शिका विवरण उपलब्ध नहीं। मूल जानकारी दिखाई जा रही है।",
       "noSection": "इस अनुभाग के लिए जानकारी उपलब्ध नहीं है।",
-      "noCrops": "चुने गए फ़िल्टर के लिए कोई फसल नहीं मिली।"
+      "noCrops": "चुने गए फ़िल्टर के लिए कोई फसल नहीं मिली।",
+      "calendarError": "अभी मौसमी कैलेंडर लोड नहीं हो सका।",
+      "compareError": "अभी फसलों की तुलना नहीं हो सकी।",
+      "compareSameCrop": "तुलना के लिए दो अलग-अलग फसलें चुनें।"
     }
   }
 }
