@@ -44,6 +44,7 @@ export default function FarmGuide() {
   const [category, setCategory] = useState('all');
   const [crops, setCrops] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCrop, setSelectedCrop] = useState(null);
   const [guideDetails, setGuideDetails] = useState(null);
   const [activeGuideTab, setActiveGuideTab] = useState('overview');
 
@@ -90,25 +91,45 @@ export default function FarmGuide() {
     });
   }, [category, crops, search, season]);
 
-  const openGuide = async (cropName) => {
+  const openGuide = async (crop) => {
+    setSelectedCrop(crop);
+    setGuideDetails(null);
+    setActiveGuideTab('overview');
+
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops/${cropName.toLowerCase()}?language=en`);
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops/${crop.name.toLowerCase()}?language=en`);
       const details = await response.json();
 
-      setGuideDetails(details);
-      setActiveGuideTab('overview');
+      if (response.ok) {
+        setGuideDetails(details);
+      }
     } catch (error) {
-      toast.error('Unable to load this crop guide.');
+      toast.error('Guide details unavailable. Showing basic crop information.');
     }
   };
 
   const getGuideSection = () => {
-    if (!guideDetails) return null;
-    const section = guideDetails[activeGuideTab];
-    if (!section) return 'No information available for this section.';
-    if (typeof section === 'string') return section;
-    if (Array.isArray(section)) return section.join(', ');
-    return section.description || section.summary || JSON.stringify(section, null, 2);
+    if (guideDetails) {
+      const section = guideDetails[activeGuideTab];
+      if (!section) return 'No information available for this section.';
+      if (typeof section === 'string') return section;
+      if (Array.isArray(section)) return section.join(', ');
+      return section.description || section.summary || JSON.stringify(section, null, 2);
+    }
+
+    if (!selectedCrop) return null;
+
+    const fallbackMap = {
+      overview: `Crop: ${selectedCrop.name}\nSeason: ${selectedCrop.season || 'All season'}\nCategory: ${selectedCrop.category || 'General'}\nDifficulty: ${selectedCrop.difficulty || 'beginner'}`,
+      planting: 'Prepare fine seedbed, use quality seeds, and maintain recommended spacing.',
+      irrigation: `Water requirement: ${selectedCrop.water_requirement || 'Moderate'}. Avoid over-irrigation.` ,
+      fertilization: 'Apply balanced NPK in split doses and add organic matter where possible.',
+      pest_management: 'Inspect crop regularly, use integrated pest management, and spray only when required.',
+      harvesting: 'Harvest at physiological maturity and avoid excess moisture during storage.',
+      market_info: `Profit potential: ${selectedCrop.profit_potential || 'Medium'}. Track mandi prices before sale.`,
+    };
+
+    return fallbackMap[activeGuideTab] || 'No information available for this section.';
   };
 
   if (isLoading) return <div className="panel">Loading farm guide...</div>;
@@ -155,7 +176,7 @@ export default function FarmGuide() {
             </div>
             <p>Water: {crop.water_requirement || 'Moderate'}</p>
             <p className="profit-tag">Profit: {crop.profit_potential || 'Medium'}</p>
-            <button type="button" className="primary-btn" onClick={() => openGuide(crop.name)}>
+            <button type="button" className="primary-btn" onClick={() => openGuide(crop)}>
               View Guide
             </button>
           </article>
@@ -168,12 +189,39 @@ export default function FarmGuide() {
         </div>
       ) : null}
 
-      {guideDetails ? (
-        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setGuideDetails(null)}>
-          <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+      {selectedCrop ? (
+        <div
+          role="presentation"
+          onClick={() => setSelectedCrop(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: '16px',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              width: '100%',
+              border: '1px solid #e5e7eb',
+              padding: '1rem',
+            }}
+          >
             <div className="scheme-modal-header">
-              <h3>{guideDetails.name || 'Crop Guide'}</h3>
-              <button type="button" className="ghost-btn" onClick={() => setGuideDetails(null)}>Close</button>
+              <h3>{selectedCrop.name || guideDetails?.name || 'Crop Guide'}</h3>
+              <button type="button" className="ghost-btn" onClick={() => setSelectedCrop(null)}>X</button>
             </div>
 
             <div className="guide-tabs-row">
