@@ -292,10 +292,39 @@
     "title": "ಮಾರುಕಟ್ಟೆ",
     "loading": "ಮಾರುಕಟ್ಟೆ ಪಟ್ಟಿಗಳು ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
     "listProduce": "ನಿಮ್ಮ ಉತ್ಪನ್ನ ಪಟ್ಟಿ ಮಾಡಿ",
+    "bookTransportBtn": "ಸಾರಿಗೆ ಬುಕ್ ಮಾಡಿ 🚛",
     "commoditySearch": "ಬೆಳೆ ಹುಡುಕು",
     "searchPlaceholder": "ಅಕ್ಕಿ, ಮೆಕ್ಕೆಜೋಳ, ಹತ್ತಿ...",
     "contactFarmer": "ರೈತರನ್ನು ಸಂಪರ್ಕಿಸಿ",
     "createListing": "ಪಟ್ಟಿ ರಚಿಸಿ",
+    "tabs": {
+      "listings": "ಪಟ್ಟಿಗಳು",
+      "transport": "ಸಾರಿಗೆ ವಿನಂತಿಗಳು"
+    },
+    "transport": {
+      "sectionTitle": "ಸಾರಿಗೆ ಬುಕ್ಕಿಂಗ್",
+      "sectionSubtitle": "ನಿಮ್ಮ ಉತ್ಪನ್ನದ ಪಿಕಪ್ ಮತ್ತು ಡೆಲಿವರಿಗಾಗಿ ಸಹಾಯ ಪಡೆಯಿರಿ.",
+      "requestsTitle": "ಸಾರಿಗೆ ವಿನಂತಿಗಳು",
+      "modalTitle": "ನಿಮ್ಮ ಉತ್ಪನ್ನಕ್ಕೆ ಸಾರಿಗೆ ಬುಕ್ ಮಾಡಿ",
+      "pickupState": "ಪಿಕಪ್ ರಾಜ್ಯ",
+      "pickupDistrict": "ಪಿಕಪ್ ಜಿಲ್ಲೆ",
+      "destination": "ಗಮ್ಯಸ್ಥಾನ",
+      "commodity": "ಬೆಳೆ",
+      "quantityKg": "ಕೆಜಿಯಲ್ಲಿ ಪ್ರಮಾಣ",
+      "pickupDate": "ಪಿಕಪ್ ದಿನಾಂಕ",
+      "farmerName": "ರೈತನ ಹೆಸರು",
+      "farmerPhone": "ರೈತನ ಫೋನ್",
+      "findTransport": "ಸಾರಿಗೆ ಹುಡುಕಿ",
+      "successTitle": "ಸಾರಿಗೆ ಯಶಸ್ವಿಯಾಗಿ ಬುಕ್ ಮಾಡಲಾಗಿದೆ! 🎉",
+      "estimatedCost": "ಅಂದಾಜು ವೆಚ್ಚ",
+      "pickupLabel": "ಪಿಕಪ್",
+      "contactNote": "ನಮ್ಮ ಲಾಜಿಸ್ಟಿಕ್ಸ್ ತಂಡವು 2 ಗಂಟೆಗಳೊಳಗೆ ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತದೆ",
+      "destinations": {
+        "nearestMandi": "ಹತ್ತಿರದ ಮಾರುಕಟ್ಟೆ",
+        "storageFacility": "ಸಂಗ್ರಹಣೆ ಕೇಂದ್ರ",
+        "directToBuyer": "ಖರೀದಿದಾರರಿಗೆ ನೇರವಾಗಿ"
+      }
+    },
     "defaults": {
       "standardVariety": "ಸಾಮಾನ್ಯ ಜಾತಿ"
     },
@@ -311,7 +340,8 @@
     "messages": {
       "loadError": "ಪಟ್ಟಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗಲಿಲ್ಲ. ಮಾದರಿ ಡೇಟಾ ತೋರಿಸಲಾಗುತ್ತಿದೆ.",
       "postSuccess": "ಪಟ್ಟಿ ಯಶಸ್ವಿಯಾಗಿ ಪ್ರಕಟಿಸಲಾಗಿದೆ.",
-      "postError": "ಪಟ್ಟಿ ಪ್ರಕಟಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ."
+      "postError": "ಪಟ್ಟಿ ಪ್ರಕಟಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+      "transportQuantityError": "ದಯವಿಟ್ಟು ಮಾನ್ಯ ಸಾರಿಗೆ ಪ್ರಮಾಣವನ್ನು ನಮೂದಿಸಿ."
     }
   },
   "quiz": {

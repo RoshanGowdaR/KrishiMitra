@@ -4,6 +4,21 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { createListing, getListings } from '../services/api';
 
+const transportStateDistrictMap = {
+  Karnataka: ['Bengaluru', 'Hassan', 'Mysuru', 'Dharwad'],
+  Maharashtra: ['Pune', 'Nashik', 'Nagpur', 'Kolhapur'],
+  Punjab: ['Ludhiana', 'Amritsar', 'Patiala', 'Bathinda'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Erode'],
+  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra'],
+  'Andhra Pradesh': ['Guntur', 'Vijayawada', 'Kurnool', 'Tirupati'],
+  Telangana: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar'],
+  Bihar: ['Patna', 'Muzaffarpur', 'Bhagalpur', 'Gaya'],
+  Rajasthan: ['Jaipur', 'Kota', 'Udaipur', 'Jodhpur'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Rajkot', 'Vadodara'],
+};
+
+const commodityOptions = ['rice', 'wheat', 'maize', 'tomato', 'onion', 'potato', 'cotton', 'sugarcane', 'ragi', 'soybean'];
+
 const cropNameMap = {
   kn: {
     rice: 'ಅಕ್ಕಿ',
@@ -36,11 +51,15 @@ const cropNameMap = {
 export default function Marketplace() {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const today = new Date().toISOString().slice(0, 10);
   const [searchCommodity, setSearchCommodity] = useState('');
   const [stateFilter, setStateFilter] = useState('all');
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('listings');
+  const [isTransportModalOpen, setIsTransportModalOpen] = useState(false);
+  const [transportResult, setTransportResult] = useState(null);
   const [form, setForm] = useState({
     farmer_name: '',
     phone: '',
@@ -51,6 +70,16 @@ export default function Marketplace() {
     state: 'Karnataka',
     district: 'Hassan',
     description: '',
+  });
+  const [transportForm, setTransportForm] = useState({
+    pickupState: 'Karnataka',
+    pickupDistrict: 'Bengaluru',
+    destination: 'nearest_mandi',
+    commodity: 'rice',
+    quantityKg: '',
+    pickupDate: today,
+    farmerName: '',
+    farmerPhone: '',
   });
 
   const sampleListings = useMemo(
@@ -124,11 +153,41 @@ export default function Marketplace() {
   }, [searchCommodity, stateFilter]);
 
   const visibleListings = listings.length ? listings : sampleListings;
+  const availableTransportDistricts = transportStateDistrictMap[transportForm.pickupState] || ['Bengaluru'];
 
   const getLocalizedCommodity = (commodity) => {
     const original = String(commodity || '').trim();
     const key = original.toLowerCase().replace(/\s+/g, '_');
     return cropNameMap[language]?.[key] || original;
+  };
+
+  const openTransportModal = () => {
+    setTransportResult(null);
+    setTransportForm((prev) => ({
+      ...prev,
+      pickupDate: prev.pickupDate || today,
+    }));
+    setIsTransportModalOpen(true);
+  };
+
+  const closeTransportModal = () => {
+    setIsTransportModalOpen(false);
+    setTransportResult(null);
+  };
+
+  const submitTransportRequest = (event) => {
+    event.preventDefault();
+    const quantity = Number(transportForm.quantityKg);
+    if (!quantity || quantity <= 0) {
+      toast.error(t('marketplace.messages.transportQuantityError'));
+      return;
+    }
+
+    const estimatedCost = Math.round(500 + (quantity / 100) * 50);
+    setTransportResult({
+      estimatedCost,
+      pickupDate: transportForm.pickupDate,
+    });
   };
 
   const submitListing = async (event) => {
@@ -171,40 +230,84 @@ export default function Marketplace() {
     <div className="page-wrap marketplace-page">
       <div className="section-header-row">
         <h2>{t('marketplace.title')}</h2>
-        <button type="button" className="primary-btn" onClick={() => setIsModalOpen(true)}>
-          {t('marketplace.listProduce')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button type="button" className="primary-btn" onClick={() => setIsModalOpen(true)}>
+            {t('marketplace.listProduce')}
+          </button>
+          <button type="button" className="primary-btn" style={{ background: '#ea580c' }} onClick={openTransportModal}>
+            {t('marketplace.bookTransportBtn')}
+          </button>
+        </div>
       </div>
 
-      <div className="panel marketplace-filter-row">
-        <label>
-          {t('marketplace.commoditySearch')}
-          <input value={searchCommodity} onChange={(event) => setSearchCommodity(event.target.value)} placeholder={t('marketplace.searchPlaceholder')} />
-        </label>
-        <label>
-          {t('common.state')}
-          <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)}>
-            <option value="all">{t('common.all')}</option>
-            <option value="Karnataka">Karnataka</option>
-            <option value="Maharashtra">Maharashtra</option>
-            <option value="Tamil Nadu">Tamil Nadu</option>
-          </select>
-        </label>
+      <div className="panel" style={{ marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className={activeTab === 'listings' ? 'primary-btn' : 'ghost-btn'}
+            onClick={() => setActiveTab('listings')}
+          >
+            {t('marketplace.tabs.listings')}
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'transport' ? 'primary-btn' : 'ghost-btn'}
+            onClick={() => setActiveTab('transport')}
+          >
+            {t('marketplace.tabs.transport')}
+          </button>
+        </div>
       </div>
 
-      <div className="marketplace-grid">
-        {visibleListings.map((item) => (
-          <article key={item.id} className="marketplace-card">
-            <h3>{getLocalizedCommodity(item.commodity)}</h3>
-            <p className="marketplace-variety">{item.variety || t('marketplace.defaults.standardVariety')}</p>
-            <p className="marketplace-price">₹{item.price_per_kg}/kg</p>
-            <p>{t('common.quantity')}: {item.quantity_kg} kg</p>
-            <p>{item.state}, {item.district}</p>
-            <p>{t('common.farmer')}: {item.farmer_name}</p>
-            <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`}>{t('marketplace.contactFarmer')}</a>
-          </article>
-        ))}
-      </div>
+      {activeTab === 'listings' ? (
+        <>
+          <div className="panel marketplace-filter-row">
+            <label>
+              {t('marketplace.commoditySearch')}
+              <input value={searchCommodity} onChange={(event) => setSearchCommodity(event.target.value)} placeholder={t('marketplace.searchPlaceholder')} />
+            </label>
+            <label>
+              {t('common.state')}
+              <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)}>
+                <option value="all">{t('common.all')}</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="marketplace-grid">
+            {visibleListings.map((item) => (
+              <article key={item.id} className="marketplace-card">
+                <h3>{getLocalizedCommodity(item.commodity)}</h3>
+                <p className="marketplace-variety">{item.variety || t('marketplace.defaults.standardVariety')}</p>
+                <p className="marketplace-price">₹{item.price_per_kg}/kg</p>
+                <p>{t('common.quantity')}: {item.quantity_kg} kg</p>
+                <p>{item.state}, {item.district}</p>
+                <p>{t('common.farmer')}: {item.farmer_name}</p>
+                <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`}>{t('marketplace.contactFarmer')}</a>
+              </article>
+            ))}
+          </div>
+
+          <section className="panel" style={{ marginTop: '0.75rem' }}>
+            <h3>{t('marketplace.transport.sectionTitle')}</h3>
+            <p className="page-muted">{t('marketplace.transport.sectionSubtitle')}</p>
+            <button type="button" className="primary-btn" style={{ background: '#ea580c', marginTop: '0.5rem' }} onClick={openTransportModal}>
+              {t('marketplace.bookTransportBtn')}
+            </button>
+          </section>
+        </>
+      ) : (
+        <section className="panel">
+          <h3>{t('marketplace.transport.requestsTitle')}</h3>
+          <p className="page-muted">{t('marketplace.transport.sectionSubtitle')}</p>
+          <button type="button" className="primary-btn" style={{ background: '#ea580c', marginTop: '0.5rem' }} onClick={openTransportModal}>
+            {t('marketplace.bookTransportBtn')}
+          </button>
+        </section>
+      )}
 
       {isModalOpen ? (
         <div className="scheme-modal-backdrop" role="presentation" onClick={() => setIsModalOpen(false)}>
@@ -222,6 +325,118 @@ export default function Marketplace() {
               <label>{t('marketplace.form.description')}<textarea rows={3} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
               <button type="submit" className="primary-btn">{t('marketplace.form.post')}</button>
             </form>
+          </section>
+        </div>
+      ) : null}
+
+      {isTransportModalOpen ? (
+        <div className="scheme-modal-backdrop" role="presentation" onClick={closeTransportModal}>
+          <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            {!transportResult ? (
+              <>
+                <h3>{t('marketplace.transport.modalTitle')}</h3>
+                <form className="soil-form-grid" onSubmit={submitTransportRequest}>
+                  <label>
+                    {t('marketplace.transport.pickupState')}
+                    <select
+                      value={transportForm.pickupState}
+                      onChange={(event) => {
+                        const nextState = event.target.value;
+                        setTransportForm((prev) => ({
+                          ...prev,
+                          pickupState: nextState,
+                          pickupDistrict: (transportStateDistrictMap[nextState] || ['Bengaluru'])[0],
+                        }));
+                      }}
+                    >
+                      {Object.keys(transportStateDistrictMap).map((stateName) => (
+                        <option key={stateName} value={stateName}>{stateName}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('marketplace.transport.pickupDistrict')}
+                    <select
+                      value={transportForm.pickupDistrict}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickupDistrict: event.target.value }))}
+                    >
+                      {availableTransportDistricts.map((districtName) => (
+                        <option key={districtName} value={districtName}>{districtName}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('marketplace.transport.destination')}
+                    <select
+                      value={transportForm.destination}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, destination: event.target.value }))}
+                    >
+                      <option value="nearest_mandi">{t('marketplace.transport.destinations.nearestMandi')}</option>
+                      <option value="storage_facility">{t('marketplace.transport.destinations.storageFacility')}</option>
+                      <option value="direct_to_buyer">{t('marketplace.transport.destinations.directToBuyer')}</option>
+                    </select>
+                  </label>
+                  <label>
+                    {t('marketplace.transport.commodity')}
+                    <select
+                      value={transportForm.commodity}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, commodity: event.target.value }))}
+                    >
+                      {commodityOptions.map((commodity) => (
+                        <option key={commodity} value={commodity}>{getLocalizedCommodity(commodity)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('marketplace.transport.quantityKg')}
+                    <input
+                      type="number"
+                      min="1"
+                      value={transportForm.quantityKg}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, quantityKg: event.target.value }))}
+                      required
+                    />
+                  </label>
+                  <label>
+                    {t('marketplace.transport.pickupDate')}
+                    <input
+                      type="date"
+                      min={today}
+                      value={transportForm.pickupDate}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickupDate: event.target.value }))}
+                      required
+                    />
+                  </label>
+                  <label>
+                    {t('marketplace.transport.farmerName')}
+                    <input
+                      value={transportForm.farmerName}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmerName: event.target.value }))}
+                      required
+                    />
+                  </label>
+                  <label>
+                    {t('marketplace.transport.farmerPhone')}
+                    <input
+                      type="tel"
+                      value={transportForm.farmerPhone}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmerPhone: event.target.value }))}
+                      required
+                    />
+                  </label>
+                  <button type="submit" className="primary-btn">{t('marketplace.transport.findTransport')}</button>
+                </form>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2rem', color: '#16a34a' }}>✅</div>
+                <h3>{t('marketplace.transport.successTitle')}</h3>
+                <p><strong>{t('marketplace.transport.estimatedCost')}:</strong> ₹{transportResult.estimatedCost.toLocaleString('en-IN')}</p>
+                <p><strong>{t('marketplace.transport.pickupLabel')}:</strong> {transportResult.pickupDate}</p>
+                <p className="page-muted">{t('marketplace.transport.contactNote')}</p>
+                <button type="button" className="primary-btn" onClick={closeTransportModal}>{t('common.close')}</button>
+              </div>
+            )}
           </section>
         </div>
       ) : null}

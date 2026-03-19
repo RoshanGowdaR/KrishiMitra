@@ -292,10 +292,39 @@
     "title": "बाज़ार",
     "loading": "बाज़ार सूची लोड हो रही है...",
     "listProduce": "अपनी उपज सूचीबद्ध करें",
+    "bookTransportBtn": "परिवहन बुक करें 🚛",
     "commoditySearch": "फसल खोज",
     "searchPlaceholder": "धान, मक्का, कपास...",
     "contactFarmer": "किसान से संपर्क करें",
     "createListing": "लिस्टिंग बनाएं",
+    "tabs": {
+      "listings": "लिस्टिंग",
+      "transport": "परिवहन अनुरोध"
+    },
+    "transport": {
+      "sectionTitle": "परिवहन बुकिंग",
+      "sectionSubtitle": "अपनी उपज के पिकअप और डिलीवरी के लिए सहायता लें।",
+      "requestsTitle": "परिवहन अनुरोध",
+      "modalTitle": "अपनी उपज के लिए परिवहन बुक करें",
+      "pickupState": "पिकअप राज्य",
+      "pickupDistrict": "पिकअप जिला",
+      "destination": "गंतव्य",
+      "commodity": "फसल",
+      "quantityKg": "मात्रा (किग्रा)",
+      "pickupDate": "पिकअप तिथि",
+      "farmerName": "किसान का नाम",
+      "farmerPhone": "किसान का फोन",
+      "findTransport": "परिवहन खोजें",
+      "successTitle": "परिवहन सफलतापूर्वक बुक हुआ! 🎉",
+      "estimatedCost": "अनुमानित लागत",
+      "pickupLabel": "पिकअप",
+      "contactNote": "हमारी लॉजिस्टिक्स टीम 2 घंटे के भीतर आपको कॉल करेगी",
+      "destinations": {
+        "nearestMandi": "निकटतम मंडी",
+        "storageFacility": "भंडारण सुविधा",
+        "directToBuyer": "सीधे खरीदार तक"
+      }
+    },
     "defaults": {
       "standardVariety": "मानक किस्म"
     },
@@ -311,7 +340,8 @@
     "messages": {
       "loadError": "लिस्टिंग लोड नहीं हो सकीं। नमूना डेटा दिखाया जा रहा है।",
       "postSuccess": "लिस्टिंग सफलतापूर्वक पोस्ट हुई।",
-      "postError": "लिस्टिंग पोस्ट नहीं हो सकी।"
+      "postError": "लिस्टिंग पोस्ट नहीं हो सकी।",
+      "transportQuantityError": "कृपया मान्य परिवहन मात्रा दर्ज करें।"
     }
   },
   "quiz": {

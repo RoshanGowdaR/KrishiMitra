@@ -291,10 +291,39 @@
     "title": "Marketplace",
     "loading": "Loading marketplace listings...",
     "listProduce": "List Your Produce",
+    "bookTransportBtn": "Book Transport 🚛",
     "commoditySearch": "Commodity Search",
     "searchPlaceholder": "Rice, maize, cotton...",
     "contactFarmer": "Contact Farmer",
     "createListing": "Create Listing",
+    "tabs": {
+      "listings": "Listings",
+      "transport": "Transport Requests"
+    },
+    "transport": {
+      "sectionTitle": "Book Transport",
+      "sectionSubtitle": "Arrange pickup and delivery support for your produce.",
+      "requestsTitle": "Transport Requests",
+      "modalTitle": "Book Transport for Your Produce",
+      "pickupState": "Pickup State",
+      "pickupDistrict": "Pickup District",
+      "destination": "Destination",
+      "commodity": "Commodity",
+      "quantityKg": "Quantity in kg",
+      "pickupDate": "Pickup Date",
+      "farmerName": "Farmer Name",
+      "farmerPhone": "Farmer Phone",
+      "findTransport": "Find Transport",
+      "successTitle": "Transport Booked Successfully! 🎉",
+      "estimatedCost": "Estimated cost",
+      "pickupLabel": "Pickup",
+      "contactNote": "Our logistics team will call you within 2 hours",
+      "destinations": {
+        "nearestMandi": "Nearest Mandi",
+        "storageFacility": "Storage Facility",
+        "directToBuyer": "Direct to Buyer"
+      }
+    },
     "defaults": {
       "standardVariety": "Standard Variety"
     },
@@ -310,7 +339,8 @@
     "messages": {
       "loadError": "Unable to load listings. Showing sample data.",
       "postSuccess": "Listing posted successfully.",
-      "postError": "Unable to post listing."
+      "postError": "Unable to post listing.",
+      "transportQuantityError": "Please enter a valid transport quantity."
     }
   },
   "quiz": {
