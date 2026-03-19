@@ -1,165 +1,222 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getQuizzes } from '../services/api';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const difficultyLabelClass = {
-  beginner: 'difficulty-badge beginner',
-  intermediate: 'difficulty-badge intermediate',
-  advanced: 'difficulty-badge advanced',
-};
+function ScoreScreen({ score, total, onTryAgain, onBack }) {
+  const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+  const passed = percentage >= 60;
+
+  return (
+    <section className="panel quiz-score-screen">
+      <h3>Quiz Complete</h3>
+      <p className="quiz-score-value">{percentage}%</p>
+      <span className={passed ? 'difficulty-badge beginner' : 'difficulty-badge advanced'}>
+        {passed ? 'Pass' : 'Fail'}
+      </span>
+      <p>
+        You answered {score} out of {total} correctly.
+      </p>
+      <div className="quiz-score-actions">
+        <button type="button" className="primary-btn" onClick={onTryAgain}>Try Again</button>
+        <button type="button" className="ghost-btn" onClick={onBack}>Back to Quizzes</button>
+      </div>
+    </section>
+  );
+}
+
+function QuizList({ quizzes, onStart }) {
+  return (
+    <div className="quiz-grid">
+      {quizzes.map((quiz) => (
+        <article key={quiz.id} className="quiz-card">
+          <div className="quiz-card-head">
+            <span className="quiz-category-badge">{quiz.category || 'general'}</span>
+            <span className={
+              quiz.difficulty === 'advanced'
+                ? 'difficulty-badge advanced'
+                : quiz.difficulty === 'intermediate'
+                  ? 'difficulty-badge intermediate'
+                  : 'difficulty-badge beginner'
+            }
+            >
+              {quiz.difficulty || 'beginner'}
+            </span>
+          </div>
+          <h3>{quiz.title}</h3>
+          <p>{quiz.questions?.length || 0} Questions</p>
+          <button type="button" className="primary-btn" onClick={() => onStart(quiz)}>Start Quiz</button>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function QuizMode({
+  quiz,
+  currentQ,
+  selected,
+  showExplanation,
+  onSelect,
+  onNext,
+}) {
+  const question = quiz.questions[currentQ];
+  const total = quiz.questions.length;
+  const progress = Math.round(((currentQ + 1) / total) * 100);
+
+  return (
+    <section className="panel quiz-mode">
+      <div className="quiz-progress-wrap">
+        <div className="quiz-progress-track">
+          <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <span>{currentQ + 1}/{total}</span>
+      </div>
+
+      <h3>{question.question}</h3>
+
+      <div className="quiz-options-grid">
+        {question.options.map((option) => {
+          const isCorrect = option === question.correct_answer;
+          const isSelected = selected === option;
+
+          let optionClass = 'quiz-option';
+          if (selected !== null) {
+            if (isCorrect) optionClass += ' correct';
+            else if (isSelected) optionClass += ' wrong';
+          }
+
+          return (
+            <button
+              key={option}
+              type="button"
+              className={optionClass}
+              onClick={() => onSelect(option)}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+
+      {showExplanation ? (
+        <div className="quiz-explanation">
+          <strong>{selected === question.correct_answer ? 'Correct!' : 'Not quite.'}</strong>
+          <p>{question.explanation || 'Review this concept before moving to the next question.'}</p>
+        </div>
+      ) : null}
+
+      {selected !== null ? (
+        <button type="button" className="primary-btn" onClick={onNext}>Next Question</button>
+      ) : null}
+    </section>
+  );
+}
 
 export default function Quiz() {
-  const { data, isLoading } = useQuery({ queryKey: ['quiz'], queryFn: () => getQuizzes({ language: 'en' }), retry: 0 });
+  const { t } = useTranslation();
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState('');
-  const [answers, setAnswers] = useState([]);
-  const [isFinished, setIsFinished] = useState(false);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
 
-  if (isLoading) return <LoadingSpinner />;
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/v1/quiz')
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.quizzes || [];
+        setQuizzes(list);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        setError('Failed');
+      });
+  }, []);
 
-  const quizzes = data?.quizzes || [];
-  const currentQuestion = activeQuiz?.questions?.[questionIndex];
-  const progress = activeQuiz?.questions?.length
-    ? Math.round(((questionIndex + 1) / activeQuiz.questions.length) * 100)
-    : 0;
-
-  const score = useMemo(() => {
-    if (!activeQuiz?.questions?.length) {
-      return 0;
-    }
-
-    const correctCount = answers.filter((item) => item.isCorrect).length;
-    return Math.round((correctCount / activeQuiz.questions.length) * 100);
-  }, [activeQuiz?.questions?.length, answers]);
+  const totalQuestions = useMemo(
+    () => activeQuiz?.questions?.length || 0,
+    [activeQuiz?.questions?.length]
+  );
 
   const startQuiz = (quiz) => {
     setActiveQuiz(quiz);
-    setQuestionIndex(0);
-    setSelectedOption('');
-    setAnswers([]);
-    setIsFinished(false);
+    setCurrentQ(0);
+    setSelected(null);
+    setShowExplanation(false);
+    setScore(0);
+    setFinished(false);
   };
 
-  const chooseOption = (option) => {
-    if (selectedOption) {
-      return;
-    }
-    setSelectedOption(option);
-  };
-
-  const moveToNext = () => {
-    if (!currentQuestion || !selectedOption) {
+  const selectAnswer = (option) => {
+    if (selected !== null || !activeQuiz) {
       return;
     }
 
-    const isCorrect = selectedOption === currentQuestion.correct_answer;
-    setAnswers((prev) => [
-      ...prev,
-      {
-        question_id: currentQuestion.id,
-        answer: selectedOption,
-        isCorrect,
-      },
-    ]);
+    const question = activeQuiz.questions[currentQ];
+    setSelected(option);
+    setShowExplanation(true);
 
-    if (questionIndex + 1 >= activeQuiz.questions.length) {
-      setIsFinished(true);
+    if (option === question.correct_answer) {
+      setScore((prev) => prev + 1);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (!activeQuiz) {
       return;
     }
 
-    setQuestionIndex((prev) => prev + 1);
-    setSelectedOption('');
+    const atLastQuestion = currentQ >= activeQuiz.questions.length - 1;
+    if (atLastQuestion) {
+      setFinished(true);
+      return;
+    }
+
+    setCurrentQ((prev) => prev + 1);
+    setSelected(null);
+    setShowExplanation(false);
   };
 
-  const restart = () => {
+  const tryAgain = () => {
     if (!activeQuiz) {
       return;
     }
     startQuiz(activeQuiz);
   };
 
+  const backToList = () => {
+    setActiveQuiz(null);
+    setFinished(false);
+    setSelected(null);
+    setShowExplanation(false);
+    setCurrentQ(0);
+  };
+
+  if (loading) return <div className="panel">Loading...</div>;
+  if (error) return <div className="panel">Error: {error}</div>;
+
   return (
     <div className="page-wrap quiz-page">
-      <h2>Farming Quiz</h2>
+      <h2>{t('nav.quiz', 'Farming Quiz')}</h2>
 
-      {!activeQuiz ? (
-        <div className="quiz-grid">
-          {quizzes.map((quiz) => (
-            <article key={quiz.id} className="quiz-card">
-              <div className="quiz-card-head">
-                <span className="quiz-category-badge">{quiz.category || 'General'}</span>
-                <span className={difficultyLabelClass[quiz.difficulty] || 'difficulty-badge beginner'}>
-                  {quiz.difficulty || 'beginner'}
-                </span>
-              </div>
-              <h3>{quiz.title}</h3>
-              <p>{quiz.questions?.length || 0} Questions</p>
-              <button type="button" className="primary-btn" onClick={() => startQuiz(quiz)}>
-                Start Quiz
-              </button>
-            </article>
-          ))}
-        </div>
-      ) : null}
-
-      {activeQuiz && !isFinished && currentQuestion ? (
-        <section className="panel quiz-mode">
-          <div className="quiz-progress-wrap">
-            <div className="quiz-progress-track">
-              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
-            </div>
-            <span>{questionIndex + 1} / {activeQuiz.questions.length}</span>
-          </div>
-
-          <h3>{currentQuestion.question}</h3>
-
-          <div className="quiz-options-grid">
-            {currentQuestion.options?.map((option) => {
-              let optionClass = 'quiz-option';
-              if (selectedOption) {
-                if (option === currentQuestion.correct_answer) {
-                  optionClass += ' correct';
-                } else if (option === selectedOption) {
-                  optionClass += ' wrong';
-                }
-              }
-
-              return (
-                <button key={option} type="button" className={optionClass} onClick={() => chooseOption(option)}>
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedOption ? (
-            <div className="quiz-explanation">
-              <strong>
-                {selectedOption === currentQuestion.correct_answer ? 'Correct!' : 'Not quite.'}
-              </strong>
-              <p>{currentQuestion.explanation || 'Use this answer pattern to improve your next attempt.'}</p>
-            </div>
-          ) : null}
-
-          <button type="button" className="primary-btn" onClick={moveToNext} disabled={!selectedOption}>
-            Next
-          </button>
-        </section>
-      ) : null}
-
-      {activeQuiz && isFinished ? (
-        <section className="panel quiz-score-screen">
-          <h3>Quiz Complete</h3>
-          <p className="quiz-score-value">{score}%</p>
-          <p>You answered {answers.filter((item) => item.isCorrect).length} out of {activeQuiz.questions.length} correctly.</p>
-          <div className="quiz-score-actions">
-            <button type="button" className="primary-btn" onClick={restart}>Retry Quiz</button>
-            <button type="button" className="ghost-btn" onClick={() => setActiveQuiz(null)}>Back to Quiz List</button>
-          </div>
-        </section>
-      ) : null}
+      {finished ? (
+        <ScoreScreen score={score} total={totalQuestions} onTryAgain={tryAgain} onBack={backToList} />
+      ) : activeQuiz ? (
+        <QuizMode
+          quiz={activeQuiz}
+          currentQ={currentQ}
+          selected={selected}
+          showExplanation={showExplanation}
+          onSelect={selectAnswer}
+          onNext={nextQuestion}
+        />
+      ) : (
+        <QuizList quizzes={quizzes} onStart={startQuiz} />
+      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getCropGuide, getFarmGuideCrops } from '../services/api';
 
 const guideTabs = [
   { key: 'overview', label: 'Overview' },
@@ -16,10 +15,28 @@ const cropEmojis = {
   rice: '🌾',
   wheat: '🌿',
   maize: '🌽',
+  tomato: '🍅',
+  onion: '🧅',
+  potato: '🥔',
   cotton: '🧵',
   sugarcane: '🎋',
+  ragi: '🌾',
+  soybean: '🫘',
   turmeric: '🟡',
 };
+
+const sampleCrops = [
+  { name: 'rice', category: 'cereal', season: 'kharif', difficulty: 'beginner', profit_potential: 'high', water_requirement: 'high' },
+  { name: 'wheat', category: 'cereal', season: 'rabi', difficulty: 'beginner', profit_potential: 'medium', water_requirement: 'moderate' },
+  { name: 'maize', category: 'cereal', season: 'kharif', difficulty: 'intermediate', profit_potential: 'medium', water_requirement: 'moderate' },
+  { name: 'tomato', category: 'vegetable', season: 'zaid', difficulty: 'intermediate', profit_potential: 'high', water_requirement: 'moderate' },
+  { name: 'onion', category: 'vegetable', season: 'rabi', difficulty: 'intermediate', profit_potential: 'high', water_requirement: 'moderate' },
+  { name: 'potato', category: 'vegetable', season: 'rabi', difficulty: 'beginner', profit_potential: 'medium', water_requirement: 'moderate' },
+  { name: 'cotton', category: 'cash_crop', season: 'kharif', difficulty: 'advanced', profit_potential: 'high', water_requirement: 'moderate' },
+  { name: 'sugarcane', category: 'cash_crop', season: 'all', difficulty: 'advanced', profit_potential: 'high', water_requirement: 'high' },
+  { name: 'ragi', category: 'cereal', season: 'kharif', difficulty: 'beginner', profit_potential: 'medium', water_requirement: 'low' },
+  { name: 'soybean', category: 'pulse', season: 'kharif', difficulty: 'intermediate', profit_potential: 'high', water_requirement: 'moderate' },
+];
 
 export default function FarmGuide() {
   const [search, setSearch] = useState('');
@@ -36,14 +53,17 @@ export default function FarmGuide() {
     async function loadCrops() {
       setIsLoading(true);
       try {
-        const response = await getFarmGuideCrops({ language: 'en' });
+        const response = await fetch('http://127.0.0.1:8000/api/v1/farm-guide/crops?language=en');
+        const data = await response.json();
+        const cropList = data?.crops || [];
+
         if (!ignore) {
-          setCrops(response?.crops || []);
+          setCrops(cropList.length ? cropList : sampleCrops);
         }
       } catch (error) {
         if (!ignore) {
-          setCrops([]);
-          toast.error('Unable to fetch farm guide data.');
+          setCrops(sampleCrops);
+          toast.error('Unable to fetch farm guide data. Showing sample crops.');
         }
       } finally {
         if (!ignore) {
@@ -60,16 +80,21 @@ export default function FarmGuide() {
 
   const filteredCrops = useMemo(() => {
     return crops.filter((crop) => {
-      const searchMatch = !search || crop.name.toLowerCase().includes(search.toLowerCase());
-      const seasonMatch = season === 'all' || String(crop.season || '').toLowerCase().includes(season.toLowerCase());
-      const categoryMatch = category === 'all' || crop.category === category;
+      const cropName = String(crop.name || '').toLowerCase();
+      const cropSeason = String(crop.season || '').toLowerCase();
+      const cropCategory = String(crop.category || '').toLowerCase();
+      const searchMatch = !search || cropName.includes(search.toLowerCase());
+      const seasonMatch = season === 'all' || cropSeason.includes(season.toLowerCase());
+      const categoryMatch = category === 'all' || cropCategory === category.toLowerCase();
       return searchMatch && seasonMatch && categoryMatch;
     });
   }, [category, crops, search, season]);
 
   const openGuide = async (cropName) => {
     try {
-      const details = await getCropGuide(cropName.toLowerCase(), 'en');
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/farm-guide/crops/${cropName.toLowerCase()}?language=en`);
+      const details = await response.json();
+
       setGuideDetails(details);
       setActiveGuideTab('overview');
     } catch (error) {
@@ -120,8 +145,8 @@ export default function FarmGuide() {
       <div className="farm-guide-grid">
         {filteredCrops.map((crop) => (
           <article key={crop.name} className="farm-crop-card">
-            <span className="crop-icon">{cropEmojis[crop.name.toLowerCase()] || '🌱'}</span>
-            <h3>{crop.name}</h3>
+            <span className="crop-icon">{cropEmojis[String(crop.name).toLowerCase()] || '🌱'}</span>
+            <h3>{String(crop.name).charAt(0).toUpperCase() + String(crop.name).slice(1)}</h3>
             <div className="crop-tag-row">
               <span className="scheme-ministry">{crop.season || 'All Season'}</span>
               <span className={crop.difficulty === 'advanced' ? 'difficulty-badge advanced' : crop.difficulty === 'intermediate' ? 'difficulty-badge intermediate' : 'difficulty-badge beginner'}>
@@ -136,6 +161,12 @@ export default function FarmGuide() {
           </article>
         ))}
       </div>
+
+      {filteredCrops.length === 0 ? (
+        <div className="panel">
+          <p className="page-muted">No crops found for selected filters.</p>
+        </div>
+      ) : null}
 
       {guideDetails ? (
         <div className="scheme-modal-backdrop" role="presentation" onClick={() => setGuideDetails(null)}>
