@@ -146,6 +146,8 @@ export default function Landing() {
     []
   );
 
+  const brandLetters = 'KRISHIMITRA'.split('');
+
   return (
     <div className="km-landing">
       <section className="km-hero" ref={heroRef}>
@@ -187,9 +189,43 @@ export default function Landing() {
             Empower Your Farm With AI
           </motion.h1>
 
-          <motion.p className="km-stroke" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.18 }}>
-            KRISHIMITRA
-          </motion.p>
+          <motion.div
+            className="km-stroke"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.18 }}
+            style={{ textAlign: 'center' }}
+          >
+            {brandLetters.map((letter, index) => (
+              <motion.span
+                key={`${letter}-${index + 1}`}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.05, duration: 0.5 }}
+                whileHover={{ color: '#16a34a', scale: 1.2 }}
+                style={{
+                  fontFamily: 'Playfair Display, serif',
+                  fontSize: 'clamp(3rem, 7vw, 6rem)',
+                  fontWeight: 900,
+                  color: 'transparent',
+                  WebkitTextStroke: '1.5px #16a34a',
+                  display: 'inline-block',
+                  letterSpacing: '0.2em',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {letter}
+              </motion.span>
+            ))}
+            <div
+              style={{
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, #16a34a, #f97316, #16a34a, transparent)',
+                width: '60%',
+                margin: '0.5rem auto 0',
+              }}
+            />
+          </motion.div>
 
           <motion.p className="km-subtitle" initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.24 }}>
             Hyperlocal crop intelligence, market timing, disease detection, and multilingual guidance in one powerful farming cockpit.
