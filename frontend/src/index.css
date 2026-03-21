@@ -2153,12 +2153,41 @@ a {
 
 .km-stroke {
   margin: 0.35rem 0 0;
-  font-size: clamp(2.2rem, 8vw, 6.4rem);
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(4rem, 12vw, 9rem);
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   color: transparent;
-  -webkit-text-stroke: 1.8px rgba(61, 220, 132, 0.84);
-  text-shadow: 0 0 22px rgba(61, 220, 132, 0.26);
+  -webkit-text-stroke: 2px #16a34a;
+  text-shadow:
+    0 0 20px rgba(22, 163, 74, 0.4),
+    0 0 40px rgba(22, 163, 74, 0.2),
+    0 0 80px rgba(22, 163, 74, 0.1);
+  animation: pulseGlow 3s ease-in-out infinite;
+  transition: all 0.5s ease;
+}
+
+.km-stroke:hover {
+  background: linear-gradient(90deg, #16a34a, #86efac);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 20px rgba(22, 163, 74, 0.4),
+      0 0 40px rgba(22, 163, 74, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 30px rgba(22, 163, 74, 0.7),
+      0 0 60px rgba(22, 163, 74, 0.4),
+      0 0 100px rgba(22, 163, 74, 0.2);
+  }
 }
 
 .km-subtitle {
@@ -2552,10 +2581,6 @@ a {
   .km-nav-btn {
     padding: 0.5rem 1rem;
     font-size: 0.86rem;
-  }
-
-  .km-stroke {
-    letter-spacing: 0.1em;
   }
 
   .km-parallax-row {
