@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signInWithGoogle } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -14,8 +14,8 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  const startLogin = () => {
-    navigate('/auth/callback?new=1', { replace: true });
+  const startLogin = async () => {
+    await signInWithGoogle();
   };
 
   return (

@@ -1,34 +1,42 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'krishimitra_language';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { signIn } = useAuth();
 
   useEffect(() => {
-    const hasProfile = localStorage.getItem('krishimitra_profile_complete') === 'true';
-    const isNewUser = searchParams.get('new') === '1' && !hasProfile;
-    const selectedLanguage = localStorage.getItem(STORAGE_KEY);
+    const resolveAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
 
-    signIn({ isNewUser });
+      if (!user) {
+        navigate('/login', { replace: true });
+        return;
+      }
 
-    if (!isNewUser) {
-      navigate('/app', { replace: true });
-      return;
-    }
+      const hasProfile = localStorage.getItem('krishimitra_profile_complete') === 'true';
+      const isNewUser = !hasProfile;
+      const selectedLanguage = localStorage.getItem(STORAGE_KEY);
 
-    if (!selectedLanguage) {
-      navigate('/language-select', { replace: true });
-      return;
-    }
+      if (!isNewUser) {
+        navigate('/app', { replace: true });
+        return;
+      }
 
-    navigate('/profile-setup', { replace: true });
-  }, [navigate, searchParams, signIn]);
+      if (!selectedLanguage) {
+        navigate('/language-select', { replace: true });
+        return;
+      }
+
+      navigate('/profile-setup', { replace: true });
+    };
+
+    resolveAuth();
+  }, [navigate]);
 
   return <LoadingSpinner label="Completing sign in..." />;
 }

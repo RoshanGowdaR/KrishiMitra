@@ -110,9 +110,15 @@ function TiltCard({ card }) {
 }
 
 export default function Landing() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const goToStart = () => navigate(user ? '/app' : '/login');
+  const navigate = useNavigate();
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/app');
+      return;
+    }
+    navigate('/login');
+  };
 
   const heroRef = useRef(null);
   const parallaxRef = useRef(null);
@@ -173,7 +179,7 @@ export default function Landing() {
 
         <motion.header className="km-hero-head" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <div className="km-brand">🌿 KrishiMitra</div>
-          <button type="button" className="km-nav-btn" onClick={goToStart}>Login</button>
+          <button type="button" className="km-nav-btn" onClick={handleGetStarted}>Login</button>
         </motion.header>
 
         <div className="km-hero-center">
@@ -182,7 +188,7 @@ export default function Landing() {
             className="km-pill"
             whileHover={{ scale: 1.06 }}
             transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-            onClick={goToStart}
+            onClick={handleGetStarted}
           >
             🌾 Start For Free Today
           </motion.button>
@@ -342,7 +348,7 @@ export default function Landing() {
           ))}
         </div>
         <h2>Ready to transform your farm?</h2>
-        <motion.button type="button" className="km-cta-btn" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} onClick={goToStart}>
+        <motion.button type="button" className="km-cta-btn" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} onClick={handleGetStarted}>
           Get Started Free
         </motion.button>
       </section>

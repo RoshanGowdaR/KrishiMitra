@@ -1,70 +1,49 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-const USER_STORAGE_KEY = 'krishimitra_user';
-const PROFILE_DONE_KEY = 'krishimitra_profile_complete';
-
-const AuthContext = createContext(null);
-
-function readStoredUser() {
-  try {
-    const raw = localStorage.getItem(USER_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = readStoredUser();
-    setUser(stored);
-    setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const setAuthUser = (nextUser) => {
-    setUser(nextUser);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+  const signInWithGoogle = async () => {
+    const callbackUrl = `${window.location.origin}/auth/callback`;
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: callbackUrl },
+    });
   };
 
-  const signIn = ({ isNewUser }) => {
-    const existing = readStoredUser();
-    const profileComplete = localStorage.getItem(PROFILE_DONE_KEY) === 'true';
-
-    const nextUser = existing || {
-      id: 'local-user',
-      email: 'farmer@krishimitra.app',
-    };
-
-    nextUser.isNewUser = Boolean(isNewUser);
-    nextUser.profileComplete = profileComplete;
-
-    setAuthUser(nextUser);
-    return nextUser;
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
   };
 
   const completeProfile = () => {
-    const existing = readStoredUser() || { id: 'local-user', email: 'farmer@krishimitra.app' };
-    existing.profileComplete = true;
-    existing.isNewUser = false;
-    localStorage.setItem(PROFILE_DONE_KEY, 'true');
-    setAuthUser(existing);
-  };
-
-  const signOut = () => {
-    localStorage.removeItem(USER_STORAGE_KEY);
-    setUser(null);
+    localStorage.setItem('krishimitra_profile_complete', 'true');
   };
 
   const value = useMemo(() => ({
     user,
     loading,
-    signIn,
+    signInWithGoogle,
     signOut,
     completeProfile,
   }), [user, loading]);
@@ -72,10 +51,4 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);

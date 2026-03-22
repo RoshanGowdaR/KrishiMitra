@@ -3,8 +3,8 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from './context/LanguageContext';
 import LanguageSelector from './components/LanguageSelector';
-import LoadingSpinner from './components/LoadingSpinner';
 import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Landing from './pages/Landing';
@@ -26,20 +26,6 @@ import SOS from './pages/SOS';
 import FarmGuide from './pages/FarmGuide';
 
 const STORAGE_KEY = 'krishimitra_language';
-
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner label="Loading your account..." />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
 
 function PageTransition({ children }) {
   const location = useLocation();
@@ -110,7 +96,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
 export default function App() {
   const location = useLocation();
   const { setLanguage } = useLanguage();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
   useEffect(() => {
@@ -150,7 +136,7 @@ export default function App() {
           </ProtectedRoute>
         )}
       />
-      <Route path="*" element={<Navigate to={user ? '/app' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={loading ? '/' : (user ? '/app' : '/login')} replace />} />
     </Routes>
   );
 }
