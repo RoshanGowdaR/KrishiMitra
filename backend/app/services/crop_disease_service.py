@@ -1,16 +1,11 @@
 import json
 from typing import Any
 
-import httpx
+import httpx  # noqa: F401
 from fastapi import HTTPException
 
 from app.config import get_settings
-
-GEMINI_MODEL = "gemini-1.5-flash"
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
-)
+from app.services.gemini_client import gemini_client
 SUPPORTED_CROPS = [
     "rice",
     "wheat",
@@ -25,30 +20,6 @@ SUPPORTED_CROPS = [
     "potato",
     "chilli",
 ]
-
-
-def _get_api_key() -> str:
-    api_key = get_settings().gemini_api_key
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
-    return api_key
-
-
-def _extract_text(payload: dict[str, Any]) -> str:
-    candidates = payload.get("candidates", [])
-    if not candidates:
-        raise HTTPException(status_code=502, detail="Gemini returned no candidates")
-
-    content = candidates[0].get("content", {})
-    parts = content.get("parts", [])
-    for part in parts:
-        text = part.get("text")
-        if isinstance(text, str) and text.strip():
-            return text.strip()
-
-    raise HTTPException(status_code=502, detail="Gemini returned an empty response")
-
-
 def _parse_json_response(raw_text: str) -> dict[str, Any]:
     cleaned = raw_text.strip()
     if cleaned.startswith("```"):
@@ -90,6 +61,12 @@ async def get_healthy_crop_info(crop_name: str) -> dict[str, Any]:
 
 
 async def analyze_crop_image(image_base64: str, language: str = "en") -> dict[str, Any]:
+    settings = get_settings()
+    fallback_key = getattr(settings, "gemini_api_key", "")
+    if fallback_key and not gemini_client.keys:
+        gemini_client.keys = [fallback_key]
+        gemini_client.current_index = 0
+
     prompt = (
         "You are an agricultural crop disease expert for India. Analyze the image and return "
         "ONLY valid JSON with keys: is_crop (boolean), crop_type (string), disease_name (string), "
@@ -98,38 +75,8 @@ async def analyze_crop_image(image_base64: str, language: str = "en") -> dict[st
         f"Respond in language code '{language}'. If image is not a crop, set is_crop=false and provide not_crop_reason."
     )
 
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt},
-                    {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_base64,
-                        }
-                    },
-                ]
-            }
-        ]
-    }
-
-    params = {"key": _get_api_key()}
-
-    try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            response = await client.post(GEMINI_API_URL, params=params, json=payload)
-            response.raise_for_status()
-            raw_response = response.json()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=exc.response.status_code,
-            detail="Gemini API returned an error",
-        ) from exc
-    except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail="Unable to reach Gemini API") from exc
-
-    parsed = _parse_json_response(_extract_text(raw_response))
+    generated = await gemini_client.generate(prompt, image_base64=image_base64)
+    parsed = _parse_json_response(generated)
 
     if not parsed.get("is_crop", False):
         reason = parsed.get("not_crop_reason", "Uploaded image is not a crop image")

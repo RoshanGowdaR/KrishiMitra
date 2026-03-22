@@ -57,7 +57,7 @@ def upsert_profile(payload: UpdateProfileRequest, current_user: dict = Depends(g
             .upsert(update_payload, on_conflict='id')
             .execute()
         )
-    except Exception as db_error:
+    except Exception:
         # Some existing schemas enforce NOT NULL phone even for Google users.
         try:
             update_response = (
@@ -107,3 +107,8 @@ def upsert_profile(payload: UpdateProfileRequest, current_user: dict = Depends(g
         user['email'] = current_user.get('email')
 
     return {'success': True, 'user': user}
+
+
+@router.post('/update-profile')
+def update_profile(payload: UpdateProfileRequest, current_user: dict = Depends(get_current_user)):
+    return upsert_profile(payload=payload, current_user=current_user)

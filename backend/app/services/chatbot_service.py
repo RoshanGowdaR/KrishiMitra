@@ -1,15 +1,10 @@
 from typing import Any
 
-import httpx
+import httpx  # noqa: F401
 from fastapi import HTTPException
 
 from app.config import get_settings
-
-GEMINI_MODEL = "gemini-1.5-flash"
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
-)
+from app.services.gemini_client import gemini_client
 
 SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "en", "name": "English", "language_code": "en-IN", "voice_name": "en-IN-Wavenet-A"},
@@ -23,30 +18,6 @@ SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "bn", "name": "Bengali", "language_code": "bn-IN", "voice_name": "bn-IN-Wavenet-A"},
     {"code": "pa", "name": "Punjabi", "language_code": "pa-IN", "voice_name": "pa-IN-Wavenet-A"},
 ]
-
-
-def _get_api_key() -> str:
-    api_key = get_settings().gemini_api_key
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
-    return api_key
-
-
-def _extract_text(payload: dict[str, Any]) -> str:
-    candidates = payload.get("candidates", [])
-    if not candidates:
-        raise HTTPException(status_code=502, detail="Gemini returned no candidates")
-
-    content = candidates[0].get("content", {})
-    parts = content.get("parts", [])
-    for part in parts:
-        text = part.get("text")
-        if isinstance(text, str) and text.strip():
-            return text.strip()
-
-    raise HTTPException(status_code=502, detail="Gemini returned an empty response")
-
-
 def _normalize_history(conversation_history: list[dict[str, str]]) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for item in conversation_history:
@@ -62,23 +33,17 @@ async def _call_gemini(
     contents: list[dict[str, Any]],
     system_prompt: str,
 ) -> str:
-    params = {"key": _get_api_key()}
-    payload = {
-        "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": contents,
-    }
+    settings = get_settings()
+    fallback_key = getattr(settings, "gemini_api_key", "")
+    if fallback_key and not gemini_client.keys:
+        gemini_client.keys = [fallback_key]
+        gemini_client.current_index = 0
 
-    try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            response = await client.post(GEMINI_API_URL, params=params, json=payload)
-            response.raise_for_status()
-            raw_payload = response.json()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail="Gemini API returned an error") from exc
-    except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail="Unable to reach Gemini API") from exc
-
-    return _extract_text(raw_payload)
+    serialized_history = "\n".join(
+        f"{item.get('role', 'user')}: {item.get('parts', [{}])[0].get('text', '')}" for item in contents
+    )
+    prompt = f"System instruction:\n{system_prompt}\n\nConversation:\n{serialized_history}"
+    return await gemini_client.generate(prompt)
 
 
 async def get_chat_response(

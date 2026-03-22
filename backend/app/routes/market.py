@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.services.market_service import get_available_commodities, get_commodity_prices
@@ -12,9 +12,9 @@ class MarketPriceResponse(BaseModel):
     market: str
     commodity: str
     variety: str
-    min_price: str
-    max_price: str
-    modal_price: str
+    min_price: str | float
+    max_price: str | float
+    modal_price: str | float
     date: str
 
 
@@ -28,18 +28,20 @@ class CommodityListResponse(BaseModel):
 
 @router.get("/market/prices", response_model=MarketPricesListResponse)
 async def read_market_prices(
-    state: str = Query(..., min_length=2),
-    district: str = Query(..., min_length=2),
+    state: str | None = Query(default=None),
+    district: str | None = Query(default=None),
     commodity: str | None = Query(default=None, min_length=1),
 ) -> MarketPricesListResponse:
     prices = await get_commodity_prices(state=state, district=district, commodity=commodity)
+    if state and district and not prices:
+        raise HTTPException(status_code=404, detail="No market prices found for the provided filters")
     return MarketPricesListResponse(prices=[MarketPriceResponse(**item) for item in prices])
 
 
 @router.get("/market/commodities", response_model=CommodityListResponse)
 async def read_market_commodities(
-    state: str = Query(..., min_length=2),
-    district: str = Query(..., min_length=2),
+    state: str | None = Query(default=None),
+    district: str | None = Query(default=None),
 ) -> CommodityListResponse:
     commodities = await get_available_commodities(state=state, district=district)
     return CommodityListResponse(commodities=commodities)
