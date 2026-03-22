@@ -288,13 +288,59 @@ export default function FarmGuide() {
     }
   };
 
+  const renderSection = (data) => {
+    if (!data) {
+      return <p>Information not available</p>;
+    }
+
+    if (typeof data === 'string') {
+      return <p>{data}</p>;
+    }
+
+    if (typeof data === 'object') {
+      return (
+        <div>
+          {Object.entries(data).map(([key, value]) => (
+            value ? (
+              <div
+                key={key}
+                style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  padding: '0.5rem 0',
+                  borderBottom: '1px solid #e5e7eb',
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: 600,
+                    minWidth: 160,
+                    color: '#16a34a',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {key.replace(/_/g, ' ')}:
+                </span>
+                <span style={{ color: '#444' }}>
+                  {typeof value === 'object'
+                    ? Object.values(value).join(', ')
+                    : String(value)}
+                </span>
+              </div>
+            ) : null
+          ))}
+        </div>
+      );
+    }
+
+    return <p>Information not available</p>;
+  };
+
   const getGuideSection = () => {
     if (guideDetails) {
       const section = guideDetails[activeGuideTab];
-      if (!section) return t('farmGuide.messages.noSection');
-      if (typeof section === 'string') return section;
-      if (Array.isArray(section)) return section.join(', ');
-      return section.description || section.summary || JSON.stringify(section, null, 2);
+      if (!section) return 'Information not available';
+      return section;
     }
 
     if (!selectedCrop) return null;
@@ -314,7 +360,7 @@ export default function FarmGuide() {
       market_info: t('farmGuide.fallback.marketInfo', { profit: selectedCrop.profit_potential || t('farmGuide.defaults.medium') }),
     };
 
-    return fallbackMap[activeGuideTab] || t('farmGuide.messages.noSection');
+    return fallbackMap[activeGuideTab] || 'Information not available';
   };
 
   if (isLoading) return <div className="panel">{t('farmGuide.loading')}</div>;
@@ -544,7 +590,7 @@ export default function FarmGuide() {
             </div>
 
             <div className="guide-content-block">
-              <p>{getGuideSection()}</p>
+              {renderSection(getGuideSection())}
             </div>
           </section>
         </div>

@@ -31,9 +31,11 @@ const quickActionMeta = [
 export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const weatherValue = t('home.stats.weather.value').replace('�C', '\u00B0C');
-  const priceValue = t('home.stats.price.value').replace('?', '\u20B9');
-  const priceSubtext = t('home.stats.price.subtext').replace('?', '\u20B9');
+  const normalizeDegree = (value) => String(value || '').replace(/°/g, '\u00B0').replace(/�C/g, '\u00B0C');
+  const normalizeRupee = (value) => String(value || '').replace(/₹/g, '\u20B9').replace(/\?/g, '\u20B9');
+  const weatherValue = normalizeDegree(t('home.stats.weather.value'));
+  const priceValue = normalizeRupee(t('home.stats.price.value'));
+  const priceSubtext = normalizeRupee(t('home.stats.price.subtext'));
   const dashboardStats = [
     { icon: '🌤️', title: t('home.stats.weather.title'), value: weatherValue, subtext: t('home.stats.weather.subtext') },
     { icon: '📈', title: t('home.stats.price.title'), value: priceValue, subtext: priceSubtext },

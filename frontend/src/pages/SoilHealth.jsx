@@ -130,6 +130,12 @@ export default function SoilHealth() {
     }
   };
 
+  const renderValue = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  };
+
   return (
     <div className="page-wrap soil-page">
       <h2>{t('soil.title')}</h2>
@@ -260,12 +266,12 @@ export default function SoilHealth() {
           <div className="market-table-wrap">
             <table className="market-table">
               <tbody>
-                <tr><th>{t('soil.cost.seeds')}</th><td>{costBreakdown.seeds_cost ?? '-'}</td></tr>
-                <tr><th>{t('soil.cost.fertilizer')}</th><td>{costBreakdown.fertilizer_cost ?? '-'}</td></tr>
-                <tr><th>{t('soil.cost.pesticide')}</th><td>{costBreakdown.pesticide_cost ?? '-'}</td></tr>
-                <tr><th>{t('soil.cost.irrigation')}</th><td>{costBreakdown.irrigation_cost ?? '-'}</td></tr>
-                <tr><th>{t('soil.cost.labor')}</th><td>{costBreakdown.labor_cost ?? '-'}</td></tr>
-                <tr><th>{t('soil.cost.total')}</th><td><strong>{costBreakdown.total_cost ?? '-'}</strong></td></tr>
+                <tr><th>{t('soil.cost.seeds')}</th><td>{renderValue(costBreakdown.seeds_cost)}</td></tr>
+                <tr><th>{t('soil.cost.fertilizer')}</th><td>{renderValue(costBreakdown.fertilizer_cost)}</td></tr>
+                <tr><th>{t('soil.cost.pesticide')}</th><td>{renderValue(costBreakdown.pesticide_cost)}</td></tr>
+                <tr><th>{t('soil.cost.irrigation')}</th><td>{renderValue(costBreakdown.irrigation_cost)}</td></tr>
+                <tr><th>{t('soil.cost.labor')}</th><td>{renderValue(costBreakdown.labor_cost)}</td></tr>
+                <tr><th>{t('soil.cost.total')}</th><td><strong>{renderValue(costBreakdown.total_cost)}</strong></td></tr>
               </tbody>
             </table>
           </div>

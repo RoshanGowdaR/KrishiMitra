@@ -143,8 +143,8 @@ export default function SOS() {
       <section className="panel sos-helpline-panel">
         <h3>{t('sos.helplines')}</h3>
         <div className="sos-helpline-grid">
-          {helplines.map((line) => (
-            <article key={line.number} className="sos-helpline-card">
+          {helplines.map((line, index) => (
+            <article key={`helpline-${index}`} className="sos-helpline-card">
               <h4>{line.name}</h4>
               <p>{line.number}</p>
               <a className="primary-btn" href={`tel:${line.number}`}>{t('sos.call')}</a>

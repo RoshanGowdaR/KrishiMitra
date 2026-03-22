@@ -11,6 +11,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
 import LanguageSelect from './pages/LanguageSelect';
+import SelectLanguage from './pages/SelectLanguage';
 import ProfileSetup from './pages/ProfileSetup';
 import Home from './pages/Home';
 import Weather from './pages/Weather';
@@ -24,6 +25,7 @@ import SoilHealth from './pages/SoilHealth';
 import Forum from './pages/Forum';
 import SOS from './pages/SOS';
 import FarmGuide from './pages/FarmGuide';
+import Settings from './pages/Settings';
 
 const STORAGE_KEY = 'krishimitra_language';
 
@@ -85,6 +87,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="forum" element={<Forum />} />
               <Route path="sos" element={<SOS />} />
               <Route path="farm-guide" element={<FarmGuide />} />
+              <Route path="settings" element={<Settings />} />
             </Routes>
           </PageTransition>
         </main>
@@ -123,6 +126,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/language-select" element={<LanguageSelect />} />
+      <Route path="/select-language" element={<SelectLanguage />} />
       <Route path="/profile-setup" element={<ProfileSetup />} />
       <Route
         path="/app/*"

@@ -12,6 +12,7 @@ import {
   RiAlarmWarningLine,
   RiBookOpenLine,
   RiHome5Line,
+  RiSettings3Line,
 } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/app/forum', key: 'forum', icon: RiMessage2Line },
   { to: '/app/sos', key: 'sos', icon: RiAlarmWarningLine },
   { to: '/app/farm-guide', key: 'farmGuide', icon: RiBookOpenLine },
+  { to: '/app/settings', key: 'settings', icon: RiSettings3Line },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -50,7 +52,7 @@ export default function Sidebar({ open, onClose }) {
               onClick={onClose}
             >
               <Icon />
-              <span>{t(`nav.${item.key === 'marketPrices' ? 'market' : item.key}`)}</span>
+              <span>{item.key === 'settings' ? 'Settings' : t(`nav.${item.key === 'marketPrices' ? 'market' : item.key}`)}</span>
             </NavLink>
           );
         })}
