@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from './context/LanguageContext';
 import LanguageSelector from './components/LanguageSelector';
+import LoadingSpinner from './components/LoadingSpinner';
+import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Landing from './pages/Landing';
+import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
+import LanguageSelect from './pages/LanguageSelect';
+import ProfileSetup from './pages/ProfileSetup';
 import Home from './pages/Home';
 import Weather from './pages/Weather';
 import MarketPrices from './pages/MarketPrices';
@@ -20,6 +26,20 @@ import SOS from './pages/SOS';
 import FarmGuide from './pages/FarmGuide';
 
 const STORAGE_KEY = 'krishimitra_language';
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner label="Loading your account..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function PageTransition({ children }) {
   const location = useLocation();
@@ -90,6 +110,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
 export default function App() {
   const location = useLocation();
   const { setLanguage } = useLanguage();
+  const { user } = useAuth();
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
   useEffect(() => {
@@ -113,16 +134,23 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/language-select" element={<LanguageSelect />} />
+      <Route path="/profile-setup" element={<ProfileSetup />} />
       <Route
         path="/app/*"
         element={(
-          <DashboardLayout
-            isLanguageModalOpen={isLanguageModalOpen}
-            onLanguageSelect={handleLanguageSelect}
-            onOpenLanguageModal={() => setIsLanguageModalOpen(true)}
-          />
+          <ProtectedRoute>
+            <DashboardLayout
+              isLanguageModalOpen={isLanguageModalOpen}
+              onLanguageSelect={handleLanguageSelect}
+              onOpenLanguageModal={() => setIsLanguageModalOpen(true)}
+            />
+          </ProtectedRoute>
         )}
       />
+      <Route path="*" element={<Navigate to={user ? '/app' : '/login'} replace />} />
     </Routes>
   );
 }

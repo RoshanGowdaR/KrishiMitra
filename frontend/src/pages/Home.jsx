@@ -31,9 +31,12 @@ const quickActionMeta = [
 export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const weatherValue = t('home.stats.weather.value').replace('�C', '\u00B0C');
+  const priceValue = t('home.stats.price.value').replace('?', '\u20B9');
+  const priceSubtext = t('home.stats.price.subtext').replace('?', '\u20B9');
   const dashboardStats = [
-    { icon: '🌤️', title: t('home.stats.weather.title'), value: t('home.stats.weather.value'), subtext: t('home.stats.weather.subtext') },
-    { icon: '📈', title: t('home.stats.price.title'), value: t('home.stats.price.value'), subtext: t('home.stats.price.subtext') },
+    { icon: '🌤️', title: t('home.stats.weather.title'), value: weatherValue, subtext: t('home.stats.weather.subtext') },
+    { icon: '📈', title: t('home.stats.price.title'), value: priceValue, subtext: priceSubtext },
     { icon: '🏛️', title: t('home.stats.schemes.title'), value: t('home.stats.schemes.value'), subtext: t('home.stats.schemes.subtext') },
     { icon: '🆘', title: t('home.stats.expert.title'), value: t('home.stats.expert.value'), subtext: t('home.stats.expert.subtext') },
   ];

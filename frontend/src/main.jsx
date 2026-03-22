@@ -7,18 +7,21 @@ import './index.css';
 import './i18n';
 import App from './App.jsx';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <BrowserRouter>
-          <App />
-          <Toaster position="top-right" />
-        </BrowserRouter>
-      </LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <BrowserRouter>
+            <App />
+            <Toaster position="top-right" />
+          </BrowserRouter>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>
 );

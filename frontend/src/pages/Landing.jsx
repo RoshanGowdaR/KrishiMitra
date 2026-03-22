@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 const tickerItems = [
   '🌤️ Weather AI',
@@ -110,7 +111,8 @@ function TiltCard({ card }) {
 
 export default function Landing() {
   const navigate = useNavigate();
-  const goToStart = () => navigate('/app');
+  const { user } = useAuth();
+  const goToStart = () => navigate(user ? '/app' : '/login');
 
   const heroRef = useRef(null);
   const parallaxRef = useRef(null);
