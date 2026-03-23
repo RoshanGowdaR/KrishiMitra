@@ -1,32 +1,3 @@
-const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
-
-// Voice IDs for different languages
-const VOICE_MAP = {
-  en: '21m00Tcm4TlvDq8ikWAM',
-  hi: 'AZnzlk1XvdvUeBnXmlld',
-  kn: '21m00Tcm4TlvDq8ikWAM',
-  ta: '21m00Tcm4TlvDq8ikWAM',
-  te: '21m00Tcm4TlvDq8ikWAM',
-  mr: 'AZnzlk1XvdvUeBnXmlld',
-  gu: '21m00Tcm4TlvDq8ikWAM',
-  bn: '21m00Tcm4TlvDq8ikWAM',
-  pa: '21m00Tcm4TlvDq8ikWAM',
-  ml: '21m00Tcm4TlvDq8ikWAM',
-};
-
-const GREETINGS = {
-  en: 'Welcome to KrishiMitra! Your smart farming assistant is ready to help you today.',
-  hi: 'कृषिमित्र में आपका स्वागत है! आपका स्मार्ट कृषि सहायक आज आपकी मदद के लिए तैयार है।',
-  kn: 'ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ! ನಿಮ್ಮ ಸ್ಮಾರ್ಟ್ ಕೃಷಿ ಸಹಾಯಕ ಇಂದು ನಿಮ್ಮ ಸಹಾಯಕ್ಕೆ ಸಿದ್ಧವಾಗಿದೆ.',
-  ta: 'கிரிஷிமித்ராவிற்கு வரவேற்கிறோம்! உங்கள் ஸ்மார்ட் விவசாய உதவியாளர் தயாராக இருக்கிறார்.',
-  te: 'కృషిమిత్రకు స్వాగతం! మీ స్మార్ట్ వ్యవసాయ సహాయకుడు సిద్ధంగా ఉన్నారు.',
-  mr: 'कृषिमित्रमध्ये आपले स्वागत आहे! तुमचा स्मार्ट शेती सहाय्यक तयार आहे.',
-  gu: 'કૃષિમિત્રમાં આપનું સ્વાગત છે! તમારો સ્માર્ટ ખેતી સહાયક તૈયાર છે.',
-  bn: 'কৃষিমিত্রে আপনাকে স্বাগতম! আপনার স্মার্ট কৃষি সহায়ক প্রস্তুত।',
-  pa: 'ਕ੍ਰਿਸ਼ਿਮਿਤ੍ਰ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ! ਤੁਹਾਡਾ ਸਮਾਰਟ ਖੇਤੀ ਸਹਾਇਕ ਤਿਆਰ ਹੈ।',
-  ml: 'കൃഷിമിത്രയിലേക്ക് സ്വാഗതം! നിങ്ങളുടെ സ്മാർട്ട് കൃഷി സഹായി തയ്യാറാണ്.',
-};
-
 const LOCALE_MAP = {
   en: 'en-IN',
   hi: 'hi-IN',
@@ -38,99 +9,123 @@ const LOCALE_MAP = {
   bn: 'bn-IN',
   pa: 'pa-IN',
   ml: 'ml-IN',
+  or: 'or-IN',
+  as: 'as-IN',
 };
 
-export const speakWithBrowser = (text, language = 'en') => {
+const GREETINGS = {
+  en: 'Welcome to KrishiMitra! Your smart farming assistant is ready.',
+  hi: 'कृषिमित्र में आपका स्वागत है! आपका कृषि सहायक तैयार है।',
+  kn: 'ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ! ನಿಮ್ಮ ಕೃಷಿ ಸಹಾಯಕ ಸಿದ್ಧವಾಗಿದೆ.',
+  ta: 'கிரிஷிமித்ராவிற்கு வரவேற்கிறோம்! உங்கள் விவசாய உதவியாளர் தயார்.',
+  te: 'కృషిమిత్రకు స్వాగతం! మీ వ్యవసాయ సహాయకుడు సిద్ధంగా ఉన్నారు.',
+  mr: 'कृषिमित्रमध्ये स्वागत! तुमचा शेती सहाय्यक तयार आहे.',
+  gu: 'કૃષિમિત્રમાં સ્વાગત! તમારો ખેતી સહાયક તૈયાર છે.',
+  bn: 'কৃষিমিত্রে স্বাগতম! আপনার কৃষি সহায়ক প্রস্তুত।',
+  pa: 'ਕ੍ਰਿਸ਼ਿਮਿਤ੍ਰ ਵਿੱਚ ਸੁਆਗਤ! ਤੁਹਾਡਾ ਖੇਤੀ ਸਹਾਇਕ ਤਿਆਰ ਹੈ।',
+  ml: 'കൃഷിമിത്രയിലേക്ക് സ്വാഗതം! നിങ്ങളുടെ കൃഷി സഹായി തയ്യാറാണ്.',
+};
+
+export const detectTextLanguage = (text) => {
+  if (!text) return 'en';
+
+  if (/[\u0C80-\u0CFF]/.test(text)) return 'kn';
+  if (/[\u0900-\u097F]/.test(text)) return 'hi';
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta';
+  if (/[\u0C00-\u0C7F]/.test(text)) return 'te';
+  if (/[\u0A80-\u0AFF]/.test(text)) return 'gu';
+  if (/[\u0980-\u09FF]/.test(text)) return 'bn';
+  if (/[\u0A00-\u0A7F]/.test(text)) return 'pa';
+  if (/[\u0D00-\u0D7F]/.test(text)) return 'ml';
+  if (/[\u0B00-\u0B7F]/.test(text)) return 'or';
+
+  return 'en';
+};
+
+export const speakText = (text, language = 'en') => {
+  if (!text || !text.trim()) return;
+
+  const detectedLang = detectTextLanguage(text);
+  const finalLang = detectedLang !== 'en' ? detectedLang : language;
+
+  console.log('Speaking text, detected:', detectedLang, 'final lang:', finalLang);
+
   window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = LOCALE_MAP[language] || 'en-IN';
-  utterance.rate = 0.9;
+  utterance.lang = LOCALE_MAP[finalLang] || 'en-IN';
+  utterance.rate = 0.85;
+  utterance.pitch = 1.0;
   utterance.volume = 1.0;
-  window.speechSynthesis.speak(utterance);
-};
 
-export const speakWithElevenLabs = async (text, language = 'en') => {
-  if (!ELEVENLABS_API_KEY) {
-    console.warn('ElevenLabs API key not set, falling back to browser TTS');
-    speakWithBrowser(text, language);
-    return;
-  }
+  const trySpeak = () => {
+    const voices = window.speechSynthesis.getVoices();
 
-  try {
-    const voiceId = VOICE_MAP[language] || VOICE_MAP.en;
+    console.log('Available voices:', voices.map((v) => `${v.lang} ${v.name}`));
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
-        },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
-        }),
-      }
-    );
+    const locale = LOCALE_MAP[finalLang] || 'en-IN';
+    const langCode = locale.split('-')[0];
 
-    if (!response.ok) {
-      console.error('ElevenLabs error:', response.status);
-      speakWithBrowser(text, language);
-      return;
+    let selectedVoice = voices.find((v) => v.lang.toLowerCase() === locale.toLowerCase());
+
+    if (!selectedVoice) {
+      selectedVoice = voices.find((v) =>
+        v.lang.toLowerCase().startsWith(langCode.toLowerCase())
+      );
     }
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    if (window.currentAudio) {
-      window.currentAudio.pause();
-      URL.revokeObjectURL(window.currentAudio.src);
+    if (!selectedVoice) {
+      selectedVoice = voices.find(
+        (v) =>
+          v.name.toLowerCase().includes('google')
+          && v.lang.toLowerCase().startsWith(langCode.toLowerCase())
+      );
     }
 
-    const audio = new Audio(url);
-    window.currentAudio = audio;
-    await audio.play();
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      console.log('Using voice:', selectedVoice.name, selectedVoice.lang);
+    } else {
+      console.log('No voice found for', finalLang, '- using default browser voice');
+      utterance.lang = LOCALE_MAP[finalLang] || 'en-IN';
+    }
 
-    audio.onended = () => {
-      URL.revokeObjectURL(url);
-      window.currentAudio = null;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    trySpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      trySpeak();
     };
-  } catch (error) {
-    console.error('ElevenLabs failed:', error);
-    speakWithBrowser(text, language);
+    setTimeout(trySpeak, 500);
   }
 };
 
-export const playGreeting = async (language = 'en', userName = '') => {
+export const playGreeting = (language = 'en', userName = '') => {
   const alreadyGreeted = sessionStorage.getItem('krishimitra_greeted');
   if (alreadyGreeted) return;
   sessionStorage.setItem('krishimitra_greeted', 'true');
 
-  const greeting = GREETINGS[language] || GREETINGS.en;
-  const personalizedGreeting = userName
-    ? greeting.replace('!', `, ${userName}!`)
-    : greeting;
+  let text = GREETINGS[language] || GREETINGS.en;
+  if (userName) {
+    text = text.replace('!', `, ${userName}!`);
+  }
 
-  // Wait 1.5 seconds after page load before greeting
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  await speakWithElevenLabs(personalizedGreeting, language);
+  setTimeout(() => speakText(text, language), 2000);
 };
 
 export const startVoiceInput = (language, onResult, onError) => {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    onError('Voice input not supported. Please use Chrome browser.');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    onError('Voice input not supported. Please use Chrome.');
     return null;
   }
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
-
   recognition.lang = LOCALE_MAP[language] || 'en-IN';
   recognition.continuous = false;
   recognition.interimResults = false;
@@ -143,7 +138,7 @@ export const startVoiceInput = (language, onResult, onError) => {
 
   recognition.onerror = (event) => {
     if (event.error === 'not-allowed') {
-      onError('Microphone access denied. Please allow microphone in browser settings.');
+      onError('Microphone blocked. Allow mic in browser settings.');
     } else {
       onError(`Voice error: ${event.error}`);
     }

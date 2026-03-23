@@ -3,7 +3,20 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { sendChatbotMessage } from '../services/api';
-import { speakWithElevenLabs, startVoiceInput } from '../services/voiceService';
+import { speakText, startVoiceInput, detectTextLanguage } from '../services/voiceService';
+
+const LANG_NAMES = {
+  en: 'English',
+  hi: 'हिंदी',
+  kn: 'ಕನ್ನಡ',
+  ta: 'தமிழ்',
+  te: 'తెలుగు',
+  mr: 'मराठी',
+  gu: 'ગુજરાતી',
+  bn: 'বাংলা',
+  pa: 'ਪੰਜਾਬੀ',
+  ml: 'മലയാളം',
+};
 
 export default function Chatbot() {
   const { t } = useTranslation();
@@ -12,6 +25,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speakingLang, setSpeakingLang] = useState('English');
   const [voiceEnabled, setVoiceEnabled] = useState(
     localStorage.getItem('chatbot_voice') === 'true'
   );
@@ -71,8 +85,11 @@ export default function Chatbot() {
 
       setMessages((prev) => [...prev, botMessage]);
 
+      const detected = detectTextLanguage(botText);
+      setSpeakingLang(LANG_NAMES[detected] || 'English');
+
       if (voiceEnabled) {
-        speakWithElevenLabs(botText, language);
+        speakText(botText, language);
       }
     } catch (sendError) {
       toast.error(t('chatbot.messages.sendError'));
@@ -148,6 +165,17 @@ export default function Chatbot() {
         >
           {voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
         </button>
+        {voiceEnabled && (
+          <span
+            style={{
+              fontSize: '0.75rem',
+              color: '#16a34a',
+              marginLeft: '0.5rem',
+            }}
+          >
+            🔊 Speaking in: {speakingLang}
+          </span>
+        )}
       </div>
 
       <div className="panel">
