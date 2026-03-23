@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { sendChatbotMessage } from '../services/api';
+import { speakWithElevenLabs, startVoiceInput } from '../services/voiceService';
 
 export default function Chatbot() {
   const { t } = useTranslation();
@@ -15,48 +16,15 @@ export default function Chatbot() {
     localStorage.getItem('chatbot_voice') === 'true'
   );
   const listRef = useRef(null);
-
-  const speakResponse = (text, languageCode) => {
-    if (!voiceEnabled) return;
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    const localeMap = {
-      en: 'en-IN',
-      hi: 'hi-IN',
-      kn: 'kn-IN',
-      ta: 'ta-IN',
-      te: 'te-IN',
-      mr: 'mr-IN',
-      gu: 'gu-IN',
-      bn: 'bn-IN',
-      pa: 'pa-IN',
-      ml: 'ml-IN',
-    };
-
-    utterance.lang = localeMap[languageCode] || 'en-IN';
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    // Try to find a matching voice
-    const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find((v) =>
-      v.lang.startsWith(localeMap[languageCode]?.split('-')[0] || 'en')
-    );
-    if (matchingVoice) {
-      utterance.voice = matchingVoice;
-    }
-
-    window.speechSynthesis.speak(utterance);
-  };
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  useEffect(() => () => {
+    recognitionRef.current?.stop();
+  }, []);
 
   const conversationHistory = useMemo(
     () => messages.map((item) => ({ role: item.role, content: item.content })),
@@ -89,7 +57,12 @@ export default function Chatbot() {
         language,
       });
 
-      const botText = response.response_text || response.reply || response.message || response.response || t('chatbot.defaults.reply');
+      const botText = response.response_text
+        || response.reply
+        || response.message
+        || response.response
+        || t('chatbot.defaults.reply');
+
       const botMessage = {
         role: 'assistant',
         content: botText,
@@ -97,7 +70,10 @@ export default function Chatbot() {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-      speakResponse(botText, language);
+
+      if (voiceEnabled) {
+        speakWithElevenLabs(botText, language);
+      }
     } catch (sendError) {
       toast.error(t('chatbot.messages.sendError'));
     } finally {
@@ -105,66 +81,35 @@ export default function Chatbot() {
     }
   };
 
-  const handleSend = async (event) => {
-    event.preventDefault();
-    await handleSendMessage(inputMessage);
+  const handleSend = async (rawMessage = inputMessage) => {
+    await handleSendMessage(rawMessage);
   };
 
-  const startVoiceInput = () => {
-    if (!('webkitSpeechRecognition' in window) &&
-      !('SpeechRecognition' in window)) {
-      alert('Voice input not supported in this browser. Use Chrome.');
+  const handleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    // Map language code to speech recognition locale
-    const localeMap = {
-      en: 'en-IN',
-      hi: 'hi-IN',
-      kn: 'kn-IN',
-      ta: 'ta-IN',
-      te: 'te-IN',
-      mr: 'mr-IN',
-      gu: 'gu-IN',
-      bn: 'bn-IN',
-      pa: 'pa-IN',
-      ml: 'ml-IN',
-    };
-
-    recognition.lang = localeMap[language] || 'en-IN';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
     setIsListening(true);
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInputMessage(transcript);
-      setIsListening(false);
-      // Auto send after voice input
-      setTimeout(() => {
-        handleSendMessage(transcript);
-      }, 500);
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-      if (event.error === 'not-allowed') {
-        alert('Microphone access denied. Please allow microphone in browser settings.');
+    recognitionRef.current = startVoiceInput(
+      language,
+      (transcript) => {
+        setIsListening(false);
+        setInputMessage(transcript);
+        // Auto send after voice input with small delay
+        setTimeout(() => handleSend(transcript), 300);
+      },
+      (error) => {
+        setIsListening(false);
+        toast.error(error);
       }
-    };
+    );
 
-    recognition.onend = () => {
+    if (!recognitionRef.current) {
       setIsListening(false);
-    };
-
-    recognition.start();
+    }
   };
 
   return (
@@ -185,22 +130,20 @@ export default function Chatbot() {
         </label>
         <button
           type="button"
+          onClick={() => {
+            const newVal = !voiceEnabled;
+            setVoiceEnabled(newVal);
+            localStorage.setItem('chatbot_voice', String(newVal));
+          }}
           style={{
-            padding: '0.4rem 0.8rem',
+            padding: '0.35rem 0.8rem',
             borderRadius: '20px',
             border: 'none',
             background: voiceEnabled ? '#16a34a' : '#e5e7eb',
             color: voiceEnabled ? 'white' : '#666',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-          onClick={() => {
-            const newVal = !voiceEnabled;
-            setVoiceEnabled(newVal);
-            localStorage.setItem('chatbot_voice', newVal);
+            fontWeight: 500,
           }}
         >
           {voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
@@ -230,7 +173,13 @@ export default function Chatbot() {
           ) : null}
         </div>
 
-        <form onSubmit={handleSend} className="inline-form">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSend(inputMessage);
+          }}
+          className="inline-form"
+        >
           <input
             value={inputMessage}
             onChange={(event) => setInputMessage(event.target.value)}
@@ -238,17 +187,18 @@ export default function Chatbot() {
           />
           <button
             type="button"
-            onClick={startVoiceInput}
+            onClick={handleVoiceInput}
+            title={isListening ? 'Stop listening' : 'Speak your message'}
             style={{
               background: isListening ? '#dc2626' : 'transparent',
-              border: isListening ? 'none' : '1px solid #e5e7eb',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
-              padding: '0.5rem',
+              padding: '0.5rem 0.7rem',
               cursor: 'pointer',
-              fontSize: '1.2rem',
+              fontSize: '1.1rem',
+              transition: 'all 0.2s ease',
               animation: isListening ? 'pulse 1s infinite' : 'none',
             }}
-            title={isListening ? 'Listening...' : 'Click to speak'}
           >
             {isListening ? '🔴' : '🎤'}
           </button>
