@@ -60,6 +60,10 @@ export default function Marketplace() {
   const [activeTab, setActiveTab] = useState('listings');
   const [isTransportModalOpen, setIsTransportModalOpen] = useState(false);
   const [transportResult, setTransportResult] = useState(null);
+  const [cropImages, setCropImages] = useState([]);
+  const [previewListing, setPreviewListing] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState('');
+  const [detectedLocation, setDetectedLocation] = useState('');
   const [form, setForm] = useState({
     farmer_name: '',
     phone: '',
@@ -70,16 +74,20 @@ export default function Marketplace() {
     state: 'Karnataka',
     district: 'Hassan',
     description: '',
+    lat: null,
+    lon: null,
   });
   const [transportForm, setTransportForm] = useState({
-    pickupState: 'Karnataka',
-    pickupDistrict: 'Bengaluru',
+    pickup_state: 'Karnataka',
+    pickup_district: 'Bengaluru',
     destination: 'nearest_mandi',
     commodity: 'rice',
-    quantityKg: '',
-    pickupDate: today,
-    farmerName: '',
-    farmerPhone: '',
+    quantity_kg: '',
+    pickup_date: today,
+    farmer_name: '',
+    farmer_phone: '',
+    detected_lat: null,
+    detected_lon: null,
   });
 
   const sampleListings = useMemo(
@@ -94,6 +102,10 @@ export default function Marketplace() {
         district: 'Hassan',
         farmer_name: 'Ravi Kumar',
         phone: '9876543210',
+        images: [],
+        lat: 13.0067,
+        lon: 76.0996,
+        listed_on: '2026-03-21',
       },
       {
         id: 'sample-b',
@@ -105,6 +117,10 @@ export default function Marketplace() {
         district: 'Erode',
         farmer_name: 'Lakshmi',
         phone: '9123456789',
+        images: [],
+        lat: 11.341,
+        lon: 77.7172,
+        listed_on: '2026-03-20',
       },
       {
         id: 'sample-c',
@@ -116,6 +132,10 @@ export default function Marketplace() {
         district: 'Pune',
         farmer_name: 'Suresh Patil',
         phone: '9012345678',
+        images: [],
+        lat: 18.5204,
+        lon: 73.8567,
+        listed_on: '2026-03-19',
       },
     ],
     []
@@ -153,7 +173,7 @@ export default function Marketplace() {
   }, [searchCommodity, stateFilter]);
 
   const visibleListings = listings.length ? listings : sampleListings;
-  const availableTransportDistricts = transportStateDistrictMap[transportForm.pickupState] || ['Bengaluru'];
+  const availableTransportDistricts = transportStateDistrictMap[transportForm.pickup_state] || ['Bengaluru'];
 
   const getLocalizedCommodity = (commodity) => {
     const original = String(commodity || '').trim();
@@ -163,9 +183,10 @@ export default function Marketplace() {
 
   const openTransportModal = () => {
     setTransportResult(null);
+    setDetectedLocation('');
     setTransportForm((prev) => ({
       ...prev,
-      pickupDate: prev.pickupDate || today,
+      pickup_date: prev.pickup_date || today,
     }));
     setIsTransportModalOpen(true);
   };
@@ -177,7 +198,7 @@ export default function Marketplace() {
 
   const submitTransportRequest = (event) => {
     event.preventDefault();
-    const quantity = Number(transportForm.quantityKg);
+    const quantity = Number(transportForm.quantity_kg);
     if (!quantity || quantity <= 0) {
       toast.error(t('marketplace.messages.transportQuantityError'));
       return;
@@ -186,23 +207,109 @@ export default function Marketplace() {
     const estimatedCost = Math.round(500 + (quantity / 100) * 50);
     setTransportResult({
       estimatedCost,
-      pickupDate: transportForm.pickupDate,
+      pickupDate: transportForm.pickup_date,
+      detected_lat: transportForm.detected_lat,
+      detected_lon: transportForm.detected_lon,
     });
+  };
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported in this browser.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          );
+          const data = await response.json();
+          const state = data.address?.state || '';
+          const district = data.address?.district || data.address?.city || data.address?.town || '';
+
+          setTransportForm((prev) => ({
+            ...prev,
+            pickup_state: state || prev.pickup_state,
+            pickup_district: district || prev.pickup_district,
+            detected_lat: latitude,
+            detected_lon: longitude,
+          }));
+
+          if (state && district) {
+            setDetectedLocation(`${district}, ${state}`);
+            toast.success(`Location detected: ${district}, ${state}`);
+          } else {
+            setDetectedLocation('Location detected');
+            toast.success('Location detected successfully.');
+          }
+        } catch (error) {
+          toast.error('Unable to detect address. Please select manually.');
+        }
+      },
+      () => {
+        toast.error('Location access denied. Please select manually.');
+      }
+    );
+  };
+
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const handleImageSelect = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    if (cropImages.length + files.length > 3) {
+      toast.error('You can upload up to 3 images only.');
+      return;
+    }
+
+    const oversized = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversized) {
+      toast.error('Each image should be up to 5MB.');
+      return;
+    }
+
+    try {
+      const encoded = await Promise.all(files.map((file) => toBase64(file)));
+      setCropImages((prev) => [...prev, ...encoded].slice(0, 3));
+    } catch (error) {
+      toast.error('Failed to process selected images.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const removeImage = (index) => {
+    setCropImages((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const submitListing = async (event) => {
     event.preventDefault();
     try {
-      await createListing({
+      const payload = {
         ...form,
         quantity_kg: Number(form.quantity_kg),
         price_per_kg: Number(form.price_per_kg),
         available_from: new Date().toISOString().slice(0, 10),
         status: 'active',
-        images_base64: [],
-      });
+        images_base64: cropImages,
+        images: cropImages,
+        lat: transportForm.detected_lat || form.lat || null,
+        lon: transportForm.detected_lon || form.lon || null,
+      };
+
+      await createListing(payload);
       toast.success(t('marketplace.messages.postSuccess'));
       setIsModalOpen(false);
+      setCropImages([]);
       setForm({
         farmer_name: '',
         phone: '',
@@ -213,15 +320,51 @@ export default function Marketplace() {
         state: 'Karnataka',
         district: 'Hassan',
         description: '',
+        lat: null,
+        lon: null,
       });
       const refreshed = await getListings({
         commodity: searchCommodity || undefined,
         state: stateFilter === 'all' ? undefined : stateFilter,
       });
-      setListings(refreshed?.listings || []);
+
+      if (refreshed?.listings?.length) {
+        setListings(refreshed.listings);
+      } else {
+        // Keep UX responsive even if backend write delay exists.
+        setListings((prev) => [
+          {
+            id: `local-${Date.now()}`,
+            ...payload,
+            listed_on: today,
+          },
+          ...prev,
+        ]);
+      }
     } catch (error) {
       toast.error(t('marketplace.messages.postError'));
     }
+  };
+
+  const maskedPhone = (phone) => {
+    const value = String(phone || '');
+    const last4 = value.slice(-4) || '0000';
+    return `+91 XXXXXX${last4}`;
+  };
+
+  const openMaps = (item) => {
+    if (item.lat && item.lon) {
+      window.open(`https://www.google.com/maps?q=${item.lat},${item.lon}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const district = encodeURIComponent(item.district || '');
+    const state = encodeURIComponent(item.state || '');
+    window.open(`https://www.google.com/maps/search/${district}+${state}+India`, '_blank', 'noopener,noreferrer');
+  };
+
+  const openContact = (item) => {
+    window.location.href = `tel:${item.phone || '18001801551'}`;
   };
 
   if (isLoading) return <div className="panel">{t('marketplace.loading')}</div>;
@@ -286,7 +429,25 @@ export default function Marketplace() {
                 <p>{t('common.quantity')}: {item.quantity_kg} kg</p>
                 <p>{item.state}, {item.district}</p>
                 <p>{t('common.farmer')}: {item.farmer_name}</p>
-                <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`}>{t('marketplace.contactFarmer')}</a>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewListing(item)}
+                    style={{
+                      background: 'white',
+                      border: '1px solid #16a34a',
+                      color: '#16a34a',
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      marginRight: '0.5rem',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Preview
+                  </button>
+                  <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`}>{t('marketplace.contactFarmer')}</a>
+                </div>
               </article>
             ))}
           </div>
@@ -310,19 +471,150 @@ export default function Marketplace() {
       )}
 
       {isModalOpen ? (
-        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setIsModalOpen(false)}>
-          <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+        <div
+          role="presentation"
+          onClick={() => setIsModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            overflowY: 'auto',
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '560px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: 'sticky',
+                top: 0,
+                right: 0,
+                float: 'right',
+                background: 'white',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                zIndex: 10,
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
             <h3>{t('marketplace.createListing')}</h3>
             <form className="soil-form-grid" onSubmit={submitListing}>
               <label>{t('marketplace.form.farmerName')}<input value={form.farmer_name} onChange={(event) => setForm((prev) => ({ ...prev, farmer_name: event.target.value }))} required /></label>
               <label>{t('marketplace.form.phone')}<input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} required /></label>
               <label>{t('common.commodity')}<input value={form.commodity} onChange={(event) => setForm((prev) => ({ ...prev, commodity: event.target.value }))} required /></label>
               <label>{t('marketplace.form.variety')}<input value={form.variety} onChange={(event) => setForm((prev) => ({ ...prev, variety: event.target.value }))} required /></label>
-              <label>{t('marketplace.form.quantity')}<input type="number" value={form.quantity_kg} onChange={(event) => setForm((prev) => ({ ...prev, quantity_kg: event.target.value }))} required /></label>
+              <label>{t('marketplace.form.quantity')}<input type="number" min={1} value={form.quantity_kg} onChange={(event) => setForm((prev) => ({ ...prev, quantity_kg: event.target.value }))} required /></label>
               <label>{t('marketplace.form.price')}<input type="number" step="0.1" value={form.price_per_kg} onChange={(event) => setForm((prev) => ({ ...prev, price_per_kg: event.target.value }))} required /></label>
               <label>{t('common.state')}<input value={form.state} onChange={(event) => setForm((prev) => ({ ...prev, state: event.target.value }))} required /></label>
               <label>{t('common.district')}<input value={form.district} onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))} required /></label>
               <label>{t('marketplace.form.description')}<textarea rows={3} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
+
+              <div>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Crop Photos (up to 3 images)</label>
+                <p style={{ margin: '0 0 0.6rem', color: '#6b7280', fontSize: '0.85rem' }}>Help buyers see your produce quality</p>
+                <label
+                  htmlFor="marketplace-image-upload"
+                  style={{
+                    display: 'block',
+                    border: '2px dashed #16a34a',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                    background: '#f0fdf4',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ color: '#16a34a', fontSize: '2rem', lineHeight: 1 }}>📸</div>
+                  <p style={{ margin: '0.35rem 0 0', fontWeight: 600 }}>Click to upload crop photos</p>
+                  <p style={{ margin: '0.2rem 0 0', color: '#6b7280', fontSize: '0.85rem' }}>JPG, PNG up to 5MB each</p>
+                </label>
+                <input
+                  id="marketplace-image-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  style={{ display: 'none' }}
+                />
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  {[0, 1, 2].map((slot) => {
+                    const image = cropImages[slot];
+                    if (!image) {
+                      return (
+                        <div
+                          key={`slot-${slot}`}
+                          style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: 10,
+                            border: '1px dashed #9ca3af',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#9ca3af',
+                            fontSize: '1.3rem',
+                          }}
+                        >
+                          +
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={`img-${slot}`} style={{ position: 'relative' }}>
+                        <img
+                          src={image}
+                          alt={`Crop ${slot + 1}`}
+                          style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(slot)}
+                          style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            width: 20,
+                            height: 20,
+                            borderRadius: '999px',
+                            border: 'none',
+                            background: '#dc2626',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button type="submit" className="primary-btn">{t('marketplace.form.post')}</button>
             </form>
           </section>
@@ -336,16 +628,50 @@ export default function Marketplace() {
               <>
                 <h3>{t('marketplace.transport.modalTitle')}</h3>
                 <form className="soil-form-grid" onSubmit={submitTransportRequest}>
+                  <button
+                    type="button"
+                    onClick={detectLocation}
+                    style={{
+                      width: '100%',
+                      border: '1px solid #16a34a',
+                      color: '#16a34a',
+                      background: '#fff',
+                      borderRadius: '10px',
+                      padding: '0.7rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    📍 Detect My Location
+                  </button>
+
+                  {detectedLocation ? (
+                    <div
+                      style={{
+                        background: '#dcfce7',
+                        color: '#166534',
+                        borderRadius: '999px',
+                        padding: '0.45rem 0.75rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        width: 'fit-content',
+                      }}
+                    >
+                      📍 {detectedLocation} detected ✓
+                    </div>
+                  ) : null}
+
                   <label>
                     {t('marketplace.transport.pickupState')}
                     <select
-                      value={transportForm.pickupState}
+                      value={transportForm.pickup_state}
                       onChange={(event) => {
                         const nextState = event.target.value;
                         setTransportForm((prev) => ({
                           ...prev,
-                          pickupState: nextState,
-                          pickupDistrict: (transportStateDistrictMap[nextState] || ['Bengaluru'])[0],
+                          pickup_state: nextState,
+                          pickup_district: (transportStateDistrictMap[nextState] || ['Bengaluru'])[0],
                         }));
                       }}
                     >
@@ -357,8 +683,8 @@ export default function Marketplace() {
                   <label>
                     {t('marketplace.transport.pickupDistrict')}
                     <select
-                      value={transportForm.pickupDistrict}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickupDistrict: event.target.value }))}
+                      value={transportForm.pickup_district}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_district: event.target.value }))}
                     >
                       {availableTransportDistricts.map((districtName) => (
                         <option key={districtName} value={districtName}>{districtName}</option>
@@ -392,8 +718,8 @@ export default function Marketplace() {
                     <input
                       type="number"
                       min="1"
-                      value={transportForm.quantityKg}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, quantityKg: event.target.value }))}
+                      value={transportForm.quantity_kg}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, quantity_kg: event.target.value }))}
                       required
                     />
                   </label>
@@ -402,16 +728,16 @@ export default function Marketplace() {
                     <input
                       type="date"
                       min={today}
-                      value={transportForm.pickupDate}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickupDate: event.target.value }))}
+                      value={transportForm.pickup_date}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_date: event.target.value }))}
                       required
                     />
                   </label>
                   <label>
                     {t('marketplace.transport.farmerName')}
                     <input
-                      value={transportForm.farmerName}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmerName: event.target.value }))}
+                      value={transportForm.farmer_name}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmer_name: event.target.value }))}
                       required
                     />
                   </label>
@@ -419,8 +745,8 @@ export default function Marketplace() {
                     {t('marketplace.transport.farmerPhone')}
                     <input
                       type="tel"
-                      value={transportForm.farmerPhone}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmerPhone: event.target.value }))}
+                      value={transportForm.farmer_phone}
+                      onChange={(event) => setTransportForm((prev) => ({ ...prev, farmer_phone: event.target.value }))}
                       required
                     />
                   </label>
@@ -438,6 +764,121 @@ export default function Marketplace() {
               </div>
             )}
           </section>
+        </div>
+      ) : null}
+
+      {previewListing ? (
+        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setPreviewListing(null)}>
+          <section
+            className="scheme-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{ maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}
+          >
+            <div className="scheme-modal-header" style={{ marginBottom: '1rem' }}>
+              <h3>Listing Preview</h3>
+              <button type="button" className="ghost-btn" onClick={() => setPreviewListing(null)}>×</button>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ marginBottom: '0.5rem' }}>Crop Images</h4>
+              {(previewListing.images || previewListing.images_base64 || []).length ? (
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  {(previewListing.images || previewListing.images_base64 || []).slice(0, 3).map((image, idx) => (
+                    <img
+                      key={`preview-image-${idx}`}
+                      src={image}
+                      alt={`${previewListing.commodity} ${idx + 1}`}
+                      onClick={() => setLightboxImage(image)}
+                      style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 12, cursor: 'zoom-in' }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 12,
+                    background: '#dcfce7',
+                    color: '#166534',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '3rem',
+                  }}
+                >
+                  🌿
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <h3 style={{ color: '#16a34a', marginBottom: '0.2rem' }}>{getLocalizedCommodity(previewListing.commodity)}</h3>
+              <p style={{ color: '#6b7280', margin: 0 }}>{previewListing.variety || t('marketplace.defaults.standardVariety')}</p>
+              <p style={{ color: '#16a34a', fontSize: '1.5rem', fontWeight: 700, margin: '0.5rem 0 0.3rem' }}>₹{previewListing.price_per_kg}/kg</p>
+
+              <div style={{ display: 'grid', gap: '0.4rem' }}>
+                <p style={{ margin: 0 }}>📦 Quantity: {previewListing.quantity_kg} kg</p>
+                <p style={{ margin: 0 }}>🗓️ Listed: {previewListing.listed_on || today}</p>
+                <p style={{ margin: 0 }}>👨‍🌾 Farmer: {previewListing.farmer_name}</p>
+                <p style={{ margin: 0 }}>📱 Phone: {maskedPhone(previewListing.phone)}</p>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ marginBottom: '0.35rem' }}>📍 Farm Location</h4>
+              <p style={{ margin: '0 0 0.6rem' }}>{previewListing.district}, {previewListing.state}</p>
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => openMaps(previewListing)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🗺️ View on Google Maps
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewListing(null);
+                openContact(previewListing);
+              }}
+              style={{
+                width: '100%',
+                border: 'none',
+                background: '#ea580c',
+                color: '#fff',
+                borderRadius: '10px',
+                padding: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Contact Farmer
+            </button>
+          </section>
+        </div>
+      ) : null}
+
+      {lightboxImage ? (
+        <div
+          role="presentation"
+          onClick={() => setLightboxImage('')}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1200,
+            padding: '1rem',
+          }}
+        >
+          <img src={lightboxImage} alt="Preview" style={{ maxWidth: '95vw', maxHeight: '95vh', borderRadius: 12 }} />
         </div>
       ) : null}
     </div>
