@@ -4,19 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { createListing, getListings } from '../services/api';
 
-const transportStateDistrictMap = {
-  Karnataka: ['Bengaluru', 'Hassan', 'Mysuru', 'Dharwad'],
-  Maharashtra: ['Pune', 'Nashik', 'Nagpur', 'Kolhapur'],
-  Punjab: ['Ludhiana', 'Amritsar', 'Patiala', 'Bathinda'],
-  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Erode'],
-  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra'],
-  'Andhra Pradesh': ['Guntur', 'Vijayawada', 'Kurnool', 'Tirupati'],
-  Telangana: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar'],
-  Bihar: ['Patna', 'Muzaffarpur', 'Bhagalpur', 'Gaya'],
-  Rajasthan: ['Jaipur', 'Kota', 'Udaipur', 'Jodhpur'],
-  Gujarat: ['Ahmedabad', 'Surat', 'Rajkot', 'Vadodara'],
-};
-
 const commodityOptions = ['rice', 'wheat', 'maize', 'tomato', 'onion', 'potato', 'cotton', 'sugarcane', 'ragi', 'soybean'];
 
 const cropNameMap = {
@@ -63,7 +50,8 @@ export default function Marketplace() {
   const [cropImages, setCropImages] = useState([]);
   const [previewListing, setPreviewListing] = useState(null);
   const [lightboxImage, setLightboxImage] = useState('');
-  const [detectedLocation, setDetectedLocation] = useState('');
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [locationDetected, setLocationDetected] = useState('');
   const [form, setForm] = useState({
     farmer_name: '',
     phone: '',
@@ -173,8 +161,6 @@ export default function Marketplace() {
   }, [searchCommodity, stateFilter]);
 
   const visibleListings = listings.length ? listings : sampleListings;
-  const availableTransportDistricts = transportStateDistrictMap[transportForm.pickup_state] || ['Bengaluru'];
-
   const getLocalizedCommodity = (commodity) => {
     const original = String(commodity || '').trim();
     const key = original.toLowerCase().replace(/\s+/g, '_');
@@ -183,7 +169,8 @@ export default function Marketplace() {
 
   const openTransportModal = () => {
     setTransportResult(null);
-    setDetectedLocation('');
+    setLocationDetected('');
+    setDetectingLocation(false);
     setTransportForm((prev) => ({
       ...prev,
       pickup_date: prev.pickup_date || today,
@@ -194,6 +181,20 @@ export default function Marketplace() {
   const closeTransportModal = () => {
     setIsTransportModalOpen(false);
     setTransportResult(null);
+    setLocationDetected('');
+    setDetectingLocation(false);
+    setTransportForm({
+      pickup_state: '',
+      pickup_district: '',
+      destination: 'nearest_mandi',
+      commodity: 'rice',
+      quantity_kg: '',
+      pickup_date: today,
+      farmer_name: '',
+      farmer_phone: '',
+      detected_lat: null,
+      detected_lon: null,
+    });
   };
 
   const submitTransportRequest = (event) => {
@@ -215,43 +216,64 @@ export default function Marketplace() {
 
   const detectLocation = () => {
     if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported in this browser.');
+      alert('Geolocation not supported in this browser');
       return;
     }
+
+    setDetectingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
+
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            {
+              headers: {
+                'Accept-Language': 'en',
+                'User-Agent': 'KrishiMitra-App',
+              },
+            }
           );
+
           const data = await response.json();
-          const state = data.address?.state || '';
-          const district = data.address?.district || data.address?.city || data.address?.town || '';
+          const address = data.address || {};
+
+          const state = address.state || address.state_district || address.region || '';
+          const district = address.district
+            || address.county
+            || address.city
+            || address.town
+            || address.village
+            || address.suburb
+            || '';
 
           setTransportForm((prev) => ({
             ...prev,
-            pickup_state: state || prev.pickup_state,
-            pickup_district: district || prev.pickup_district,
+            pickup_state: state,
+            pickup_district: district,
             detected_lat: latitude,
             detected_lon: longitude,
           }));
 
-          if (state && district) {
-            setDetectedLocation(`${district}, ${state}`);
-            toast.success(`Location detected: ${district}, ${state}`);
-          } else {
-            setDetectedLocation('Location detected');
-            toast.success('Location detected successfully.');
-          }
+          setLocationDetected(`${district}, ${state}`);
+          setDetectingLocation(false);
         } catch (error) {
-          toast.error('Unable to detect address. Please select manually.');
+          console.error('Geocoding error:', error);
+          setDetectingLocation(false);
+          alert('Could not get location details. Please enter manually.');
         }
       },
-      () => {
-        toast.error('Location access denied. Please select manually.');
-      }
+      (error) => {
+        setDetectingLocation(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          alert('Location access denied. Please enter your location manually.');
+        } else {
+          alert('Could not detect location. Please enter manually.');
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
@@ -479,11 +501,11 @@ export default function Marketplace() {
             inset: 0,
             background: 'rgba(0,0,0,0.5)',
             zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
             overflowY: 'auto',
+            padding: '1rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
           }}
         >
           <section
@@ -496,8 +518,7 @@ export default function Marketplace() {
               padding: '2rem',
               width: '100%',
               maxWidth: '560px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
+              margin: '2rem auto',
               position: 'relative',
             }}
           >
@@ -622,8 +643,37 @@ export default function Marketplace() {
       ) : null}
 
       {isTransportModalOpen ? (
-        <div className="scheme-modal-backdrop" role="presentation" onClick={closeTransportModal}>
-          <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="scheme-modal-backdrop"
+          role="presentation"
+          onClick={closeTransportModal}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 1000,
+            overflowY: 'auto',
+            padding: '1rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+          }}
+        >
+          <section
+            className="scheme-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '560px',
+              margin: '2rem auto',
+              position: 'relative',
+            }}
+          >
             {!transportResult ? (
               <>
                 <h3>{t('marketplace.transport.modalTitle')}</h3>
@@ -631,66 +681,126 @@ export default function Marketplace() {
                   <button
                     type="button"
                     onClick={detectLocation}
+                    disabled={detectingLocation}
                     style={{
                       width: '100%',
-                      border: '1px solid #16a34a',
-                      color: '#16a34a',
-                      background: '#fff',
+                      padding: '0.8rem',
+                      border: '2px solid #16a34a',
                       borderRadius: '10px',
-                      padding: '0.7rem',
+                      background: '#fff',
+                      color: '#16a34a',
+                      fontSize: '0.95rem',
                       fontWeight: 600,
-                      cursor: 'pointer',
+                      cursor: detectingLocation ? 'not-allowed' : 'pointer',
+                      marginBottom: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      opacity: detectingLocation ? 0.7 : 1,
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    📍 Detect My Location
+                    {detectingLocation ? (
+                      <>
+                        <span
+                          style={{
+                            width: 16,
+                            height: 16,
+                            border: '2px solid #16a34a',
+                            borderTop: '2px solid transparent',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite',
+                            display: 'inline-block',
+                          }}
+                        />
+                        Detecting location...
+                      </>
+                    ) : (
+                      <>📍 Detect My Location</>
+                    )}
                   </button>
 
-                  {detectedLocation ? (
+                  {locationDetected ? (
                     <div
                       style={{
-                        background: '#dcfce7',
-                        color: '#166534',
-                        borderRadius: '999px',
-                        padding: '0.45rem 0.75rem',
+                        background: '#f0fdf4',
+                        border: '1px solid #86efac',
+                        borderRadius: '8px',
+                        padding: '0.6rem 1rem',
+                        marginBottom: '1rem',
                         fontSize: '0.85rem',
-                        fontWeight: 600,
-                        display: 'inline-flex',
-                        width: 'fit-content',
+                        color: '#16a34a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
                       }}
                     >
-                      📍 {detectedLocation} detected ✓
+                      ✅ Location detected: <strong>{locationDetected}</strong>
+                      <span style={{ color: '#6b7280', marginLeft: '0.3rem', fontSize: '0.78rem' }}>
+                        (fields auto-filled below)
+                      </span>
                     </div>
                   ) : null}
 
-                  <label>
-                    {t('marketplace.transport.pickupState')}
-                    <select
+                  <div style={{ marginBottom: '1.2rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 500, color: '#374151' }}>
+                      Pickup State
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter your state e.g. Karnataka"
                       value={transportForm.pickup_state}
-                      onChange={(event) => {
-                        const nextState = event.target.value;
-                        setTransportForm((prev) => ({
-                          ...prev,
-                          pickup_state: nextState,
-                          pickup_district: (transportStateDistrictMap[nextState] || ['Bengaluru'])[0],
-                        }));
+                      onChange={(e) => setTransportForm((prev) => ({
+                        ...prev,
+                        pickup_state: e.target.value,
+                      }))}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        boxSizing: 'border-box',
+                        outline: 'none',
                       }}
-                    >
-                      {Object.keys(transportStateDistrictMap).map((stateName) => (
-                        <option key={stateName} value={stateName}>{stateName}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    {t('marketplace.transport.pickupDistrict')}
-                    <select
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#16a34a';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '1.2rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 500, color: '#374151' }}>
+                      Pickup District / City
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter your district e.g. Hassan"
                       value={transportForm.pickup_district}
-                      onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_district: event.target.value }))}
-                    >
-                      {availableTransportDistricts.map((districtName) => (
-                        <option key={districtName} value={districtName}>{districtName}</option>
-                      ))}
-                    </select>
-                  </label>
+                      onChange={(e) => setTransportForm((prev) => ({
+                        ...prev,
+                        pickup_district: e.target.value,
+                      }))}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#16a34a';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
                   <label>
                     {t('marketplace.transport.destination')}
                     <select
