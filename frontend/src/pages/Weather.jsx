@@ -5,6 +5,8 @@ import { getWeather, getForecast } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const DEFAULT_COORDS = { lat: 12.9716, lon: 77.5946, label: 'Bengaluru' };
+const GEO_ACCURACY_GOOD_METERS = 1200;
+const GEO_ACCURACY_APPROX_METERS = 3500;
 const QUICK_CITIES = [
   { name: 'Bengaluru', lat: 12.9716, lon: 77.5946 },
   { name: 'Mumbai', lat: 19.0760, lon: 72.8777 },
@@ -27,6 +29,160 @@ export default function Weather() {
   const [lon, setLon] = useState(DEFAULT_COORDS.lon);
   const [locationQuery, setLocationQuery] = useState('');
   const [locationLabel, setLocationLabel] = useState(DEFAULT_COORDS.label);
+  const [locationNote, setLocationNote] = useState('');
+
+  const getBrowserPosition = (options) => new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+
+  const reverseGeocodeLabel = async (targetLat, targetLon) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${targetLat}&lon=${targetLon}&format=json&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+          },
+        }
+      );
+      const data = await response.json();
+      const address = data?.address || {};
+      return (
+        address.village
+        || address.town
+        || address.city
+        || address.suburb
+        || address.county
+        || 'Your location'
+      );
+    } catch {
+      return 'Your location';
+    }
+  };
+
+  const getBestCurrentPosition = async () => new Promise((resolve, reject) => {
+    let bestPosition = null;
+    let watchId = null;
+    let completed = false;
+
+    const finalize = (position, error) => {
+      if (completed) return;
+      completed = true;
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      if (position) {
+        resolve(position);
+      } else {
+        reject(error || new Error('Unable to detect location'));
+      }
+    };
+
+    // Gather a few GPS updates and keep the best accuracy sample.
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (!bestPosition || position.coords.accuracy < bestPosition.coords.accuracy) {
+          bestPosition = position;
+        }
+
+        if (position.coords.accuracy <= GEO_ACCURACY_GOOD_METERS) {
+          finalize(position, null);
+        }
+      },
+      (locError) => {
+        if (bestPosition) {
+          finalize(bestPosition, null);
+          return;
+        }
+        finalize(null, locError);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 20000,
+      }
+    );
+
+    setTimeout(() => {
+      if (bestPosition) {
+        finalize(bestPosition, null);
+      } else {
+        // Last fallback for devices that do not stream high-accuracy updates quickly.
+        getBrowserPosition({
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 45000,
+        })
+          .then((fallbackPosition) => finalize(fallbackPosition, null))
+          .catch((fallbackError) => finalize(null, fallbackError));
+      }
+    }, 12000);
+  });
+
+  const geocodeWithOpenMeteo = async (query) => {
+    const response = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`
+    );
+    const payload = await response.json();
+    return payload?.results || [];
+  };
+
+  const geocodeWithNominatim = async (query) => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`,
+      {
+        headers: {
+          'Accept-Language': 'en',
+        },
+      }
+    );
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload : [];
+  };
+
+  const geocodeWithPhoton = async (query) => {
+    const response = await fetch(
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
+    );
+    const payload = await response.json();
+    return Array.isArray(payload?.features) ? payload.features : [];
+  };
+
+  const buildLocationQueryAttempts = (rawQuery) => {
+    const base = String(rawQuery || '').trim();
+    const attempts = [base];
+
+    const noTaluk = base.replace(/\btaluk\b/gi, '').replace(/\bdistrict\b/gi, '').trim();
+    if (noTaluk && noTaluk !== base) {
+      attempts.push(noTaluk);
+    }
+
+    const commaParts = base
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (commaParts.length > 1) {
+      attempts.push(commaParts.join(' '));
+      attempts.push(commaParts.slice(0, 2).join(' '));
+    }
+
+    const words = base
+      .split(/\s+/)
+      .map((word) => word.trim())
+      .filter((word) => word.length > 2);
+
+    if (words.length >= 2) {
+      attempts.push(`${words[0]} ${words[1]}`);
+      attempts.push(`${words[words.length - 2]} ${words[words.length - 1]}`);
+    }
+
+    if (words.length >= 1) {
+      attempts.push(words[0]);
+    }
+
+    return [...new Set(attempts.map((item) => item.trim()).filter(Boolean))];
+  };
 
   const fetchWeather = async (targetLat, targetLon, label = 'Selected location') => {
     setIsLoading(true);
@@ -42,7 +198,7 @@ export default function Weather() {
       setForecast((forecastData?.forecast || []).slice(0, 5));
       setLat(targetLat);
       setLon(targetLon);
-      setLocationLabel(weatherData?.city_name || label);
+      setLocationLabel(label || weatherData?.city_name || 'Selected location');
     } catch (fetchError) {
       const message = t('weather.messages.fetchError');
       setError(message);
@@ -60,18 +216,30 @@ export default function Weather() {
     }
 
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+
+    const locate = async () => {
+      try {
+        const position = await getBestCurrentPosition();
+        const { latitude, longitude, accuracy } = position.coords;
+
+        const detectedLabel = await reverseGeocodeLabel(latitude, longitude);
         setIsLocating(false);
-        fetchWeather(latitude, longitude, 'Your location');
-      },
-      () => {
+        fetchWeather(latitude, longitude, detectedLabel);
+
+        if (accuracy && accuracy > GEO_ACCURACY_APPROX_METERS) {
+          setLocationNote('Location is approximate. Enable precise location for better accuracy.');
+        } else {
+          setLocationNote('');
+        }
+      } catch {
         setIsLocating(false);
+        setLocationNote('');
         toast.error('Location access denied. Using Bengaluru.');
         fetchWeather(DEFAULT_COORDS.lat, DEFAULT_COORDS.lon, DEFAULT_COORDS.label);
       }
-    );
+    };
+
+    locate();
   };
 
   const handleManualSearch = (event) => {
@@ -84,19 +252,59 @@ export default function Weather() {
 
     const geocodeAndFetch = async () => {
       try {
-        const response = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
-        );
-        const payload = await response.json();
-        const first = payload?.results?.[0];
+        const queryAttempts = buildLocationQueryAttempts(query);
 
-        if (!first) {
-          toast.error('Location not found. Try nearby city name.');
-          return;
+        for (const attempt of queryAttempts) {
+          const openMeteoCandidates = await geocodeWithOpenMeteo(attempt);
+          const openMeteoMatch = openMeteoCandidates[0];
+
+          if (openMeteoMatch) {
+            const openMeteoName = [
+              openMeteoMatch.name,
+              openMeteoMatch.admin2,
+              openMeteoMatch.admin1,
+              openMeteoMatch.country,
+            ].filter(Boolean).join(', ');
+
+            fetchWeather(openMeteoMatch.latitude, openMeteoMatch.longitude, openMeteoName);
+            return;
+          }
+
+          const nominatimCandidates = await geocodeWithNominatim(attempt);
+          const nominatimMatch = nominatimCandidates[0];
+
+          if (nominatimMatch) {
+            const address = nominatimMatch.address || {};
+            const nominatimName = [
+              address.village || address.town || address.city || address.suburb || nominatimMatch.display_name,
+              address.county,
+              address.state,
+            ].filter(Boolean).join(', ');
+
+            fetchWeather(Number(nominatimMatch.lat), Number(nominatimMatch.lon), nominatimName);
+            return;
+          }
+
+          const photonCandidates = await geocodeWithPhoton(attempt);
+          const photonMatch = photonCandidates[0];
+
+          if (photonMatch) {
+            const properties = photonMatch.properties || {};
+            const photonName = [
+              properties.name,
+              properties.city,
+              properties.county,
+              properties.state,
+              properties.country,
+            ].filter(Boolean).join(', ');
+
+            const [photonLon, photonLat] = photonMatch.geometry?.coordinates || [];
+            fetchWeather(Number(photonLat), Number(photonLon), photonName || attempt);
+            return;
+          }
         }
 
-        const name = [first.name, first.admin1, first.country].filter(Boolean).join(', ');
-        fetchWeather(first.latitude, first.longitude, name);
+        toast.error('Location not found. Try nearby village, taluk or district name.');
       } catch {
         toast.error('Unable to search location right now.');
       }
@@ -145,6 +353,23 @@ export default function Weather() {
             Using location: {locationLabel} ({Number(lat).toFixed(4)}, {Number(lon).toFixed(4)})
           </span>
         </div>
+
+        {locationNote ? (
+          <p
+            style={{
+              margin: '-0.3rem 0 0.9rem',
+              fontSize: '0.85rem',
+              color: '#92400e',
+              background: '#fffbeb',
+              border: '1px solid #fcd34d',
+              borderRadius: '8px',
+              padding: '0.45rem 0.65rem',
+              width: 'fit-content',
+            }}
+          >
+            {locationNote}
+          </p>
+        ) : null}
 
         <form onSubmit={handleManualSearch} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.6rem', marginBottom: '0.9rem' }}>
           <input

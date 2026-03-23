@@ -13,6 +13,7 @@ import {
   RiBookOpenLine,
   RiHome5Line,
   RiSettings3Line,
+  RiPushpin2Line,
 } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 
@@ -32,13 +33,35 @@ const navItems = [
   { to: '/app/settings', key: 'settings', icon: RiSettings3Line },
 ];
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({
+  open,
+  onClose,
+  pinned,
+  isDesktop,
+  onTogglePin,
+  onHoverChange,
+}) {
   const { t } = useTranslation();
 
   return (
-    <aside className={open ? 'sidebar open' : 'sidebar'}>
+    <aside
+      className={open ? 'sidebar open expanded' : 'sidebar collapsed'}
+      onMouseEnter={() => onHoverChange?.(true)}
+      onMouseLeave={() => onHoverChange?.(false)}
+    >
       <div className="sidebar-header">
         <h2>{t('common.dashboard')}</h2>
+        {isDesktop ? (
+          <button
+            type="button"
+            className={pinned ? 'sidebar-pin pinned' : 'sidebar-pin'}
+            onClick={onTogglePin}
+            title={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+          >
+            <RiPushpin2Line />
+          </button>
+        ) : null}
       </div>
 
       <nav className="sidebar-nav">

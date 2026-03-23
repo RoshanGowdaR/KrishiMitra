@@ -7,6 +7,20 @@ const parseGroqResponse = (data) => {
   try {
     let text = data.choices?.[0]?.message?.content?.trim() || '';
     text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    // If model returns extra prose, extract the JSON array/object region.
+    const firstArray = text.indexOf('[');
+    const lastArray = text.lastIndexOf(']');
+    if (firstArray !== -1 && lastArray !== -1 && lastArray > firstArray) {
+      text = text.slice(firstArray, lastArray + 1);
+    } else {
+      const firstObj = text.indexOf('{');
+      const lastObj = text.lastIndexOf('}');
+      if (firstObj !== -1 && lastObj !== -1 && lastObj > firstObj) {
+        text = text.slice(firstObj, lastObj + 1);
+      }
+    }
+
     const parsed = JSON.parse(text);
     return Array.isArray(parsed) ? parsed : [parsed];
   } catch {

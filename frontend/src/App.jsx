@@ -28,6 +28,7 @@ import FarmGuide from './pages/FarmGuide';
 import Settings from './pages/Settings';
 
 const STORAGE_KEY = 'krishimitra_language';
+const SIDEBAR_PIN_KEY = 'krishimitra_sidebar_pinned';
 
 function PageTransition({ children }) {
   const location = useLocation();
@@ -49,20 +50,74 @@ function PageTransition({ children }) {
 
 function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguageModal }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarHovered, setSidebarHovered] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 980);
+  const [isSidebarPinned, setSidebarPinned] = useState(
+    () => localStorage.getItem(SIDEBAR_PIN_KEY) !== 'false'
+  );
+
+  useEffect(() => {
+    const onResize = () => {
+      const desktop = window.innerWidth > 980;
+      setIsDesktop(desktop);
+      if (desktop) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const toggleSidebar = () => {
+    if (isDesktop) {
+      setSidebarPinned((prev) => {
+        const next = !prev;
+        localStorage.setItem(SIDEBAR_PIN_KEY, String(next));
+        return next;
+      });
+      return;
+    }
+
+    setSidebarOpen((prev) => !prev);
+  };
+
+  const isSidebarExpanded = isDesktop ? (isSidebarPinned || isSidebarHovered) : isSidebarOpen;
 
   return (
     <div className="app-shell">
       {isLanguageModalOpen && <LanguageSelector onSelect={onLanguageSelect} />}
 
       <Navbar
-        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+        onToggleSidebar={toggleSidebar}
         onOpenLanguageModal={onOpenLanguageModal}
       />
 
-      <div className="layout">
-        <Sidebar open={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className={isSidebarExpanded ? 'layout sidebar-expanded' : 'layout sidebar-collapsed'}>
+        <Sidebar
+          open={isSidebarExpanded}
+          pinned={isSidebarPinned}
+          isDesktop={isDesktop}
+          onTogglePin={() => {
+            setSidebarPinned((prev) => {
+              const next = !prev;
+              localStorage.setItem(SIDEBAR_PIN_KEY, String(next));
+              return next;
+            });
+          }}
+          onHoverChange={(hovering) => {
+            if (isDesktop && !isSidebarPinned) {
+              setSidebarHovered(hovering);
+            }
+          }}
+          onClose={() => {
+            if (!isDesktop) {
+              setSidebarOpen(false);
+            }
+          }}
+        />
 
-        {isSidebarOpen && (
+        {!isDesktop && isSidebarOpen && (
           <button
             className="overlay"
             aria-label="Close sidebar"
