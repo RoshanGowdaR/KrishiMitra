@@ -18,12 +18,7 @@ SUPPORTED_CROPS = [
 ]
 
 
-GEMINI_VISION_MODELS = [
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro",
-]
+GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
 async def analyze_crop_image(
@@ -32,16 +27,27 @@ async def analyze_crop_image(
 ) -> dict:
     settings = get_settings()
 
-    # Collect all valid Gemini keys
+    # Collect all valid Groq keys
     keys = []
     for k in [
-        getattr(settings, "gemini_api_key", None),
-        getattr(settings, "gemini_api_key_1", None),
-        getattr(settings, "gemini_api_key_2", None),
-        getattr(settings, "gemini_api_key_3", None),
+        getattr(settings, "groq_api_key_1", None),
+        getattr(settings, "groq_api_key_2", None),
+        getattr(settings, "groq_api_key_3", None),
     ]:
-        if k and k not in keys and k != "your_key":
+        if k and k not in keys and k.startswith("gsk_"):
             keys.append(k)
+
+    if not keys:
+        return {
+            "crop_type": "Unable to analyze",
+            "disease_name": "API key not configured",
+            "severity": "moderate",
+            "symptoms": ["Groq API keys are missing or invalid"],
+            "treatment": ["Configure GROQ_API_KEY_1/2/3 in backend .env"],
+            "prevention_tips": ["Restart backend after updating environment variables"],
+            "language": language,
+            "healthy_crop_info": await get_healthy_crop_info("Unable to analyze"),
+        }
 
     prompt = f"""You are an expert agricultural scientist.
 Analyze this crop image carefully and provide:
@@ -64,115 +70,113 @@ Return ONLY valid JSON with these exact keys:
 }}"""
 
     request_body = {
-        "contents": [
+        "model": GROQ_VISION_MODEL,
+        "temperature": 0.3,
+        "max_tokens": 1024,
+        "messages": [
             {
-                "parts": [
-                    {"text": prompt},
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
                     {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_base64
-                        }
-                    }
-                ]
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image_base64}"
+                        },
+                    },
+                ],
             }
         ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 1024
-        }
     }
 
-    # Try each model with each key
-    for model in GEMINI_VISION_MODELS:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        for key in keys:
-            try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.post(
-                        url,
-                        params={"key": key},
-                        json=request_body
-                    )
+    url = "https://api.groq.com/openai/v1/chat/completions"
 
-                    print(f"Crop disease: model={model} status={response.status_code}")
+    for key in keys:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    url,
+                    headers={
+                        "Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=request_body,
+                )
 
-                    if response.status_code == 429:
-                        print(f"Quota exceeded for model={model}, trying next...")
-                        continue
+            print(f"Crop disease: model={GROQ_VISION_MODEL} status={response.status_code}")
 
-                    if response.status_code == 404:
-                        print(f"Model {model} not found, trying next model...")
-                        break  # Try next model
-
-                    if response.status_code != 200:
-                        print(f"Error {response.status_code}: {response.text[:200]}")
-                        continue
-
-                    data = response.json()
-                    candidates = data.get("candidates", [])
-                    if not candidates:
-                        continue
-
-                    text = candidates[0]["content"]["parts"][0]["text"]
-                    text = text.strip()
-
-                    # Clean markdown if present
-                    if "```" in text:
-                        parts = text.split("```")
-                        for part in parts:
-                            if "{" in part:
-                                text = part
-                                if text.startswith("json"):
-                                    text = text[4:]
-                                break
-
-                    text = text.strip()
-
-                    try:
-                        result = json.loads(text)
-                        # Ensure all required fields exist
-                        result.setdefault("crop_type", "Unknown crop")
-                        result.setdefault("disease_name", "Analysis complete")
-                        result.setdefault("severity", "moderate")
-                        result.setdefault("symptoms", [])
-                        result.setdefault("treatment", [])
-                        result.setdefault("prevention_tips", [])
-                        print(f"Crop disease success with model={model}")
-                        crop_type = str(result.get("crop_type", "Unknown crop"))
-                        healthy_info = await get_healthy_crop_info(crop_type)
-                        severity = str(result.get("severity", "moderate")).lower()
-                        if severity not in {"mild", "moderate", "severe"}:
-                            severity = "moderate"
-
-                        return {
-                            "crop_type": crop_type,
-                            "disease_name": str(result.get("disease_name", "Analysis complete")),
-                            "severity": severity,
-                            "symptoms": [str(item) for item in result.get("symptoms", [])],
-                            "treatment": [str(item) for item in result.get("treatment", [])],
-                            "prevention_tips": [str(item) for item in result.get("prevention_tips", [])],
-                            "language": language,
-                            "healthy_crop_info": healthy_info,
-                        }
-                    except json.JSONDecodeError:
-                        # Return text as response
-                        crop_type = "Crop detected"
-                        healthy_info = await get_healthy_crop_info(crop_type)
-                        return {
-                            "crop_type": "Crop detected",
-                            "disease_name": "See analysis below",
-                            "severity": "moderate",
-                            "symptoms": [text[:200]],
-                            "treatment": ["Consult local Krishi Kendra"],
-                            "prevention_tips": ["Monitor crop regularly"],
-                            "language": language,
-                            "healthy_crop_info": healthy_info,
-                        }
-
-            except Exception as e:
-                print(f"Exception with model={model}: {str(e)}")
+            if response.status_code in {401, 429}:
+                print("Groq key unauthorized/rate limited, rotating...")
                 continue
+
+            if response.status_code != 200:
+                print(f"Error {response.status_code}: {response.text[:200]}")
+                continue
+
+            data = response.json()
+            choices = data.get("choices", [])
+            if not choices:
+                continue
+
+            text = choices[0].get("message", {}).get("content", "").strip()
+            if not text:
+                continue
+
+            # Clean markdown if present
+            if "```" in text:
+                parts = text.split("```")
+                for part in parts:
+                    if "{" in part:
+                        text = part
+                        if text.startswith("json"):
+                            text = text[4:]
+                        break
+
+            text = text.strip()
+
+            try:
+                result = json.loads(text)
+                # Ensure all required fields exist
+                result.setdefault("crop_type", "Unknown crop")
+                result.setdefault("disease_name", "Analysis complete")
+                result.setdefault("severity", "moderate")
+                result.setdefault("symptoms", [])
+                result.setdefault("treatment", [])
+                result.setdefault("prevention_tips", [])
+                crop_type = str(result.get("crop_type", "Unknown crop"))
+                healthy_info = await get_healthy_crop_info(crop_type)
+                severity = str(result.get("severity", "moderate")).lower()
+                if severity not in {"mild", "moderate", "severe"}:
+                    severity = "moderate"
+
+                return {
+                    "crop_type": crop_type,
+                    "disease_name": str(result.get("disease_name", "Analysis complete")),
+                    "severity": severity,
+                    "symptoms": [str(item) for item in result.get("symptoms", [])],
+                    "treatment": [str(item) for item in result.get("treatment", [])],
+                    "prevention_tips": [str(item) for item in result.get("prevention_tips", [])],
+                    "language": language,
+                    "healthy_crop_info": healthy_info,
+                }
+            except json.JSONDecodeError:
+                # Return text as response
+                crop_type = "Crop detected"
+                healthy_info = await get_healthy_crop_info(crop_type)
+                return {
+                    "crop_type": "Crop detected",
+                    "disease_name": "See analysis below",
+                    "severity": "moderate",
+                    "symptoms": [text[:200]],
+                    "treatment": ["Consult local Krishi Kendra"],
+                    "prevention_tips": ["Monitor crop regularly"],
+                    "language": language,
+                    "healthy_crop_info": healthy_info,
+                }
+
+        except Exception as e:
+            print(f"Exception with model={GROQ_VISION_MODEL}: {str(e)}")
+            continue
 
     # All models and keys failed - return helpful fallback
     crop_type = "Unable to analyze"

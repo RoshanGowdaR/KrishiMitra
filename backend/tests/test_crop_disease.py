@@ -38,8 +38,9 @@ class MockAsyncClient:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         return None
 
-    async def post(self, url: str, params: dict, json: dict) -> MockResponse:
-        prompt_text = json["contents"][0]["parts"][0]["text"]
+    async def post(self, url: str, headers: dict, json: dict) -> MockResponse:
+        _ = (url, headers)
+        prompt_text = json["messages"][0]["content"][0]["text"]
 
         if "'hi'" in prompt_text:
             response_json = {
@@ -78,14 +79,10 @@ class MockAsyncClient:
 
         return MockResponse(
             {
-                "candidates": [
+                "choices": [
                     {
-                        "content": {
-                            "parts": [
-                                {
-                                    "text": json_module_dumps(response_json),
-                                }
-                            ]
+                        "message": {
+                            "content": json_module_dumps(response_json),
                         }
                     }
                 ]
@@ -102,7 +99,15 @@ def _patch_dependencies(monkeypatch) -> None:
     monkeypatch.setattr(
         crop_disease_service,
         "get_settings",
-        lambda: type("Settings", (), {"gemini_api_key": "test-key"})(),
+        lambda: type(
+            "Settings",
+            (),
+            {
+                "groq_api_key_1": "gsk_test_key_1",
+                "groq_api_key_2": "gsk_test_key_2",
+                "groq_api_key_3": "gsk_test_key_3",
+            },
+        )(),
     )
 
 
@@ -151,8 +156,8 @@ def test_image_too_large_returns_413_error() -> None:
 def test_unsupported_crop_returns_helpful_message(monkeypatch) -> None:
     _patch_dependencies(monkeypatch)
 
-    async def mock_post_unsupported(self, url: str, params: dict, json: dict) -> MockResponse:
-        _ = (self, url, params, json)
+    async def mock_post_unsupported(self, url: str, headers: dict, json: dict) -> MockResponse:
+        _ = (self, url, headers, json)
         payload = {
             "is_crop": True,
             "crop_type": "Dragonfruit",
@@ -165,8 +170,8 @@ def test_unsupported_crop_returns_helpful_message(monkeypatch) -> None:
         }
         return MockResponse(
             {
-                "candidates": [
-                    {"content": {"parts": [{"text": json_module_dumps(payload)}]}}
+                "choices": [
+                    {"message": {"content": json_module_dumps(payload)}}
                 ]
             }
         )

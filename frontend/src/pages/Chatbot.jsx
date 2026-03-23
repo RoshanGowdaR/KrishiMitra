@@ -11,7 +11,39 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(
+    localStorage.getItem('chatbot_voice') === 'true'
+  );
   const listRef = useRef(null);
+
+  const speakResponse = async (text, languageCode) => {
+    try {
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/v1/voice/speak',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, language: languageCode }),
+        }
+      );
+      if (!response.ok) return;
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      // Stop any currently playing audio
+      if (window.currentAudio) {
+        window.currentAudio.pause();
+        URL.revokeObjectURL(window.currentAudio.src);
+      }
+
+      const audio = new Audio(url);
+      window.currentAudio = audio;
+      audio.onended = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch (error) {
+      console.log('Voice output unavailable:', error);
+    }
+  };
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -56,6 +88,10 @@ export default function Chatbot() {
       };
 
       setMessages((prev) => [...prev, botMessage]);
+
+      if (voiceEnabled) {
+        await speakResponse(response.response || botText, language);
+      }
     } catch (sendError) {
       toast.error(t('chatbot.messages.sendError'));
     } finally {
@@ -116,6 +152,17 @@ export default function Chatbot() {
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          className="ghost-btn"
+          onClick={() => {
+            const newVal = !voiceEnabled;
+            setVoiceEnabled(newVal);
+            localStorage.setItem('chatbot_voice', newVal);
+          }}
+        >
+          {voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
+        </button>
       </div>
 
       <div className="panel">

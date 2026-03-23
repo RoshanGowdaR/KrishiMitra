@@ -4,6 +4,22 @@ import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'krishimitra_language';
 
+const playGreeting = async (language) => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/v1/voice/greeting?language=${language}`
+    );
+    if (!response.ok) return;
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play().catch(() => {});
+  } catch (error) {
+    console.log('Voice greeting unavailable:', error);
+  }
+};
+
 export default function AuthCallback() {
   const navigate = useNavigate();
 
@@ -15,6 +31,11 @@ export default function AuthCallback() {
         navigate('/login', { replace: true });
         return;
       }
+
+      const savedLanguage = localStorage.getItem(
+        'krishimitra_language'
+      ) || 'en';
+      await playGreeting(savedLanguage);
 
       const user = session.user;
 
