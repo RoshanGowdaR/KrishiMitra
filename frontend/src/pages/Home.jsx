@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 const quickActionMeta = [
   {
@@ -28,9 +30,60 @@ const quickActionMeta = [
   },
 ];
 
+const playGreeting = (language, userName) => {
+  const greetings = {
+    en: `Welcome to KrishiMitra${userName ? `, ${userName}` : ''}! Your smart farming assistant is ready.`,
+    hi: `कृषिमित्र में आपका स्वागत है${userName ? `, ${userName}` : ''}! आपका कृषि सहायक तैयार है।`,
+    kn: `ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ${userName ? `, ${userName}` : ''}! ನಿಮ್ಮ ಕೃಷಿ ಸಹಾಯಕ ಸಿದ್ಧವಾಗಿದೆ.`,
+    ta: 'கிரிஷிமித்ராவிற்கு வரவேற்கிறோம்! உங்கள் விவசாய உதவியாளர் தயாராக இருக்கிறார்.',
+    te: 'కృషిమిత్రకు స్వాగతం! మీ వ్యవసాయ సహాయకుడు సిద్ధంగా ఉన్నారు.',
+    mr: 'कृषिमित्रमध्ये स्वागत आहे! तुमचा शेती सहाय्यक तयार आहे.',
+  };
+
+  const text = greetings[language] || greetings.en;
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const localeMap = {
+    en: 'en-IN',
+    hi: 'hi-IN',
+    kn: 'kn-IN',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    mr: 'mr-IN',
+  };
+  utterance.lang = localeMap[language] || 'en-IN';
+  utterance.rate = 0.85;
+  utterance.volume = 1.0;
+
+  // Small delay to ensure page is loaded
+  setTimeout(() => {
+    window.speechSynthesis.speak(utterance);
+  }, 1500);
+};
+
 export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const greetedRef = useRef(false);
+
+  useEffect(() => {
+    if (user && !greetedRef.current) {
+      greetedRef.current = true;
+      const hasGreeted = sessionStorage.getItem('greeted');
+      if (!hasGreeted) {
+        sessionStorage.setItem('greeted', 'true');
+        const language = localStorage.getItem(
+          'krishimitra_language'
+        ) || 'en';
+        const userName = user.user_metadata?.full_name?.split(' ')[0] || '';
+        playGreeting(language, userName);
+      }
+    }
+  }, [user]);
+
   const normalizeDegree = (value) => String(value || '').replace(/°/g, '\u00B0').replace(/�C/g, '\u00B0C');
   const normalizeRupee = (value) => String(value || '').replace(/₹/g, '\u20B9').replace(/\?/g, '\u20B9');
   const weatherValue = normalizeDegree(t('home.stats.weather.value'));

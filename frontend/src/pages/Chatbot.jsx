@@ -7,7 +7,7 @@ import { sendChatbotMessage } from '../services/api';
 export default function Chatbot() {
   const { t } = useTranslation();
   const { language, setLanguage, supportedLanguages } = useLanguage();
-  const [message, setMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -16,33 +16,42 @@ export default function Chatbot() {
   );
   const listRef = useRef(null);
 
-  const speakResponse = async (text, languageCode) => {
-    try {
-      const response = await fetch(
-        'http://127.0.0.1:8000/api/v1/voice/speak',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, language: languageCode }),
-        }
-      );
-      if (!response.ok) return;
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+  const speakResponse = (text, languageCode) => {
+    if (!voiceEnabled) return;
 
-      // Stop any currently playing audio
-      if (window.currentAudio) {
-        window.currentAudio.pause();
-        URL.revokeObjectURL(window.currentAudio.src);
-      }
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
 
-      const audio = new Audio(url);
-      window.currentAudio = audio;
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
-    } catch (error) {
-      console.log('Voice output unavailable:', error);
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    const localeMap = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      kn: 'kn-IN',
+      ta: 'ta-IN',
+      te: 'te-IN',
+      mr: 'mr-IN',
+      gu: 'gu-IN',
+      bn: 'bn-IN',
+      pa: 'pa-IN',
+      ml: 'ml-IN',
+    };
+
+    utterance.lang = localeMap[languageCode] || 'en-IN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Try to find a matching voice
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find((v) =>
+      v.lang.startsWith(localeMap[languageCode]?.split('-')[0] || 'en')
+    );
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
     }
+
+    window.speechSynthesis.speak(utterance);
   };
 
   useEffect(() => {
@@ -54,18 +63,18 @@ export default function Chatbot() {
     [messages]
   );
 
-  const handleSend = async (event) => {
-    event.preventDefault();
-    if (!message.trim()) return;
+  const handleSendMessage = async (rawMessage = inputMessage) => {
+    const cleanMessage = String(rawMessage || '').trim();
+    if (!cleanMessage) return;
 
     const userMessage = {
       role: 'user',
-      content: message.trim(),
+      content: cleanMessage,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setMessage('');
+    setInputMessage('');
     setIsTyping(true);
 
     try {
@@ -88,10 +97,7 @@ export default function Chatbot() {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-
-      if (voiceEnabled) {
-        await speakResponse(response.response || botText, language);
-      }
+      speakResponse(botText, language);
     } catch (sendError) {
       toast.error(t('chatbot.messages.sendError'));
     } finally {
@@ -99,8 +105,24 @@ export default function Chatbot() {
     }
   };
 
-  const handleVoiceInput = () => {
-    const speechLocaleMap = {
+  const handleSend = async (event) => {
+    event.preventDefault();
+    await handleSendMessage(inputMessage);
+  };
+
+  const startVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) &&
+      !('SpeechRecognition' in window)) {
+      alert('Voice input not supported in this browser. Use Chrome.');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    // Map language code to speech recognition locale
+    const localeMap = {
       en: 'en-IN',
       hi: 'hi-IN',
       kn: 'kn-IN',
@@ -111,29 +133,35 @@ export default function Chatbot() {
       bn: 'bn-IN',
       pa: 'pa-IN',
       ml: 'ml-IN',
-      or: 'or-IN',
-      as: 'as-IN',
     };
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      toast.error(t('chatbot.messages.voiceUnsupported'));
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = speechLocaleMap[language] || 'en-IN';
+    recognition.lang = localeMap[language] || 'en-IN';
+    recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => {
-      setIsListening(false);
-      toast.error(t('chatbot.messages.voiceFailed'));
-    };
+    setIsListening(true);
+
     recognition.onresult = (event) => {
-      const transcript = event.results?.[0]?.[0]?.transcript || '';
-      setMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(transcript);
+      setIsListening(false);
+      // Auto send after voice input
+      setTimeout(() => {
+        handleSendMessage(transcript);
+      }, 500);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        alert('Microphone access denied. Please allow microphone in browser settings.');
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
     };
 
     recognition.start();
@@ -141,6 +169,9 @@ export default function Chatbot() {
 
   return (
     <div className="page-wrap chatbot-page">
+      <style>
+        {`@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }`}
+      </style>
       <h2>{t('chatbot.title')}</h2>
 
       <div className="chat-toolbar">
@@ -154,7 +185,18 @@ export default function Chatbot() {
         </label>
         <button
           type="button"
-          className="ghost-btn"
+          style={{
+            padding: '0.4rem 0.8rem',
+            borderRadius: '20px',
+            border: 'none',
+            background: voiceEnabled ? '#16a34a' : '#e5e7eb',
+            color: voiceEnabled ? 'white' : '#666',
+            fontSize: '0.8rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
           onClick={() => {
             const newVal = !voiceEnabled;
             setVoiceEnabled(newVal);
@@ -190,12 +232,25 @@ export default function Chatbot() {
 
         <form onSubmit={handleSend} className="inline-form">
           <input
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
+            value={inputMessage}
+            onChange={(event) => setInputMessage(event.target.value)}
             placeholder={t('chatbot.placeholder')}
           />
-          <button type="button" className="ghost-btn" onClick={handleVoiceInput}>
-            {isListening ? t('chatbot.listening') : '🎤'}
+          <button
+            type="button"
+            onClick={startVoiceInput}
+            style={{
+              background: isListening ? '#dc2626' : 'transparent',
+              border: isListening ? 'none' : '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1.2rem',
+              animation: isListening ? 'pulse 1s infinite' : 'none',
+            }}
+            title={isListening ? 'Listening...' : 'Click to speak'}
+          >
+            {isListening ? '🔴' : '🎤'}
           </button>
           <button type="submit" className="primary-btn">{t('common.send')}</button>
         </form>
