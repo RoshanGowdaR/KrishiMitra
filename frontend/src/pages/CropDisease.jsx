@@ -122,7 +122,7 @@ export default function CropDisease() {
               <section>
                 <h4>{t('cropDisease.sections.prevention')}</h4>
                 <ul>
-                  {(result.prevention || []).map((item, index) => (
+                  {(result.prevention_tips || result.prevention || []).map((item, index) => (
                     <li key={`${item}-${index}`}>{item}</li>
                   ))}
                 </ul>

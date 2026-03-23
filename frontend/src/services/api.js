@@ -114,4 +114,8 @@ export const getCropGuide = async (cropName, language = 'en') => (
 
 export const getFarmGuideCrops = async (params) => (await api.get('/farm-guide/crops', { params })).data;
 
+export const updateProfile = async (payload) => (
+  await api.post('http://127.0.0.1:8000/api/v1/auth/update-profile', payload)
+).data;
+
 export default api;

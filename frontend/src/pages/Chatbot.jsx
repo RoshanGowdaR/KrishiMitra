@@ -48,7 +48,7 @@ export default function Chatbot() {
         language,
       });
 
-      const botText = response.reply || response.message || response.response || t('chatbot.defaults.reply');
+      const botText = response.response_text || response.reply || response.message || response.response || t('chatbot.defaults.reply');
       const botMessage = {
         role: 'assistant',
         content: botText,

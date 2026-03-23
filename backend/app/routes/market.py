@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from app.services.market_service import get_available_commodities, get_commodity_prices
@@ -33,8 +33,6 @@ async def read_market_prices(
     commodity: str | None = Query(default=None, min_length=1),
 ) -> MarketPricesListResponse:
     prices = await get_commodity_prices(state=state, district=district, commodity=commodity)
-    if state and district and not prices:
-        raise HTTPException(status_code=404, detail="No market prices found for the provided filters")
     return MarketPricesListResponse(prices=[MarketPriceResponse(**item) for item in prices])
 
 

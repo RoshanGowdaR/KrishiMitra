@@ -99,7 +99,7 @@ def test_forecast_endpoint_returns_200(monkeypatch) -> None:
     assert len(body["forecast"]) == 1
 
 
-def test_missing_api_key_returns_error(monkeypatch) -> None:
+def test_missing_api_key_returns_fallback(monkeypatch) -> None:
     monkeypatch.setattr(weather_service.httpx, "AsyncClient", MockAsyncClient)
     monkeypatch.setattr(
         weather_service,
@@ -109,8 +109,10 @@ def test_missing_api_key_returns_error(monkeypatch) -> None:
 
     response = client.get("/api/v1/weather?lat=12.97&lon=77.59")
 
-    assert response.status_code == 500
-    assert response.json()["detail"] == "OPENWEATHER_API_KEY is not configured"
+    assert response.status_code == 200
+    body = response.json()
+    assert body["city_name"] == "Bengaluru"
+    assert body["description"] == "Clear sky"
 
 
 def test_invalid_coordinates_return_validation_error() -> None:

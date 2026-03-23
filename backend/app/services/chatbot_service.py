@@ -3,8 +3,8 @@ from typing import Any
 import httpx  # noqa: F401
 from fastapi import HTTPException
 
-from app.config import get_settings
-from app.services.gemini_client import gemini_client
+from app.config import get_settings  # noqa: F401
+from app.services.groq_client import groq_client
 
 SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "en", "name": "English", "language_code": "en-IN", "voice_name": "en-IN-Wavenet-A"},
@@ -18,6 +18,8 @@ SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "bn", "name": "Bengali", "language_code": "bn-IN", "voice_name": "bn-IN-Wavenet-A"},
     {"code": "pa", "name": "Punjabi", "language_code": "pa-IN", "voice_name": "pa-IN-Wavenet-A"},
 ]
+
+
 def _normalize_history(conversation_history: list[dict[str, str]]) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for item in conversation_history:
@@ -27,23 +29,6 @@ def _normalize_history(conversation_history: list[dict[str, str]]) -> list[dict[
             continue
         normalized.append({"role": role, "content": content})
     return normalized
-
-
-async def _call_gemini(
-    contents: list[dict[str, Any]],
-    system_prompt: str,
-) -> str:
-    settings = get_settings()
-    fallback_key = getattr(settings, "gemini_api_key", "")
-    if fallback_key and not gemini_client.keys:
-        gemini_client.keys = [fallback_key]
-        gemini_client.current_index = 0
-
-    serialized_history = "\n".join(
-        f"{item.get('role', 'user')}: {item.get('parts', [{}])[0].get('text', '')}" for item in contents
-    )
-    prompt = f"System instruction:\n{system_prompt}\n\nConversation:\n{serialized_history}"
-    return await gemini_client.generate(prompt)
 
 
 async def get_chat_response(
@@ -56,27 +41,42 @@ async def get_chat_response(
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     normalized_history = _normalize_history(conversation_history)
-    model_contents: list[dict[str, Any]] = []
 
-    for item in normalized_history:
-        role = "user" if item["role"] == "user" else "model"
-        model_contents.append(
-            {
-                "role": role,
-                "parts": [{"text": item["content"]}],
-            }
-        )
+    system_prompt = """You are KrishiMitra, an expert 
+Indian agricultural AI assistant helping farmers.
+You provide practical advice on:
+- Crop management and cultivation
+- Pest and disease identification and treatment
+- Weather interpretation for farming
+- Government schemes and subsidies
+- Market prices and selling strategies
+- Soil health and fertilizer recommendations
 
-    model_contents.append({"role": "user", "parts": [{"text": clean_message}]})
+Rules:
+- Always respond in the SAME language as the user
+- If user writes in Kannada reply in Kannada
+- If user writes in Hindi reply in Hindi
+- Keep responses concise and practical
+- Use simple language farmers can understand
+- Always give actionable advice
+- If asking about a crop disease suggest treatment"""
 
-    system_prompt = (
-        "You are KrishiMitra, an expert Indian agricultural assistant. Provide practical, "
-        "region-aware advice to farmers about crops, weather, market prices, government schemes, "
-        "and disease management. Keep responses clear and actionable. Respond in the same language "
-        f"as the user message. Preferred response language code: {language}."
+    messages = [{"role": "system", "content": system_prompt}]
+
+    for msg in normalized_history[-10:]:
+        if msg.get("role") and msg.get("content"):
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"],
+            })
+
+    messages.append({"role": "user", "content": clean_message})
+
+    response_text = await groq_client.chat(
+        messages=messages,
+        temperature=0.7,
+        max_tokens=512,
     )
-
-    response_text = await _call_gemini(model_contents, system_prompt=system_prompt)
 
     updated_history = normalized_history + [
         {"role": "user", "content": clean_message},
@@ -87,6 +87,8 @@ async def get_chat_response(
         "response_text": response_text,
         "conversation_history": updated_history,
         "language": language,
+        "response": response_text,
+        "history": updated_history,
     }
 
 
@@ -95,22 +97,20 @@ async def translate_text(text: str, target_language: str) -> str:
     if not clean_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
-    contents = [
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a translation assistant for Indian agriculture use-cases.",
+        },
         {
             "role": "user",
-            "parts": [
-                {
-                    "text": (
-                        "Translate the following text into language code "
-                        f"'{target_language}'. Return only translated text.\n\n{clean_text}"
-                    )
-                }
-            ],
-        }
+            "content": (
+                "Translate the following text into language code "
+                f"'{target_language}'. Return only translated text.\n\n{clean_text}"
+            ),
+        },
     ]
-
-    system_prompt = "You are a translation assistant for Indian agriculture use-cases."
-    return await _call_gemini(contents, system_prompt=system_prompt)
+    return await groq_client.chat(messages=messages, temperature=0.2, max_tokens=256)
 
 
 async def text_to_speech_info(text: str, language: str) -> dict[str, str]:

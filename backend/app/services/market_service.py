@@ -15,35 +15,112 @@ FALLBACK_PRICES: list[dict[str, Any]] = [
     {
         "state": "Karnataka",
         "district": "Bengaluru",
-        "market": "Yeshwanthpur",
-        "commodity": "Tomato",
+        "market": "APMC Bengaluru",
+        "commodity": "Rice",
+        "variety": "Sona Masuri",
+        "min_price": 2100,
+        "max_price": 2400,
+        "modal_price": 2250,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Karnataka",
+        "district": "Hassan",
+        "market": "Hassan Mandi",
+        "commodity": "Ragi",
         "variety": "Local",
-        "min_price": 1800.0,
-        "max_price": 2400.0,
-        "modal_price": 2100.0,
-        "date": "22/03/2026",
+        "min_price": 1800,
+        "max_price": 2000,
+        "modal_price": 1900,
+        "date": "2026-03-22",
     },
     {
         "state": "Karnataka",
         "district": "Mysuru",
-        "market": "Mysuru",
-        "commodity": "Onion",
-        "variety": "Red",
-        "min_price": 1400.0,
-        "max_price": 1900.0,
-        "modal_price": 1650.0,
-        "date": "22/03/2026",
+        "market": "Mysuru APMC",
+        "commodity": "Tomato",
+        "variety": "Hybrid",
+        "min_price": 800,
+        "max_price": 1200,
+        "modal_price": 1000,
+        "date": "2026-03-22",
     },
     {
-        "state": "Karnataka",
-        "district": "Udupi",
-        "market": "Udupi",
-        "commodity": "Rice",
-        "variety": "Sona",
-        "min_price": 2500.0,
-        "max_price": 2800.0,
-        "modal_price": 2650.0,
-        "date": "22/03/2026",
+        "state": "Maharashtra",
+        "district": "Pune",
+        "market": "Pune Mandi",
+        "commodity": "Onion",
+        "variety": "Red",
+        "min_price": 1200,
+        "max_price": 1500,
+        "modal_price": 1350,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Punjab",
+        "district": "Ludhiana",
+        "market": "Ludhiana Mandi",
+        "commodity": "Wheat",
+        "variety": "HD-2967",
+        "min_price": 2100,
+        "max_price": 2300,
+        "modal_price": 2200,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Tamil Nadu",
+        "district": "Chennai",
+        "market": "Koyambedu",
+        "commodity": "Banana",
+        "variety": "Robusta",
+        "min_price": 1500,
+        "max_price": 1800,
+        "modal_price": 1650,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Andhra Pradesh",
+        "district": "Guntur",
+        "market": "Guntur Mandi",
+        "commodity": "Chilli",
+        "variety": "Teja",
+        "min_price": 8000,
+        "max_price": 9000,
+        "modal_price": 8500,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Uttar Pradesh",
+        "district": "Lucknow",
+        "market": "Lucknow Mandi",
+        "commodity": "Potato",
+        "variety": "Jyoti",
+        "min_price": 600,
+        "max_price": 800,
+        "modal_price": 700,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Rajasthan",
+        "district": "Jaipur",
+        "market": "Jaipur Mandi",
+        "commodity": "Mustard",
+        "variety": "RH-749",
+        "min_price": 4500,
+        "max_price": 5000,
+        "modal_price": 4750,
+        "date": "2026-03-22",
+    },
+    {
+        "state": "Gujarat",
+        "district": "Ahmedabad",
+        "market": "Ahmedabad Mandi",
+        "commodity": "Cotton",
+        "variety": "Bt Cotton",
+        "min_price": 5500,
+        "max_price": 6000,
+        "modal_price": 5750,
+        "date": "2026-03-22",
     },
 ]
 
@@ -84,7 +161,14 @@ async def get_commodity_prices(
 
     prices: list[dict[str, Any]] = []
 
-    if sheet_id and sheets_api_key:
+    if not sheet_id or not sheets_api_key:
+        logger.warning(
+            "Google Sheets credentials missing (sheet_id=%s, api_key_present=%s). Using fallback market data.",
+            bool(sheet_id),
+            bool(sheets_api_key),
+        )
+        prices = list(FALLBACK_PRICES)
+    else:
         try:
             url = (
                 "https://sheets.googleapis.com/v4/spreadsheets"
@@ -118,6 +202,7 @@ async def get_commodity_prices(
                         continue
         except Exception as exc:  # noqa: BLE001
             logger.exception("Google Sheets fetch failed: %s", exc)
+            prices = list(FALLBACK_PRICES)
 
     if not prices:
         logger.warning("Using fallback market prices data")

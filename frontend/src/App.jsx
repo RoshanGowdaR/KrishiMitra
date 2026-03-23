@@ -126,8 +126,22 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/language-select" element={<LanguageSelect />} />
-      <Route path="/select-language" element={<SelectLanguage />} />
-      <Route path="/profile-setup" element={<ProfileSetup />} />
+      <Route
+        path="/select-language"
+        element={(
+          <ProtectedRoute>
+            <SelectLanguage />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/profile-setup"
+        element={(
+          <ProtectedRoute>
+            <ProfileSetup />
+          </ProtectedRoute>
+        )}
+      />
       <Route
         path="/app/*"
         element={(
