@@ -96,62 +96,67 @@ const CROP_IMAGES = {
   Tomato: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=150&h=150&fit=crop',
   Onion: 'https://images.unsplash.com/photo-1508747703725-719777637510?w=150&h=150&fit=crop',
   Potato: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=150&h=150&fit=crop',
-  Brinjal: 'https://images.unsplash.com/photo-1659010539498-04e44e5a7b3e?w=150&h=150&fit=crop',
+  Brinjal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Aubergine.jpg/320px-Aubergine.jpg',
   Cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=150&h=150&fit=crop',
   Cucumber: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=150&h=150&fit=crop',
   Cauliflower: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=150&h=150&fit=crop',
   Carrot: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=150&h=150&fit=crop',
   Spinach: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=150&h=150&fit=crop',
   Pumpkin: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=150&h=150&fit=crop',
-  Garlic: 'https://images.unsplash.com/photo-1615475532358-d68ac5cdf87e?w=150&h=150&fit=crop',
-  Ginger: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=150&h=150&fit=crop',
+  Garlic: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Garlic_bulb_white_background.jpg/320px-Garlic_bulb_white_background.jpg',
+  Ginger: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Fresh_ginger.jpg/320px-Fresh_ginger.jpg',
   Mango: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=150&h=150&fit=crop',
   Banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=150&h=150&fit=crop',
   Coconut: 'https://images.unsplash.com/photo-1580984969071-a8da5656c2fb?w=150&h=150&fit=crop',
   Papaya: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=150&h=150&fit=crop',
-  Mandarin: 'https://images.unsplash.com/photo-1547514701-42782101795e?w=150&h=150&fit=crop',
-  'Dragon Fruit': 'https://images.unsplash.com/photo-1527325678964-54921661f888?w=150&h=150&fit=crop',
+  Mandarin: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Clementine_-_whole_and_split.jpg/320px-Clementine_-_whole_and_split.jpg',
+  'Dragon Fruit': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Pitaya_cross_section_ed2.jpg/320px-Pitaya_cross_section_ed2.jpg',
   Guava: 'https://images.unsplash.com/photo-1536511132770-e5058c7e8c46?w=150&h=150&fit=crop',
   Grapes: 'https://images.unsplash.com/photo-1596363505729-4190a9506133?w=150&h=150&fit=crop',
   Watermelon: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&h=150&fit=crop',
   Pomegranate: 'https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=150&h=150&fit=crop',
-  Lemon: 'https://images.unsplash.com/photo-1582476012715-4a9c3ae2b3e9?w=150&h=150&fit=crop',
+  Lemon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Lemon_-_whole_%26_split.jpg/320px-Lemon_-_whole_%26_split.jpg',
   Pineapple: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=150&h=150&fit=crop',
   Strawberry: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=150&h=150&fit=crop',
   Apple: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=150&h=150&fit=crop',
   Cotton: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=150&h=150&fit=crop',
   Sugarcane: 'https://images.unsplash.com/photo-1596638787647-904d822d751e?w=150&h=150&fit=crop',
-  Tobacco: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=150&h=150&fit=crop',
-  Jute: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=150&h=150&fit=crop',
+  Tobacco: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/tobacco_flowers.jpg/320px-tobacco_flowers.jpg',
+  Jute: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Jute_field_Bangladesh.jpg/320px-Jute_field_Bangladesh.jpg',
   Turmeric: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=150&h=150&fit=crop',
   Chilli: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=150&h=150&fit=crop',
-  Coriander: 'https://images.unsplash.com/photo-1592503254549-d83d24a4dfab?w=150&h=150&fit=crop',
+  Coriander: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Coriander_seeds_spice.jpg/320px-Coriander_seeds_spice.jpg',
   Cumin: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=150&h=150&fit=crop',
-  Cardamom: 'https://images.unsplash.com/photo-1601493700631-2851f9cc5b39?w=150&h=150&fit=crop',
-  Pepper: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=150&h=150&fit=crop',
-  Fenugreek: 'https://images.unsplash.com/photo-1599909631201-8b1cb70cf17e?w=150&h=150&fit=crop',
-  Groundnut: 'https://images.unsplash.com/photo-1567204912523-924c114bb65c?w=150&h=150&fit=crop',
+  Cardamom: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Elaichi_%28Cardamom%29.jpg/320px-Elaichi_%28Cardamom%29.jpg',
+  Pepper: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Black_pepper.jpg/320px-Black_pepper.jpg',
+  Fenugreek: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Fenugreek_leaves.jpg/320px-Fenugreek_leaves.jpg',
+  Groundnut: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Peanuts_USDA.jpg/320px-Peanuts_USDA.jpg',
   Soybean: 'https://images.unsplash.com/photo-1599360889420-da1afaba9edc?w=150&h=150&fit=crop',
   Sunflower: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=150&h=150&fit=crop',
   Mustard: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=150&h=150&fit=crop',
-  Sesame: 'https://images.unsplash.com/photo-1612957824979-141f787c8946?w=150&h=150&fit=crop',
-  Lentil: 'https://images.unsplash.com/photo-1616684000067-36952fde56ec?w=150&h=150&fit=crop',
-  'Green Gram': 'https://images.unsplash.com/photo-1612810806695-30f7a8258391?w=150&h=150&fit=crop',
-  'Black Gram': 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=150&h=150&fit=crop',
-  'Pigeon Pea': 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=150&h=150&fit=crop',
+  Sesame: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Sesame_seeds_white.jpg/320px-Sesame_seeds_white.jpg',
+  Lentil: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Red_Lentils.jpg/320px-Red_Lentils.jpg',
+  'Green Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mung_beans.jpg/320px-Mung_beans.jpg',
+  'Black Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Black_gram_seeds.jpg/320px-Black_gram_seeds.jpg',
+  'Pigeon Pea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cajanus_cajan_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-168.jpg/320px-Cajanus_cajan_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-168.jpg',
+  'Kidney Bean': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Kidney_beans.jpg/320px-Kidney_beans.jpg',
   Coffee: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=150&h=150&fit=crop',
   Tea: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&h=150&fit=crop',
-  Rubber: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=150&h=150&fit=crop',
-  Arecanut: 'https://images.unsplash.com/photo-1596638787647-904d822d751e?w=150&h=150&fit=crop',
-  Cashew: 'https://images.unsplash.com/photo-1563903530908-afdd155d057a?w=150&h=150&fit=crop',
+  Rubber: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Rubber_tree_tapping.jpg/320px-Rubber_tree_tapping.jpg',
+  Arecanut: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Areca_Nut.jpg/320px-Areca_Nut.jpg',
+  Cashew: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Cashew_nut_with_fruit.jpg/320px-Cashew_nut_with_fruit.jpg',
   Chickpea: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=150&h=150&fit=crop',
-  Ragi: 'https://images.unsplash.com/photo-1536304447766-da0ed4ce1b73?w=150&h=150&fit=crop',
-  Jowar: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop',
-  Bajra: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=150&h=150&fit=crop',
-  Barley: 'https://images.unsplash.com/photo-1530870110042-98b2cb110834?w=150&h=150&fit=crop',
+  Ragi: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Eleusine_coracana.jpg/320px-Eleusine_coracana.jpg',
+  Jowar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Sorghum_vulgare.jpg/320px-Sorghum_vulgare.jpg',
+  Bajra: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Pennisetum_glaucum_USDA.jpg/320px-Pennisetum_glaucum_USDA.jpg',
+  Barley: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Barley_in_field.jpg/320px-Barley_in_field.jpg',
   Jackfruit: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=150&h=150&fit=crop',
   Muskmelon: 'https://images.unsplash.com/photo-1571575173700-afb9492e6a50?w=150&h=150&fit=crop',
-  Sapota: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=150&h=150&fit=crop',
+  Sapota: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Manilkara_zapota_-_Sapota_-_Fruits.jpg/320px-Manilkara_zapota_-_Sapota_-_Fruits.jpg',
+  'Lady Finger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Okra_2008.jpg/320px-Okra_2008.jpg',
+  'Green Chilli': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Green_chili_pepper.jpg/320px-Green_chili_pepper.jpg',
+  'Bitter Gourd': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Bitter_melon_%28Momordica_charantia%29.jpg/320px-Bitter_melon_%28Momordica_charantia%29.jpg',
+  'Bottle Gourd': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Lagenaria_siceraria_%28bottle_gourd%29.jpg/320px-Lagenaria_siceraria_%28bottle_gourd%29.jpg',
 };
 
 const getCropImage = (cropName) => CROP_IMAGES[cropName]
@@ -687,9 +692,11 @@ export default function FarmGuide() {
                         style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '12px' }}
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          if (e.target.nextElementSibling) {
-                            e.target.nextElementSibling.style.display = 'block';
-                          }
+                          const parent = e.target.parentNode;
+                          const fallback = document.createElement('div');
+                          fallback.style.cssText = 'width:60px;height:60px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#16a34a;';
+                          fallback.textContent = crop.name.charAt(0);
+                          parent.appendChild(fallback);
                         }}
                       />
                       <span style={{ display: 'none', fontSize: '2rem' }}>🌿</span>
@@ -893,9 +900,11 @@ export default function FarmGuide() {
                         style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '12px' }}
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          if (e.target.nextElementSibling) {
-                            e.target.nextElementSibling.style.display = 'block';
-                          }
+                          const parent = e.target.parentNode;
+                          const fallback = document.createElement('div');
+                          fallback.style.cssText = 'width:60px;height:60px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#16a34a;';
+                          fallback.textContent = crop.name.charAt(0);
+                          parent.appendChild(fallback);
                         }}
                       />
                       <span style={{ display: 'none', fontSize: '2rem' }}>🌿</span>
