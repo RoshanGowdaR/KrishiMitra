@@ -89,6 +89,68 @@ const ALL_CROPS = {
   ],
 };
 
+const CROP_IMAGES = {
+  Rice: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=150&h=150&fit=crop',
+  Wheat: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop',
+  Maize: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=150&h=150&fit=crop',
+  Tomato: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=150&h=150&fit=crop',
+  Onion: 'https://images.unsplash.com/photo-1508747703725-719777637510?w=150&h=150&fit=crop',
+  Potato: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=150&h=150&fit=crop',
+  Brinjal: 'https://images.unsplash.com/photo-1659010539498-04e44e5a7b3e?w=150&h=150&fit=crop',
+  Cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=150&h=150&fit=crop',
+  Cucumber: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=150&h=150&fit=crop',
+  Cauliflower: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=150&h=150&fit=crop',
+  Carrot: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=150&h=150&fit=crop',
+  Spinach: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=150&h=150&fit=crop',
+  Pumpkin: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=150&h=150&fit=crop',
+  Garlic: 'https://images.unsplash.com/photo-1615475532358-d68ac5cdf87e?w=150&h=150&fit=crop',
+  Ginger: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=150&h=150&fit=crop',
+  Mango: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=150&h=150&fit=crop',
+  Banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=150&h=150&fit=crop',
+  Coconut: 'https://images.unsplash.com/photo-1580984969071-a8da5656c2fb?w=150&h=150&fit=crop',
+  Papaya: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=150&h=150&fit=crop',
+  Guava: 'https://images.unsplash.com/photo-1536511132770-e5058c7e8c46?w=150&h=150&fit=crop',
+  Grapes: 'https://images.unsplash.com/photo-1596363505729-4190a9506133?w=150&h=150&fit=crop',
+  Watermelon: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&h=150&fit=crop',
+  Pomegranate: 'https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=150&h=150&fit=crop',
+  Lemon: 'https://images.unsplash.com/photo-1582476012715-4a9c3ae2b3e9?w=150&h=150&fit=crop',
+  Pineapple: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=150&h=150&fit=crop',
+  Strawberry: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=150&h=150&fit=crop',
+  Apple: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=150&h=150&fit=crop',
+  Cotton: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=150&h=150&fit=crop',
+  Sugarcane: 'https://images.unsplash.com/photo-1596638787647-904d822d751e?w=150&h=150&fit=crop',
+  Turmeric: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=150&h=150&fit=crop',
+  Chilli: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=150&h=150&fit=crop',
+  Groundnut: 'https://images.unsplash.com/photo-1567204912523-924c114bb65c?w=150&h=150&fit=crop',
+  Soybean: 'https://images.unsplash.com/photo-1599360889420-da1afaba9edc?w=150&h=150&fit=crop',
+  Sunflower: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=150&h=150&fit=crop',
+  Mustard: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=150&h=150&fit=crop',
+  Coffee: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=150&h=150&fit=crop',
+  Tea: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&h=150&fit=crop',
+  Chickpea: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=150&h=150&fit=crop',
+  Ragi: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop',
+  Jackfruit: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=150&h=150&fit=crop',
+  Muskmelon: 'https://images.unsplash.com/photo-1571575173700-afb9492e6a50?w=150&h=150&fit=crop',
+  Sapota: 'https://images.unsplash.com/photo-1560148218-1a83060f7b32?w=150&h=150&fit=crop',
+};
+
+const getCropImage = (cropName) => CROP_IMAGES[cropName]
+  || 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=150&h=150&fit=crop';
+
+const PEST_IMAGES = {
+  Aphids: 'https://images.unsplash.com/photo-1598514983318-2f64f8f4796c?w=200&h=200&fit=crop',
+  Whitefly: 'https://images.unsplash.com/photo-1612170153139-6f881ff067e0?w=200&h=200&fit=crop',
+  'Stem Borer': 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=200&h=200&fit=crop',
+  'Brown Planthopper': 'https://images.unsplash.com/photo-1563699441-85e2cbf3e47f?w=200&h=200&fit=crop',
+  Blast: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=200&h=200&fit=crop',
+  Blight: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200&h=200&fit=crop',
+  'Leaf Curl': 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200&h=200&fit=crop',
+  'Fusarium Wilt': 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=200&h=200&fit=crop',
+};
+
+const getPestImage = (pestName) => PEST_IMAGES[pestName]
+  || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200&h=200&fit=crop';
+
 const CROP_STAGES = {
   Tomato: [
     { name: 'Germination', days: '0-10 days', level: 1 },
@@ -136,16 +198,7 @@ const TREE_STAGES = [
 ];
 
 const TREE_CROPS = new Set([
-  'Mango',
-  'Sapota',
-  'Coconut',
-  'Guava',
-  'Jackfruit',
-  'Pomegranate',
-  'Apple',
-  'Coffee',
-  'Tea',
-  'Arecanut',
+  'Mango', 'Sapota', 'Coconut', 'Guava', 'Jackfruit', 'Pomegranate', 'Apple', 'Coffee', 'Tea', 'Arecanut',
 ]);
 
 const CROP_PESTS = {
@@ -208,9 +261,43 @@ const PRACTICES = [
 ];
 
 const SAMPLE_QA = {
+  Rice: [
+    {
+      question: 'My rice leaves are turning yellow from tips. What nutrient deficiency is this?',
+      answer: 'This is likely nitrogen deficiency. Apply urea 20kg/acre as top dressing. If yellowing from middle leaf it could be sulfur deficiency - apply gypsum.',
+      date: '21 Mar',
+    },
+    {
+      question: 'How much water does rice need per day during flowering stage?',
+      answer: 'During flowering maintain 5cm standing water in field. Critical period is 10 days before and after heading. Never let field dry during this stage.',
+      date: '20 Mar',
+    },
+    {
+      question: 'When should I apply the second dose of fertilizer for rice?',
+      answer: 'Apply second dose of nitrogen fertilizer at active tillering stage - around 25-30 days after transplanting. Use 1/3 of total nitrogen dose.',
+      date: '19 Mar',
+    },
+  ],
+  Wheat: [
+    {
+      question: 'My wheat crop is showing rust symptoms. How to control it?',
+      answer: 'This is yellow rust. Spray propiconazole 25EC at 0.1% or tebuconazole at 0.1%. Spray immediately - rust spreads fast in cool humid weather.',
+      date: '21 Mar',
+    },
+    {
+      question: 'What is the ideal sowing time for wheat in North India?',
+      answer: 'Ideal sowing time for wheat in North India is November 1-15. Late sowing after November 25 reduces yield by 1-1.5 quintals per week of delay.',
+      date: '20 Mar',
+    },
+    {
+      question: 'How much seed rate is needed for wheat per acre?',
+      answer: 'Use 40kg seed per acre for timely sown wheat. For late sown conditions increase to 45-50kg per acre. Treat seed with carbendazim before sowing.',
+      date: '19 Mar',
+    },
+  ],
   Tomato: [
     {
-      question: 'My tomato leaves are turning yellow and curling. What disease is this and how to treat it?',
+      question: 'My tomato leaves are turning yellow and curling. What disease is this?',
       answer: 'This appears to be Tomato Leaf Curl Virus spread by whiteflies. Spray imidacloprid 0.3ml/L water. Remove infected plants immediately.',
       date: '21 Mar',
     },
@@ -225,10 +312,76 @@ const SAMPLE_QA = {
       date: '19 Mar',
     },
   ],
+  Onion: [
+    {
+      question: 'My onion leaves are showing purple spots. What is this disease?',
+      answer: 'This is Purple Blotch caused by Alternaria porri. Spray mancozeb 75WP at 2.5g/L or iprodione at 1ml/L. Remove infected leaves immediately.',
+      date: '21 Mar',
+    },
+    {
+      question: 'How to prevent onion from bolting before bulb formation?',
+      answer: 'Bolting is caused by high temperatures or long day length. Use short day varieties for Rabi season. Avoid planting too early. Apply MH spray at 2500ppm.',
+      date: '20 Mar',
+    },
+    {
+      question: 'What causes onion bulbs to remain small even after proper care?',
+      answer: 'Small bulbs are caused by dense planting, low potassium, or premature harvest. Maintain 10x10cm spacing. Apply MOP 40kg/acre at bulb initiation stage.',
+      date: '19 Mar',
+    },
+  ],
+  Mango: [
+    {
+      question: 'My mango tree flowers are dropping before fruit set. Why?',
+      answer: 'Flower drop is caused by thrips attack or powdery mildew. Spray carbendazim 1g/L at pink bud stage. Also spray imidacloprid for thrips control.',
+      date: '21 Mar',
+    },
+    {
+      question: 'How to control mango hopper which is destroying my crop?',
+      answer: 'Spray imidacloprid 0.5ml/L or lambda-cyhalothrin at first sign of hopper. Spray in evening. Repeat after 15 days. Keep orchard clean of weeds.',
+      date: '20 Mar',
+    },
+    {
+      question: 'When should I stop irrigation before mango flowering?',
+      answer: 'Stop irrigation 2-3 months before expected flowering (October-November). This stress induces flowering. Resume irrigation only after flower buds appear.',
+      date: '19 Mar',
+    },
+  ],
+  Cotton: [
+    {
+      question: 'How to identify and control bollworm in cotton?',
+      answer: 'Spray emamectin benzoate 5SG at 0.4g/L or spinosad 45SC at 0.3ml/L. Set pheromone traps 5 per acre. Spray in evening for best results.',
+      date: '21 Mar',
+    },
+    {
+      question: 'My cotton leaves are turning red. Is this a disease?',
+      answer: 'Red leaf in cotton is caused by magnesium or potassium deficiency or leaf reddening virus. Apply magnesium sulfate 10g/L as foliar spray.',
+      date: '20 Mar',
+    },
+    {
+      question: 'When is the right time to apply first irrigation in cotton?',
+      answer: 'Apply first irrigation at 30-35 days after sowing or at square formation stage. Critical irrigation stages are squaring, flowering, and boll development.',
+      date: '19 Mar',
+    },
+  ],
 };
 
-const PEST_COLORS = ['#2d6a4f', '#1b4332', '#40916c', '#52b788', '#74c69d'];
-const PRACTICE_COLORS = ['#2d5016', '#1a3a0a', '#3d6b1f', '#4a7c23', '#1b4332', '#2d6a4f', '#40916c', '#1a3a0a'];
+const getExpertQA = (cropName) => SAMPLE_QA[cropName] || [
+  {
+    question: `What are the most common diseases affecting ${cropName} crop?`,
+    answer: `Common diseases in ${cropName} include fungal leaf spots, root rot, and viral infections. Maintain proper spacing, avoid waterlogging, and spray preventive fungicides.`,
+    date: '21 Mar',
+  },
+  {
+    question: `What is the ideal fertilizer schedule for ${cropName}?`,
+    answer: 'Apply balanced NPK fertilizer at planting. Top dress with nitrogen at vegetative and flowering stages. Supplement with micronutrients based on soil test results.',
+    date: '20 Mar',
+  },
+  {
+    question: `How much irrigation does ${cropName} need per week?`,
+    answer: `${cropName} generally needs 25-40mm water per week depending on soil type and climate. Critical stages are germination, flowering and fruit/grain development.`,
+    date: '19 Mar',
+  },
+];
 
 const DEFAULT_STAGES = [
   { name: 'Germination', days: '0-10 days', level: 1 },
@@ -238,8 +391,7 @@ const DEFAULT_STAGES = [
   { name: 'Harvest', days: '71-110 days', level: 5 },
 ];
 
-const getAllCropEntries = () => Object.values(ALL_CROPS).flat();
-const getCropByName = (name) => getAllCropEntries().find((item) => item.name === name);
+const PRACTICE_COLORS = ['#2d5016', '#1a3a0a', '#3d6b1f', '#4a7c23', '#1b4332', '#2d6a4f', '#40916c', '#1a3a0a'];
 
 const renderPlant = (level) => {
   const stemHeight = [14, 22, 30, 36, 42][level - 1] || 22;
@@ -279,10 +431,17 @@ export default function FarmGuide() {
   const [queryText, setQueryText] = useState('');
   const [queryAnswer, setQueryAnswer] = useState('');
   const [queryLoading, setQueryLoading] = useState(false);
+  const [showAddCrops, setShowAddCrops] = useState(false);
+  const [cropSearch, setCropSearch] = useState('');
 
   const categories = Object.keys(ALL_CROPS);
 
-  const currentCategoryCrops = ALL_CROPS[activeCategory] || [];
+  const currentCategoryCrops = useMemo(() => {
+    const list = ALL_CROPS[activeCategory] || [];
+    const key = cropSearch.trim().toLowerCase();
+    if (!key) return list;
+    return list.filter((item) => item.name.toLowerCase().includes(key));
+  }, [activeCategory, cropSearch]);
 
   const cropStages = useMemo(() => {
     if (!selectedCrop) return DEFAULT_STAGES;
@@ -296,8 +455,8 @@ export default function FarmGuide() {
   }, [selectedCrop]);
 
   const qaList = useMemo(() => {
-    if (!selectedCrop) return SAMPLE_QA.Tomato;
-    return SAMPLE_QA[selectedCrop.name] || SAMPLE_QA.Tomato;
+    if (!selectedCrop) return [];
+    return getExpertQA(selectedCrop.name);
   }, [selectedCrop]);
 
   const activeStageName = cropStages[activeStage]?.name || cropStages[0]?.name || 'Growth';
@@ -334,6 +493,7 @@ export default function FarmGuide() {
 
   const onSaveMyCrops = () => {
     localStorage.setItem('my_crops', JSON.stringify(myCrops));
+    setShowAddCrops(false);
     toast.success('My crops saved successfully.');
   };
 
@@ -399,592 +559,77 @@ export default function FarmGuide() {
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
-
-          .jk-wrap {
-            background: #ffffff;
-            color: #1a1a1a;
-            min-height: 100vh;
-            font-family: 'DM Sans', sans-serif;
-            padding-bottom: 2rem;
-          }
-
-          .jk-header {
-            background: #16a34a;
-            color: white;
-            padding: 0.85rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          }
-
-          .jk-header h2 {
-            margin: 0;
-            font-size: 1.02rem;
-            font-weight: 700;
-            text-align: center;
-            flex: 1;
-            font-family: 'Playfair Display', serif;
-          }
-
-          .jk-back-btn {
-            border: none;
-            background: transparent;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            width: 28px;
-          }
-
-          .jk-body {
-            padding: 1rem;
-            max-width: 1080px;
-            margin: 0 auto;
-          }
-
-          .jk-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.45rem;
-            margin: 0;
-          }
-
-          .jk-subtitle {
-            margin: 0.3rem 0 1rem;
-            color: #4b5563;
-            font-size: 0.9rem;
-          }
-
-          .section {
-            margin: 1.5rem 0;
-          }
-
-          .section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-          }
-
-          .section-title {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: #1a1a1a;
-            margin: 0;
-          }
-
-          .view-all {
-            color: #16a34a;
-            font-size: 0.85rem;
-            font-weight: 600;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-          }
-
-          .horizontal-scroll {
-            display: flex;
-            gap: 0.75rem;
-            overflow-x: auto;
-            padding-bottom: 0.3rem;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-
-          .horizontal-scroll::-webkit-scrollbar {
-            display: none;
-          }
-
-          .crop-chip {
-            min-width: 86px;
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            padding: 0.45rem;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            position: relative;
-            cursor: pointer;
-          }
-
-          .crop-chip.active {
-            border: 2px solid #16a34a;
-            background: #f0fdf4;
-          }
-
-          .crop-emoji-box {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 0.35rem;
-            border-radius: 10px;
-            background: #ecfdf5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-          }
-
-          .crop-chip p {
-            margin: 0;
-            color: #166534;
-            font-size: 0.75rem;
-            font-weight: 600;
-          }
-
-          .remove-btn {
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            border: none;
-            border-radius: 999px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            font-size: 0.7rem;
-            background: #fee2e2;
-            color: #dc2626;
-          }
-
-          .add-crop-btn {
-            min-width: 86px;
-            border: 1px dashed #16a34a;
-            border-radius: 12px;
-            background: #f0fdf4;
-            color: #166534;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0.45rem;
-          }
-
-          .tab-pill {
-            border-radius: 999px;
-            padding: 0.5rem 0.9rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-            white-space: nowrap;
-            border: 1px solid #e5e7eb;
-            background: white;
-            color: #666;
-            cursor: pointer;
-          }
-
-          .tab-pill.active {
-            background: #16a34a;
-            color: white;
-            border-color: #16a34a;
-          }
-
-          .crop-pick-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.65rem;
-            margin-top: 1rem;
-          }
-
-          .crop-pick-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            text-align: center;
-            padding: 0.6rem 0.4rem;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            background: #fff;
-            position: relative;
-          }
-
-          .crop-pick-card.selected {
-            border: 2px solid #16a34a;
-            background: #f0fdf4;
-          }
-
-          .crop-pick-card .emoji {
-            font-size: 1.3rem;
-            display: block;
-          }
-
-          .crop-pick-card .name {
-            font-size: 0.72rem;
-            margin-top: 0.25rem;
-            color: #374151;
-            font-weight: 600;
-          }
-
-          .crop-check {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            color: #16a34a;
-            font-size: 0.8rem;
-            font-weight: 700;
-          }
-
-          .save-btn {
-            margin-top: 1rem;
-            width: 100%;
-            border: none;
-            background: #16a34a;
-            color: #fff;
-            border-radius: 12px;
-            padding: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-          }
-
-          .stage-card {
-            min-width: 170px;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            padding: 0.7rem;
-            cursor: pointer;
-          }
-
-          .stage-card.active {
-            background: #dcfce7;
-            border: 1px solid #16a34a;
-          }
-
-          .stage-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            margin: 0;
-          }
-
-          .stage-days {
-            margin: 0.2rem 0 0.45rem;
-            color: #4b5563;
-            font-size: 0.75rem;
-          }
-
-          .plant-art {
-            position: relative;
-            width: 100%;
-            height: 78px;
-            border-radius: 10px;
-            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-            overflow: hidden;
-          }
-
-          .plant-stem {
-            width: 6px;
-            background: #16a34a;
-            border-radius: 8px;
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-          }
-
-          .plant-leaf {
-            position: absolute;
-            width: 12px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 999px;
-          }
-
-          .plant-leaf.left {
-            left: calc(50% - 14px);
-            transform: rotate(-30deg);
-          }
-
-          .plant-leaf.right {
-            right: calc(50% - 14px);
-            transform: rotate(30deg);
-          }
-
-          .plant-flower {
-            position: absolute;
-            top: 10px;
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: #f59e0b;
-            border: 2px solid #fde68a;
-          }
-
-          .pest-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.7rem;
-          }
-
-          .pest-card {
-            text-align: center;
-          }
-
-          .pest-box {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            min-height: 120px;
-            max-height: 130px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 3rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          }
-
-          .pest-name {
-            margin-top: 0.35rem;
-            font-size: 0.78rem;
-            color: #1f2937;
-            font-weight: 600;
-          }
-
-          .practice-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.7rem;
-          }
-
-          .practice-card {
-            border: none;
-            border-radius: 12px;
-            height: 160px;
-            color: #fff;
-            padding: 1rem;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            text-align: left;
-          }
-
-          .practice-emoji {
-            font-size: 2.5rem;
-            line-height: 1;
-            align-self: center;
-          }
-
-          .practice-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-          }
-
-          .qa-row {
-            display: flex;
-            gap: 0.75rem;
-            overflow-x: auto;
-            padding-bottom: 0.3rem;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-
-          .qa-row::-webkit-scrollbar {
-            display: none;
-          }
-
-          .qa-card {
-            min-width: 280px;
-            max-width: 280px;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            padding: 1rem;
-          }
-
-          .qa-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            font-size: 0.72rem;
-            color: #6b7280;
-          }
-
-          .avatar-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 999px;
-            background: #16a34a;
-            color: #fff;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 0.45rem;
-            flex-shrink: 0;
-          }
-
-          .qa-question {
-            margin: 0.8rem 0 0.4rem;
-            font-size: 0.9rem;
-            color: #111827;
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .link-like {
-            color: #16a34a;
-            font-size: 0.82rem;
-            font-weight: 600;
-            border: none;
-            background: transparent;
-            padding: 0;
-            cursor: pointer;
-          }
-
-          .qa-expert {
-            margin-top: 0.65rem;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 0.65rem;
-          }
-
-          .expert-box {
-            background: #f3f4f6;
-            border-radius: 8px;
-            padding: 0.6rem;
-          }
-
-          .expert-row {
-            display: flex;
-            gap: 0.45rem;
-            align-items: center;
-            font-size: 0.72rem;
-            color: #4b5563;
-            margin-bottom: 0.45rem;
-          }
-
-          .expert-logo {
-            width: 24px;
-            height: 24px;
-            border-radius: 999px;
-            background: #16a34a;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.62rem;
-            font-weight: 700;
-          }
-
-          .expert-preview {
-            margin: 0;
-            font-size: 0.82rem;
-            color: #6b7280;
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .ask-btn {
-            width: 100%;
-            margin-top: 0.9rem;
-            border: 1px solid #16a34a;
-            background: #fff;
-            color: #16a34a;
-            border-radius: 25px;
-            padding: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-          }
-
-          .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-          }
-
-          .modal-card {
-            width: min(680px, 100%);
-            max-height: 85vh;
-            overflow-y: auto;
-            background: #fff;
-            border-radius: 16px;
-            padding: 1rem;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-          }
-
-          .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-          }
-
-          .modal-header h4 {
-            margin: 0;
-            font-size: 1.05rem;
-          }
-
-          .close-btn {
-            border: none;
-            background: #f3f4f6;
-            border-radius: 999px;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-weight: 700;
-          }
-
-          .practice-content {
-            margin-top: 0.9rem;
-            white-space: pre-wrap;
-            font-size: 0.92rem;
-            line-height: 1.6;
-            color: #1f2937;
-          }
-
-          .query-textarea {
-            width: 100%;
-            min-height: 120px;
-            border-radius: 12px;
-            border: 1px solid #d1d5db;
-            padding: 0.7rem;
-            font-family: inherit;
-            font-size: 0.92rem;
-            resize: vertical;
-          }
-
-          .submit-btn {
-            margin-top: 0.75rem;
-            width: 100%;
-            border: none;
-            background: #16a34a;
-            color: #fff;
-            border-radius: 12px;
-            padding: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-          }
-
-          .spinner {
-            width: 22px;
-            height: 22px;
-            border: 3px solid #bbf7d0;
-            border-top-color: #16a34a;
-            border-radius: 999px;
-            animation: spin 0.8s linear infinite;
-            margin: 0.8rem auto;
-          }
-
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-
-          @media (min-width: 768px) {
-            .jk-body {
-              padding: 1.25rem;
-            }
-
-            .crop-pick-grid {
-              gap: 0.8rem;
-            }
-          }
+          .jk-wrap { background: #ffffff; color: #1a1a1a; min-height: 100vh; font-family: 'DM Sans', sans-serif; padding-bottom: 2rem; }
+          .jk-header { background: #16a34a; color: white; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+          .jk-header h2 { margin: 0; font-size: 1.02rem; font-weight: 700; text-align: center; flex: 1; font-family: 'Playfair Display', serif; }
+          .jk-back-btn { border: none; background: transparent; color: white; font-size: 1.2rem; cursor: pointer; width: 28px; }
+          .jk-body { padding: 1rem; max-width: 1080px; margin: 0 auto; }
+          .jk-title { font-family: 'Playfair Display', serif; font-size: 1.45rem; margin: 0; }
+          .jk-subtitle { margin: 0.3rem 0 1rem; color: #4b5563; font-size: 0.9rem; }
+          .section { margin: 1.5rem 0; }
+          .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+          .section-title { font-weight: 700; font-size: 1.3rem; color: #1a1a1a; margin: 0; }
+          .view-all { color: #16a34a; font-size: 0.85rem; font-weight: 600; background: transparent; border: none; cursor: pointer; }
+          .horizontal-scroll { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.3rem; -ms-overflow-style: none; scrollbar-width: none; }
+          .horizontal-scroll::-webkit-scrollbar { display: none; }
+          .crop-chip { min-width: 96px; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 0.45rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); position: relative; cursor: pointer; }
+          .crop-chip.active { border: 2px solid #16a34a; background: #f0fdf4; }
+          .crop-image-box { width: 60px; height: 60px; margin: 0 auto 0.35rem; border-radius: 12px; overflow: hidden; background: #ecfdf5; display: flex; align-items: center; justify-content: center; }
+          .crop-chip p { margin: 0; color: #166534; font-size: 0.75rem; font-weight: 600; }
+          .remove-btn { position: absolute; top: 3px; right: 3px; border: none; border-radius: 999px; width: 18px; height: 18px; cursor: pointer; font-size: 0.7rem; background: #fee2e2; color: #dc2626; }
+          .add-crop-btn { min-width: 96px; border: 1px dashed #16a34a; border-radius: 12px; background: #f0fdf4; color: #166534; font-weight: 600; cursor: pointer; padding: 0.45rem; }
+          .stage-card { min-width: 170px; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 0.7rem; cursor: pointer; }
+          .stage-card.active { background: #dcfce7; border: 1px solid #16a34a; }
+          .stage-name { font-size: 0.88rem; font-weight: 700; margin: 0; }
+          .stage-days { margin: 0.2rem 0 0.45rem; color: #4b5563; font-size: 0.75rem; }
+          .plant-art { position: relative; width: 100%; height: 78px; border-radius: 10px; background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); overflow: hidden; }
+          .plant-stem { width: 6px; background: #16a34a; border-radius: 8px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
+          .plant-leaf { position: absolute; width: 12px; height: 8px; background: #22c55e; border-radius: 999px; }
+          .plant-leaf.left { left: calc(50% - 14px); transform: rotate(-30deg); }
+          .plant-leaf.right { right: calc(50% - 14px); transform: rotate(30deg); }
+          .plant-flower { position: absolute; top: 10px; width: 10px; height: 10px; border-radius: 999px; background: #f59e0b; border: 2px solid #fde68a; }
+          .pest-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; }
+          .practice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+          .practice-card { border: none; border-radius: 12px; height: 160px; color: #fff; padding: 1rem; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); text-align: left; }
+          .practice-emoji { font-size: 2.5rem; line-height: 1; align-self: center; }
+          .practice-name { font-size: 0.9rem; font-weight: 700; }
+          .qa-row { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.3rem; -ms-overflow-style: none; scrollbar-width: none; }
+          .qa-row::-webkit-scrollbar { display: none; }
+          .qa-card { min-width: 280px; max-width: 280px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 1rem; }
+          .qa-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.72rem; color: #6b7280; }
+          .avatar-dot { width: 32px; height: 32px; border-radius: 999px; background: #16a34a; color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.45rem; flex-shrink: 0; }
+          .qa-question { margin: 0.8rem 0 0.4rem; font-size: 0.9rem; color: #111827; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+          .link-like { color: #16a34a; font-size: 0.82rem; font-weight: 600; border: none; background: transparent; padding: 0; cursor: pointer; }
+          .qa-expert { margin-top: 0.65rem; border-top: 1px solid #e5e7eb; padding-top: 0.65rem; }
+          .expert-box { background: #f3f4f6; border-radius: 8px; padding: 0.6rem; }
+          .expert-row { display: flex; gap: 0.45rem; align-items: center; font-size: 0.72rem; color: #4b5563; margin-bottom: 0.45rem; }
+          .expert-logo { width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; }
+          .expert-preview { margin: 0; font-size: 0.82rem; color: #6b7280; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+          .ask-btn { width: 100%; margin-top: 0.9rem; border: 1px solid #16a34a; background: #fff; color: #16a34a; border-radius: 25px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
+          .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+          .modal-card { width: min(680px, 100%); max-height: 85vh; overflow-y: auto; background: #fff; border-radius: 16px; padding: 1rem; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
+          .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+          .modal-header h4 { margin: 0; font-size: 1.05rem; }
+          .close-btn { border: none; background: #f3f4f6; border-radius: 999px; width: 30px; height: 30px; cursor: pointer; font-weight: 700; }
+          .practice-content { margin-top: 0.9rem; white-space: pre-wrap; font-size: 0.92rem; line-height: 1.6; color: #1f2937; }
+          .query-textarea { width: 100%; min-height: 120px; border-radius: 12px; border: 1px solid #d1d5db; padding: 0.7rem; font-family: inherit; font-size: 0.92rem; resize: vertical; }
+          .submit-btn { margin-top: 0.75rem; width: 100%; border: none; background: #16a34a; color: #fff; border-radius: 12px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
+          .spinner { width: 22px; height: 22px; border: 3px solid #bbf7d0; border-top-color: #16a34a; border-radius: 999px; animation: spin 0.8s linear infinite; margin: 0.8rem auto; }
+          .bottom-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; }
+          .bottom-sheet { background: white; border-radius: 20px 20px 0 0; padding: 1.5rem; max-height: 80vh; overflow-y: auto; width: 100%; }
+          .sheet-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; margin: 0; }
+          .sheet-subtitle { margin: 0.25rem 0 0.9rem; color: #6b7280; font-size: 0.9rem; }
+          .sheet-search { width: 100%; border: 1px solid #d1d5db; border-radius: 12px; padding: 0.75rem; margin-bottom: 0.8rem; }
+          .tab-pill { border-radius: 999px; padding: 0.5rem 0.9rem; font-size: 0.82rem; font-weight: 600; white-space: nowrap; border: 1px solid #e5e7eb; background: white; color: #666; cursor: pointer; }
+          .tab-pill.active { background: #16a34a; color: white; border-color: #16a34a; }
+          .crop-pick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; margin-top: 1rem; }
+          .crop-pick-card { border: 1px solid #e5e7eb; border-radius: 12px; text-align: center; padding: 0.6rem 0.4rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); background: #fff; position: relative; }
+          .crop-pick-card.selected { border: 2px solid #16a34a; background: #f0fdf4; }
+          .crop-pick-card .name { font-size: 0.72rem; margin-top: 0.25rem; color: #374151; font-weight: 600; }
+          .crop-check { position: absolute; top: 6px; right: 6px; color: #16a34a; font-size: 0.8rem; font-weight: 700; }
+          .save-btn { margin-top: 1rem; width: 100%; border: none; background: #16a34a; color: #fff; border-radius: 12px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @media (min-width: 768px) { .jk-body { padding: 1.25rem; } }
         `}
       </style>
 
@@ -1015,7 +660,20 @@ export default function FarmGuide() {
                     className={`crop-chip ${selectedCrop?.name === crop.name ? 'active' : ''}`}
                     onClick={() => openCropDetail(crop)}
                   >
-                    <span className="crop-emoji-box">{crop.emoji}</span>
+                    <div className="crop-image-box">
+                      <img
+                        src={getCropImage(crop.name)}
+                        alt={crop.name}
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '12px' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextElementSibling) {
+                            e.target.nextElementSibling.style.display = 'block';
+                          }
+                        }}
+                      />
+                      <span style={{ display: 'none', fontSize: '2rem' }}>🌿</span>
+                    </div>
                     <p>{crop.name}</p>
                     <span
                       className="remove-btn"
@@ -1030,42 +688,8 @@ export default function FarmGuide() {
                   </button>
                 ))}
 
-                <button type="button" className="add-crop-btn" onClick={() => toast('Pick crops below to add.')}>+ Add</button>
+                <button type="button" className="add-crop-btn" onClick={() => setShowAddCrops(true)}>+ Add</button>
               </div>
-
-              <div className="horizontal-scroll" style={{ marginTop: '0.9rem' }}>
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    className={`tab-pill ${activeCategory === category ? 'active' : ''}`}
-                    onClick={() => setActiveCategory(category)}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-
-              <div className="crop-pick-grid">
-                {currentCategoryCrops.map((crop) => {
-                  const selected = myCrops.some((item) => item.name === crop.name);
-
-                  return (
-                    <button
-                      key={crop.name}
-                      type="button"
-                      className={`crop-pick-card ${selected ? 'selected' : ''}`}
-                      onClick={() => toggleCropSelection(crop)}
-                    >
-                      {selected ? <span className="crop-check">✓</span> : null}
-                      <span className="emoji">{crop.emoji}</span>
-                      <span className="name">{crop.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button type="button" className="save-btn" onClick={onSaveMyCrops}>Save</button>
             </section>
           </>
         ) : null}
@@ -1105,10 +729,24 @@ export default function FarmGuide() {
               </div>
 
               <div className="pest-grid">
-                {pests.map((pest, index) => (
-                  <article key={pest.name} className="pest-card">
-                    <div className="pest-box" style={{ background: PEST_COLORS[index % PEST_COLORS.length] }}>{pest.emoji}</div>
-                    <p className="pest-name">{pest.name}</p>
+                {pests.map((pest) => (
+                  <article key={pest.name}>
+                    <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', aspectRatio: '1' }}>
+                      <img
+                        src={getPestImage(pest.name)}
+                        alt={pest.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                          padding: '0.5rem', color: 'white', fontSize: '0.8rem', fontWeight: 600,
+                        }}
+                      >
+                        {pest.name}
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -1143,7 +781,7 @@ export default function FarmGuide() {
               </div>
 
               <div className="qa-row">
-                {qaList.map((item, index) => (
+                {qaList.map((item) => (
                   <article key={`${item.question}-${item.date}`} className="qa-card">
                     <div className="qa-meta">
                       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -1184,6 +822,74 @@ export default function FarmGuide() {
           </>
         ) : null}
       </main>
+
+      {showAddCrops ? (
+        <div className="bottom-sheet-backdrop" role="presentation" onClick={() => setShowAddCrops(false)}>
+          <section className="bottom-sheet" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3 className="sheet-title">Select your crop.</h3>
+                <p className="sheet-subtitle">Select up to 10 crops</p>
+              </div>
+              <button type="button" className="close-btn" onClick={() => setShowAddCrops(false)}>×</button>
+            </div>
+
+            <input
+              className="sheet-search"
+              value={cropSearch}
+              onChange={(event) => setCropSearch(event.target.value)}
+              placeholder="Search crop..."
+            />
+
+            <div className="horizontal-scroll">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`tab-pill ${activeCategory === category ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            <div className="crop-pick-grid">
+              {currentCategoryCrops.map((crop) => {
+                const selected = myCrops.some((item) => item.name === crop.name);
+
+                return (
+                  <button
+                    key={crop.name}
+                    type="button"
+                    className={`crop-pick-card ${selected ? 'selected' : ''}`}
+                    onClick={() => toggleCropSelection(crop)}
+                  >
+                    {selected ? <span className="crop-check">✓</span> : null}
+                    <div className="crop-image-box" style={{ marginBottom: '0.2rem' }}>
+                      <img
+                        src={getCropImage(crop.name)}
+                        alt={crop.name}
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '12px' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextElementSibling) {
+                            e.target.nextElementSibling.style.display = 'block';
+                          }
+                        }}
+                      />
+                      <span style={{ display: 'none', fontSize: '2rem' }}>🌿</span>
+                    </div>
+                    <span className="name">{crop.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button type="button" className="save-btn" onClick={onSaveMyCrops}>Save</button>
+          </section>
+        </div>
+      ) : null}
 
       {practiceModal ? (
         <div className="modal-backdrop" role="presentation" onClick={() => setPracticeModal(null)}>
