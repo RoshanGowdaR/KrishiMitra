@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -23,10 +24,15 @@ const timeAgo = (isoText) => {
   return `${Math.floor(hours / 24)}d ago`;
 };
 
+const byNewest = (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
 export default function Community() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const navigate = useNavigate();
+
   const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedPostId, setExpandedPostId] = useState('');
@@ -40,9 +46,14 @@ export default function Community() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterLanguage, setFilterLanguage] = useState('all');
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [activeFarmer, setActiveFarmer] = useState(null);
+
   const visiblePosts = useMemo(() => posts || [], [posts]);
 
-  const loadPosts = async () => {
+  const loadFilteredPosts = async () => {
     setLoading(true);
     try {
       const url = new URL(`${API}/forum/posts`);
@@ -52,12 +63,25 @@ export default function Community() {
       const response = await fetch(url.toString());
       const data = await response.json();
       if (!response.ok) throw new Error(data?.detail || 'Failed to load posts');
-      setPosts(data?.posts || []);
+      setPosts((data?.posts || []).sort(byNewest));
     } catch (error) {
       toast.error(error.message || 'Unable to load posts');
       setPosts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAllPosts = async () => {
+    try {
+      const response = await fetch(`${API}/forum/posts`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.detail || 'Failed to load all posts');
+      setAllPosts((data?.posts || []).sort(byNewest));
+      return data?.posts || [];
+    } catch {
+      setAllPosts([]);
+      return [];
     }
   };
 
@@ -73,9 +97,51 @@ export default function Community() {
   };
 
   useEffect(() => {
-    loadPosts();
+    loadFilteredPosts();
+    loadAllPosts();
     loadTrending();
   }, [filterCategory, filterLanguage]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const loadSearchResults = async () => {
+      if (!debouncedSearch) {
+        setSearchResults([]);
+        return;
+      }
+
+      const sourcePosts = allPosts.length ? allPosts : await loadAllPosts();
+      const term = debouncedSearch.toLowerCase();
+      const seen = new Set();
+
+      const authors = sourcePosts
+        .filter((post) => {
+          const name = (post.author_name || '').toLowerCase();
+          const state = (post.state || '').toLowerCase();
+          const district = (post.district || '').toLowerCase();
+          return name.includes(term) || state.includes(term) || district.includes(term);
+        })
+        .filter((post) => {
+          const key = `${post.author_name}-${post.state || ''}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map((post) => ({
+          name: post.author_name,
+          state: post.state || 'Unknown',
+          district: post.district || '',
+        }));
+
+      setSearchResults(authors);
+    };
+
+    loadSearchResults();
+  }, [debouncedSearch, allPosts]);
 
   const createPost = async () => {
     try {
@@ -104,7 +170,8 @@ export default function Community() {
       setCreateTitle('');
       setCreateContent('');
       toast.success('Posted successfully');
-      loadPosts();
+      loadFilteredPosts();
+      loadAllPosts();
       loadTrending();
     } catch (error) {
       toast.error(error.message || 'Unable to create post');
@@ -120,17 +187,15 @@ export default function Community() {
       const response = await fetch(`${API}/forum/posts/${postId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          author_name: authorName,
-          content: replyText,
-        }),
+        body: JSON.stringify({ author_name: authorName, content: replyText }),
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data?.detail || 'Failed to submit reply');
 
       setReplyTextByPost((prev) => ({ ...prev, [postId]: '' }));
-      loadPosts();
+      loadFilteredPosts();
+      loadAllPosts();
       loadTrending();
       toast.success('Reply added');
     } catch (error) {
@@ -138,10 +203,83 @@ export default function Community() {
     }
   };
 
+  const openAuthorProfile = (authorName) => {
+    const postsByFarmer = allPosts.filter((post) => (post.author_name || '').toLowerCase() === authorName.toLowerCase());
+    setActiveFarmer({
+      name: authorName,
+      state: postsByFarmer[0]?.state || 'Unknown',
+      posts: postsByFarmer,
+    });
+  };
+
   return (
     <div className="page-wrap">
       <h2>Community</h2>
       <p className="page-muted">Connect with farmers across India</p>
+
+      <section className="panel">
+        <h3>Find Farmers</h3>
+        <input
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search by name or location..."
+          style={{ width: '100%', maxWidth: '520px' }}
+        />
+
+        <div
+          style={{
+            marginTop: '0.8rem',
+            display: 'flex',
+            gap: '0.7rem',
+            overflowX: 'auto',
+            paddingBottom: '0.2rem',
+          }}
+        >
+          {searchResults.map((farmer) => (
+            <article
+              key={`${farmer.name}-${farmer.state}`}
+              style={{
+                minWidth: '220px',
+                border: '1px solid #dcfce7',
+                borderRadius: '12px',
+                background: '#fff',
+                padding: '0.7rem',
+                display: 'grid',
+                gap: '0.45rem',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    background: '#16a34a',
+                    color: '#fff',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontWeight: 700,
+                  }}
+                >
+                  {(farmer.name || 'F').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700 }}>{farmer.name}</p>
+                  <span className="forum-category-badge">{farmer.state}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => navigate(`/app/profile/${encodeURIComponent(farmer.name)}`)}
+              >
+                View Profile
+              </button>
+            </article>
+          ))}
+          {debouncedSearch && searchResults.length === 0 ? <p className="page-muted">No farmers found.</p> : null}
+        </div>
+      </section>
 
       <section className="panel">
         <h3>Create Post</h3>
@@ -200,7 +338,21 @@ export default function Community() {
             return (
               <article key={post.id} className="social-user-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.8rem' }}>
-                  <div style={{ display: 'flex', gap: '0.7rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openAuthorProfile(post.author_name || 'Farmer');
+                    }}
+                    style={{
+                      display: 'flex',
+                      gap: '0.7rem',
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <div
                       style={{
                         width: '36px',
@@ -219,7 +371,7 @@ export default function Community() {
                       <p style={{ margin: 0 }}><strong>{post.author_name}</strong> · {post.state} · {timeAgo(post.created_at)}</p>
                       <span className="forum-category-badge">{post.category}</span>
                     </div>
-                  </div>
+                  </button>
                 </div>
 
                 <h4 style={{ marginTop: '0.7rem' }}>{post.title}</h4>
@@ -277,6 +429,61 @@ export default function Community() {
           ))}
         </div>
       </section>
+
+      {activeFarmer ? (
+        <div
+          role="presentation"
+          onClick={() => setActiveFarmer(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'grid',
+            placeItems: 'center',
+            zIndex: 220,
+            padding: '1rem',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 'min(520px, 100%)',
+              background: '#fff',
+              borderRadius: '14px',
+              border: '1px solid #dcfce7',
+              padding: '1rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem' }}>
+              <div style={{ display: 'flex', gap: '0.7rem', alignItems: 'center' }}>
+                <div style={{ width: '62px', height: '62px', borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: '1.3rem' }}>
+                  {(activeFarmer.name || 'F').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 style={{ margin: 0 }}>{activeFarmer.name}</h3>
+                  <span className="forum-category-badge">{activeFarmer.state}</span>
+                </div>
+              </div>
+              <button type="button" className="ghost-btn" onClick={() => setActiveFarmer(null)}>Close</button>
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
+              <p style={{ marginTop: 0, fontWeight: 700 }}>Posts by this farmer</p>
+              <div style={{ display: 'grid', gap: '0.55rem', maxHeight: '260px', overflowY: 'auto' }}>
+                {activeFarmer.posts.slice(0, 5).map((post) => (
+                  <article key={post.id} style={{ border: '1px solid #dcfce7', borderRadius: '10px', padding: '0.55rem' }}>
+                    <p style={{ margin: 0, fontWeight: 700 }}>{post.title}</p>
+                    <p className="page-muted" style={{ margin: 0 }}>{post.category} · {timeAgo(post.created_at)}</p>
+                  </article>
+                ))}
+                {activeFarmer.posts.length === 0 ? <p className="page-muted">No posts found.</p> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -14,10 +14,9 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const activeLanguage = supportedLanguages.find((item) => item.code === language);
 
-  const displayName = user?.user_metadata?.full_name || user?.email || 'Farmer';
-  const profilePhoto = user?.user_metadata?.avatar_url || '';
-  const avatarText = String(displayName).trim().charAt(0).toUpperCase() || 'F';
-  const shortDisplayName = String(displayName).length > 15 ? `${String(displayName).slice(0, 15)}...` : String(displayName);
+  const avatarUrl = user?.user_metadata?.avatar_url;
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials = userName.charAt(0).toUpperCase();
 
   useEffect(() => {
     const onScroll = () => {
@@ -64,53 +63,85 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
         </button>
 
         <div
+          onClick={() => navigate('/app/profile')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            padding: '0.35rem 0.55rem',
-            borderRadius: '999px',
-            background: 'rgba(22,163,74,0.12)',
-            border: '1px solid rgba(22,163,74,0.25)',
-            maxWidth: '260px',
+            cursor: 'pointer',
+            padding: '0.4rem 0.8rem',
+            borderRadius: '25px',
+            border: '1px solid #e5e7eb',
+            background: 'white',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.background = '#f0fdf4';
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.background = 'white';
           }}
           role="button"
           tabIndex={0}
-          onClick={() => navigate('/app/settings')}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
-              navigate('/app/settings');
+              navigate('/app/profile');
             }
           }}
-          title="Open settings"
+          title="Open profile"
         >
-          {profilePhoto ? (
+          {avatarUrl ? (
             <img
-              src={profilePhoto}
-              alt="User avatar"
-              style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
-            />
-          ) : (
-            <span
+              src={avatarUrl}
+              alt={userName}
               style={{
-                width: '30px',
-                height: '30px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                background: 'rgba(22,163,74,0.85)',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '0.85rem',
+                objectFit: 'cover',
+                border: '2px solid #16a34a',
               }}
-            >
-              {avatarText}
-            </span>
-          )}
+              onError={(event) => {
+                event.currentTarget.style.display = 'none';
+                const fallback = event.currentTarget.nextSibling;
+                if (fallback) {
+                  fallback.style.display = 'flex';
+                }
+              }}
+            />
+          ) : null}
 
-          <span style={{ fontSize: '0.8rem', color: '#14532d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={displayName}>
-            {shortDisplayName}
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: '#16a34a',
+              color: 'white',
+              display: avatarUrl ? 'none' : 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            {initials}
+          </div>
+
+          <span
+            style={{
+              fontSize: '0.88rem',
+              fontWeight: 500,
+              color: '#1a1a1a',
+              maxWidth: '120px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {userName.split(' ')[0]}
           </span>
         </div>
 

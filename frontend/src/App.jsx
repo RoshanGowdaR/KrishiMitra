@@ -146,6 +146,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="sos" element={<SOS />} />
               <Route path="farm-guide" element={<FarmGuide />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="profile/:username" element={<Profile />} />
               <Route path="community" element={<Community />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
