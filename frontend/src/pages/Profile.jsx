@@ -216,9 +216,9 @@ export default function Profile() {
       <section className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         <div
           style={{
-            height: '140px',
-            backgroundImage: 'linear-gradient(135deg, #16a34a, #15803d), repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0) 8px, rgba(255,255,255,0) 16px)',
-            backgroundBlendMode: 'overlay',
+            height: '72px',
+            background: 'linear-gradient(180deg, #f0fdf4 0%, #ecfdf3 100%)',
+            borderBottom: '1px solid #dcfce7',
             position: 'relative',
           }}
         />
