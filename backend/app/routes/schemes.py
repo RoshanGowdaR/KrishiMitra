@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
+from app.config import get_supabase_client
 from app.services.schemes_service import (
     check_eligibility,
     get_all_schemes,
@@ -26,6 +27,41 @@ class SchemeResponse(BaseModel):
 
 class SchemeListResponse(BaseModel):
     schemes: list[SchemeResponse]
+
+
+def _load_custom_schemes(language: str) -> list[dict]:
+    try:
+        supabase = get_supabase_client()
+    except RuntimeError:
+        return []
+
+    try:
+        response = (
+            supabase
+            .table("custom_schemes")
+            .select("id, name, description, language, deadline, ministry")
+            .eq("language", language.lower())
+            .execute()
+        )
+    except Exception:
+        return []
+
+    rows = response.data or []
+    transformed = []
+    for row in rows:
+        transformed.append({
+            "id": row.get("id"),
+            "name": row.get("name") or "Custom Scheme",
+            "description": row.get("description") or "Custom scheme added by admin",
+            "eligibility": ["As declared by admin"],
+            "benefits": ["Refer scheme description"],
+            "application_process": ["Contact local office or in-app support"],
+            "deadline": row.get("deadline") or "Open",
+            "ministry": row.get("ministry") or "State / Local Authority",
+            "scheme_type": "training",
+        })
+
+    return transformed
 
 
 class FarmerProfileRequest(BaseModel):
@@ -52,6 +88,7 @@ async def read_schemes(
     language: str = Query(default="en", min_length=2),
 ) -> SchemeListResponse:
     schemes = await get_all_schemes(language=language)
+    schemes.extend(_load_custom_schemes(language=language))
     return SchemeListResponse(schemes=[SchemeResponse(**scheme) for scheme in schemes])
 
 

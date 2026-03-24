@@ -14,6 +14,9 @@ import {
   RiHome5Line,
   RiSettings3Line,
   RiPushpin2Line,
+  RiUser3Line,
+  RiTeamLine,
+  RiFlag2Line,
 } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 
@@ -30,6 +33,9 @@ const navItems = [
   { to: '/app/forum', key: 'forum', icon: RiMessage2Line },
   { to: '/app/sos', key: 'sos', icon: RiAlarmWarningLine },
   { to: '/app/farm-guide', key: 'farmGuide', icon: RiBookOpenLine },
+  { to: '/app/profile', key: 'profile', icon: RiUser3Line },
+  { to: '/app/community', key: 'community', icon: RiTeamLine },
+  { to: '/app/reports', key: 'reports', icon: RiFlag2Line },
   { to: '/app/settings', key: 'settings', icon: RiSettings3Line },
 ];
 
@@ -75,7 +81,17 @@ export default function Sidebar({
               onClick={onClose}
             >
               <Icon />
-              <span>{item.key === 'settings' ? 'Settings' : t(`nav.${item.key === 'marketPrices' ? 'market' : item.key}`)}</span>
+              <span>
+                {item.key === 'settings'
+                  ? 'Settings'
+                  : item.key === 'profile'
+                    ? 'Profile'
+                  : item.key === 'community'
+                    ? 'Community'
+                    : item.key === 'reports'
+                      ? 'Reports'
+                      : t(`nav.${item.key === 'marketPrices' ? 'market' : item.key}`)}
+              </span>
             </NavLink>
           );
         })}

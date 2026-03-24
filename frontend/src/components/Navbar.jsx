@@ -74,6 +74,16 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
             border: '1px solid rgba(22,163,74,0.25)',
             maxWidth: '260px',
           }}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/app/settings')}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              navigate('/app/settings');
+            }
+          }}
+          title="Open settings"
         >
           {profilePhoto ? (
             <img

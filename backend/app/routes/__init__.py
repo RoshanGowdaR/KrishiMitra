@@ -9,6 +9,7 @@ from app.routes.market import router as market_router
 from app.routes.marketplace import router as marketplace_router
 from app.routes.quiz import router as quiz_router
 from app.routes.schemes import router as schemes_router
+from app.routes.social import router as social_router
 from app.routes.soil import router as soil_router
 from app.routes.sos import router as sos_router
 from app.routes.voice import router as voice_router
@@ -24,6 +25,7 @@ api_router.include_router(market_router)
 api_router.include_router(marketplace_router)
 api_router.include_router(quiz_router)
 api_router.include_router(schemes_router)
+api_router.include_router(social_router)
 api_router.include_router(soil_router)
 api_router.include_router(sos_router)
 api_router.include_router(voice_router, tags=["Voice"])

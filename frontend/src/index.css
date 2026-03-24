@@ -1577,6 +1577,105 @@ a {
   font-size: 0.85rem;
 }
 
+.social-profile-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.social-profile-photo {
+  width: 110px;
+  height: 110px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid #cbd5e1;
+}
+
+.social-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.social-search-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.social-user-card {
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+.social-user-card p {
+  margin: 0.2rem 0;
+}
+
+.social-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.social-row {
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  margin-bottom: 0.45rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.social-friend-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  background: #fff;
+  display: grid;
+  gap: 0.15rem;
+  margin-bottom: 0.45rem;
+  cursor: pointer;
+}
+
+.social-friend-btn.active {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.social-friend-btn small {
+  color: #64748b;
+}
+
+.social-chat-log {
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.soil-form-grid textarea {
+  width: 100%;
+  min-height: 88px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.52rem 0.6rem;
+  resize: vertical;
+}
+
 .section-header-row {
   display: flex;
   align-items: center;
@@ -2124,6 +2223,10 @@ a {
   .landing-feature-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .social-search-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
@@ -2191,6 +2294,15 @@ a {
   .farm-guide-filter-row,
   .sos-helpline-grid {
     grid-template-columns: 1fr;
+  }
+
+  .social-two-col,
+  .social-search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-profile-panel {
+    flex-direction: column;
   }
 
   .chatbot-shell {

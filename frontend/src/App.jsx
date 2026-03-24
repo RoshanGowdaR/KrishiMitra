@@ -26,6 +26,9 @@ import Forum from './pages/Forum';
 import SOS from './pages/SOS';
 import FarmGuide from './pages/FarmGuide';
 import Settings from './pages/Settings';
+import Community from './pages/Community';
+import Reports from './pages/Reports';
+import Profile from './pages/Profile';
 
 const STORAGE_KEY = 'krishimitra_language';
 const SIDEBAR_PIN_KEY = 'krishimitra_sidebar_pinned';
@@ -142,6 +145,9 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="forum" element={<Forum />} />
               <Route path="sos" element={<SOS />} />
               <Route path="farm-guide" element={<FarmGuide />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="community" element={<Community />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
             </Routes>
           </PageTransition>

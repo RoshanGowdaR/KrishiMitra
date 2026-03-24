@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
+import { getQuizzes } from '../services/api';
 
 function ScoreScreen({ score, total, onTryAgain, onBack, t }) {
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -114,6 +116,7 @@ function QuizMode({
 
 export default function Quiz() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -125,18 +128,20 @@ export default function Quiz() {
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/v1/quiz')
-      .then((r) => r.json())
+    setLoading(true);
+    getQuizzes({ language })
       .then((data) => {
         const list = Array.isArray(data) ? data : data?.quizzes || [];
-        setQuizzes(list);
+        const rank = { beginner: 0, intermediate: 1, advanced: 2 };
+        const sorted = [...list].sort((a, b) => (rank[a.difficulty] ?? 9) - (rank[b.difficulty] ?? 9));
+        setQuizzes(sorted);
         setLoading(false);
       })
       .catch(() => {
         setLoading(false);
         setError(t('quiz.failed'));
       });
-  }, [t]);
+  }, [t, language]);
 
   const totalQuestions = useMemo(
     () => activeQuiz?.questions?.length || 0,

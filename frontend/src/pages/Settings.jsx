@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
+import { authedFetch } from '../lib/authFetch';
 import i18n from '../i18n';
 
 const STORAGE_NOTIFICATIONS = 'krishimitra_notification_settings';
@@ -66,16 +67,6 @@ export default function Settings() {
     });
   }, [user]);
 
-  const getAuthHeaders = async () => {
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
-    if (!token) throw new Error('No active session found');
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    };
-  };
-
   useEffect(() => {
     const savedNotifications = localStorage.getItem(STORAGE_NOTIFICATIONS);
     if (savedNotifications) {
@@ -99,8 +90,7 @@ export default function Settings() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const headers = await getAuthHeaders();
-        const response = await fetch('http://127.0.0.1:8000/api/v1/auth/me', { headers });
+        const response = await authedFetch('http://127.0.0.1:8000/api/v1/auth/me');
         const data = await response.json();
         if (response.ok && data?.user) {
           setProfile((prev) => ({
@@ -132,10 +122,8 @@ export default function Settings() {
   const saveProfile = async () => {
     setIsSavingProfile(true);
     try {
-      const headers = await getAuthHeaders();
-      const response = await fetch('http://127.0.0.1:8000/api/v1/auth/update-profile', {
+      const response = await authedFetch('http://127.0.0.1:8000/api/v1/auth/update-profile', {
         method: 'POST',
-        headers,
         body: JSON.stringify(profile),
       });
       const data = await response.json();
@@ -157,10 +145,8 @@ export default function Settings() {
     setLanguage(nextLanguage);
 
     try {
-      const headers = await getAuthHeaders();
-      const response = await fetch('http://127.0.0.1:8000/api/v1/auth/update-profile', {
+      const response = await authedFetch('http://127.0.0.1:8000/api/v1/auth/update-profile', {
         method: 'POST',
-        headers,
         body: JSON.stringify({
           name: profile.name,
           state: profile.state,
