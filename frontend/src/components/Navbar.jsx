@@ -5,6 +5,7 @@ import { RiLogoutBoxRLine } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { getUnreadCounts, subscribeToMessages } from '../services/socialService';
 
 export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [totalUnread, setTotalUnread] = useState(0);
   const activeLanguage = supportedLanguages.find((item) => item.code === language);
 
   const avatarUrl = user?.user_metadata?.avatar_url;
@@ -30,6 +32,22 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
       window.removeEventListener('scroll', onScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    getUnreadCounts(user.id).then((counts) => {
+      setTotalUnread(Object.values(counts || {}).reduce((sum, value) => sum + Number(value || 0), 0));
+    });
+
+    const sub = subscribeToMessages(user.id, () => {
+      setTotalUnread((prev) => prev + 1);
+    });
+
+    return () => {
+      if (sub?.unsubscribe) sub.unsubscribe();
+    };
+  }, [user?.id]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -61,6 +79,55 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
           <RiTranslate2 />
           <span>{activeLanguage?.native || language.toUpperCase()}</span>
         </button>
+
+        <div
+          onClick={() => navigate('/app/chat')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              navigate('/app/chat');
+            }
+          }}
+          style={{
+            position: 'relative',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            borderRadius: '50%',
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+          }}
+          title="Open chat"
+        >
+          💬
+          {totalUnread > 0 ? (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {totalUnread > 9 ? '9+' : totalUnread}
+            </span>
+          ) : null}
+        </div>
 
         <div
           onClick={() => navigate('/app/profile')}

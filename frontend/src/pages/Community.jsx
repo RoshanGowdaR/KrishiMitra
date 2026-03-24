@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { searchUsers } from '../services/socialService';
 
 const API = 'http://127.0.0.1:8000/api/v1';
 
@@ -108,40 +109,18 @@ export default function Community() {
   }, [searchTerm]);
 
   useEffect(() => {
-    const loadSearchResults = async () => {
+    const runSearch = async () => {
       if (!debouncedSearch) {
         setSearchResults([]);
         return;
       }
 
-      const sourcePosts = allPosts.length ? allPosts : await loadAllPosts();
-      const term = debouncedSearch.toLowerCase();
-      const seen = new Set();
-
-      const authors = sourcePosts
-        .filter((post) => {
-          const name = (post.author_name || '').toLowerCase();
-          const state = (post.state || '').toLowerCase();
-          const district = (post.district || '').toLowerCase();
-          return name.includes(term) || state.includes(term) || district.includes(term);
-        })
-        .filter((post) => {
-          const key = `${post.author_name}-${post.state || ''}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        })
-        .map((post) => ({
-          name: post.author_name,
-          state: post.state || 'Unknown',
-          district: post.district || '',
-        }));
-
-      setSearchResults(authors);
+      const results = await searchUsers(debouncedSearch);
+      setSearchResults(results || []);
     };
 
-    loadSearchResults();
-  }, [debouncedSearch, allPosts]);
+    runSearch();
+  }, [debouncedSearch]);
 
   const createPost = async () => {
     try {
@@ -203,11 +182,17 @@ export default function Community() {
     }
   };
 
-  const openAuthorProfile = (authorName) => {
-    const postsByFarmer = allPosts.filter((post) => (post.author_name || '').toLowerCase() === authorName.toLowerCase());
+  const openAuthor = (post) => {
+    const inferredUserId = post.author_id || post.user_id || post.author_user_id || null;
+    if (inferredUserId) {
+      navigate(`/app/profile/${inferredUserId}`);
+      return;
+    }
+
+    const postsByFarmer = allPosts.filter((item) => (item.author_name || '').toLowerCase() === (post.author_name || '').toLowerCase());
     setActiveFarmer({
-      name: authorName,
-      state: postsByFarmer[0]?.state || 'Unknown',
+      name: post.author_name || 'Farmer',
+      state: post.state || 'Unknown',
       posts: postsByFarmer,
     });
   };
@@ -222,59 +207,27 @@ export default function Community() {
         <input
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search by name or location..."
-          style={{ width: '100%', maxWidth: '520px' }}
+          placeholder="Search by name, location or User ID (e.g. 05E9383C)"
+          style={{ width: '100%', maxWidth: '560px' }}
         />
 
-        <div
-          style={{
-            marginTop: '0.8rem',
-            display: 'flex',
-            gap: '0.7rem',
-            overflowX: 'auto',
-            paddingBottom: '0.2rem',
-          }}
-        >
+        <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.7rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
           {searchResults.map((farmer) => (
             <article
-              key={`${farmer.name}-${farmer.state}`}
-              style={{
-                minWidth: '220px',
-                border: '1px solid #dcfce7',
-                borderRadius: '12px',
-                background: '#fff',
-                padding: '0.7rem',
-                display: 'grid',
-                gap: '0.45rem',
-              }}
+              key={farmer.id}
+              style={{ minWidth: '250px', border: '1px solid #dcfce7', borderRadius: '12px', background: '#fff', padding: '0.7rem', display: 'grid', gap: '0.45rem' }}
             >
               <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    background: '#16a34a',
-                    color: '#fff',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontWeight: 700,
-                  }}
-                >
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700 }}>
                   {(farmer.name || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontWeight: 700 }}>{farmer.name}</p>
-                  <span className="forum-category-badge">{farmer.state}</span>
+                  <p style={{ margin: 0, fontWeight: 700 }}>{farmer.name || 'Farmer'}</p>
+                  <p className="page-muted" style={{ margin: 0, fontSize: '0.76rem' }}>📍 {farmer.state || 'Unknown'}, {farmer.district || '-'}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => navigate(`/app/profile/${encodeURIComponent(farmer.name)}`)}
-              >
-                View Profile
-              </button>
+              <p className="page-muted" style={{ margin: 0, fontSize: '0.74rem' }}>ID: {(farmer.user_uid || farmer.id || '').toString().slice(0, 8).toUpperCase()}</p>
+              <button type="button" className="ghost-btn" onClick={() => navigate(`/app/profile/${farmer.id}`)}>View Profile</button>
             </article>
           ))}
           {debouncedSearch && searchResults.length === 0 ? <p className="page-muted">No farmers found.</p> : null}
@@ -340,31 +293,10 @@ export default function Community() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.8rem' }}>
                   <button
                     type="button"
-                    onClick={() => {
-                      openAuthorProfile(post.author_name || 'Farmer');
-                    }}
-                    style={{
-                      display: 'flex',
-                      gap: '0.7rem',
-                      background: 'transparent',
-                      border: 'none',
-                      padding: 0,
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                    }}
+                    onClick={() => openAuthor(post)}
+                    style={{ display: 'flex', gap: '0.7rem', background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}
                   >
-                    <div
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        background: '#16a34a',
-                        color: '#fff',
-                        display: 'grid',
-                        placeItems: 'center',
-                        fontWeight: 700,
-                      }}
-                    >
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700 }}>
                       {(post.author_name || 'F').charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -375,20 +307,12 @@ export default function Community() {
                 </div>
 
                 <h4 style={{ marginTop: '0.7rem' }}>{post.title}</h4>
-                <p style={{
-                  marginBottom: '0.55rem',
-                  display: '-webkit-box',
-                  WebkitLineClamp: expanded ? 'unset' : 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}>
+                <p style={{ marginBottom: '0.55rem', display: '-webkit-box', WebkitLineClamp: expanded ? 'unset' : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {post.content}
                 </p>
 
                 <p className="page-muted">👍 {post.likes || 0} · 💬 {post.replies?.length || 0}</p>
-                <button type="button" className="ghost-btn" onClick={() => setExpandedPostId(expanded ? '' : post.id)}>
-                  View & Reply
-                </button>
+                <button type="button" className="ghost-btn" onClick={() => setExpandedPostId(expanded ? '' : post.id)}>View & Reply</button>
 
                 {expanded ? (
                   <div style={{ marginTop: '0.7rem' }}>
@@ -407,9 +331,7 @@ export default function Community() {
                       onChange={(event) => setReplyTextByPost((prev) => ({ ...prev, [post.id]: event.target.value }))}
                       placeholder="Add reply"
                     />
-                    <button type="button" className="primary-btn" style={{ marginTop: '0.5rem' }} onClick={() => submitReply(post.id)}>
-                      Submit Reply
-                    </button>
+                    <button type="button" className="primary-btn" style={{ marginTop: '0.5rem' }} onClick={() => submitReply(post.id)}>Submit Reply</button>
                   </div>
                 ) : null}
               </article>
@@ -431,31 +353,8 @@ export default function Community() {
       </section>
 
       {activeFarmer ? (
-        <div
-          role="presentation"
-          onClick={() => setActiveFarmer(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.45)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 220,
-            padding: '1rem',
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            onClick={(event) => event.stopPropagation()}
-            style={{
-              width: 'min(520px, 100%)',
-              background: '#fff',
-              borderRadius: '14px',
-              border: '1px solid #dcfce7',
-              padding: '1rem',
-            }}
-          >
+        <div role="presentation" onClick={() => setActiveFarmer(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', display: 'grid', placeItems: 'center', zIndex: 220, padding: '1rem' }}>
+          <div role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()} style={{ width: 'min(520px, 100%)', background: '#fff', borderRadius: '14px', border: '1px solid #dcfce7', padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem' }}>
               <div style={{ display: 'flex', gap: '0.7rem', alignItems: 'center' }}>
                 <div style={{ width: '62px', height: '62px', borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: '1.3rem' }}>

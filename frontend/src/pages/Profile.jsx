@@ -3,6 +3,15 @@ import toast from 'react-hot-toast';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import {
+  acceptFriendRequest,
+  cancelFriendRequest,
+  declineFriendRequest,
+  getFriendshipStatus,
+  getUserById,
+  removeFriend,
+  sendFriendRequest,
+} from '../services/socialService';
 
 const API = 'http://127.0.0.1:8000/api/v1';
 
@@ -13,15 +22,6 @@ const languageLabel = (code) => {
   if (normalized === 'ta') return 'Tamil';
   if (normalized === 'te') return 'Telugu';
   return 'English';
-};
-
-const languageFlag = (code) => {
-  const normalized = (code || 'en').toLowerCase();
-  if (normalized === 'hi') return 'IN';
-  if (normalized === 'kn') return 'KA';
-  if (normalized === 'ta') return 'TN';
-  if (normalized === 'te') return 'AP';
-  return 'US';
 };
 
 const formatJoinDate = (dateText) => {
@@ -35,6 +35,7 @@ const formatJoinDate = (dateText) => {
 
 const fallbackProfile = (user) => ({
   id: user?.id,
+  user_uid: user?.id?.slice(0, 8)?.toUpperCase(),
   name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Farmer',
   email: user?.email || '-',
   phone: '',
@@ -58,20 +59,23 @@ function InfoRow({ label, value }) {
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { username } = useParams();
+  const { userId } = useParams();
   const [searchParams] = useSearchParams();
 
-  const requestedUser = username || searchParams.get('user') || '';
-  const isPublicProfile = Boolean(requestedUser);
+  const queryUserName = searchParams.get('user') || '';
+
+  const isOwnByParam = !userId || userId === user?.id;
+  const isLegacyNameProfile = Boolean(queryUserName);
+  const isOwnProfile = isOwnByParam && !isLegacyNameProfile;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
+  const [friendship, setFriendship] = useState({ status: 'none' });
 
   const [profile, setProfile] = useState(null);
-  const [recentPosts, setRecentPosts] = useState([]);
-  const [publicPosts, setPublicPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
 
   const [draft, setDraft] = useState({
     name: '',
@@ -83,6 +87,16 @@ export default function Profile() {
     preferred_language: 'en',
   });
 
+  const loadFriendship = async (targetId) => {
+    if (!user?.id || !targetId || targetId === user.id) {
+      setFriendship({ status: 'none' });
+      return;
+    }
+
+    const status = await getFriendshipStatus(user.id, targetId);
+    setFriendship(status || { status: 'none' });
+  };
+
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true);
@@ -91,62 +105,94 @@ export default function Profile() {
         const forumData = await forumResponse.json();
         const allPosts = forumResponse.ok ? (forumData?.posts || []) : [];
 
-        if (isPublicProfile) {
-          const lookup = decodeURIComponent(requestedUser);
-          const farmerPosts = allPosts.filter((post) => (post.author_name || '').toLowerCase() === lookup.toLowerCase());
-          setPublicPosts(farmerPosts);
-          setRecentPosts([]);
-
-          const profileFromPosts = {
-            id: `public-${lookup}`,
+        if (isLegacyNameProfile) {
+          const lookup = decodeURIComponent(queryUserName);
+          const byName = allPosts.filter((post) => (post.author_name || '').toLowerCase() === lookup.toLowerCase());
+          setPosts(byName.slice(0, 3));
+          setProfile({
+            id: '',
+            user_uid: '',
             name: lookup,
             email: 'Public farmer profile',
             phone: '',
-            state: farmerPosts[0]?.state || 'Karnataka',
-            district: farmerPosts[0]?.district || 'Hassan',
+            state: byName[0]?.state || 'Karnataka',
+            district: byName[0]?.district || 'Hassan',
             taluk: '',
             village: '',
-            preferred_language: farmerPosts[0]?.language || 'en',
+            preferred_language: byName[0]?.language || 'en',
             avatar_url: '',
-            created_at: farmerPosts[0]?.created_at || '',
-          };
-          setProfile(profileFromPosts);
+            created_at: byName[0]?.created_at || '',
+          });
           setImageFailed(false);
+          setFriendship({ status: 'none' });
           return;
         }
 
-        const base = fallbackProfile(user);
-        let merged = { ...base };
+        if (isOwnProfile) {
+          const base = fallbackProfile(user);
+          let merged = { ...base };
 
-        if (user?.id) {
-          const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
-          if (!error && data) {
-            merged = {
-              ...merged,
-              ...data,
-              email: data.email || base.email,
-              avatar_url: user?.user_metadata?.avatar_url || data.avatar_url || '',
-            };
+          if (user?.id) {
+            const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
+            if (!error && data) {
+              merged = {
+                ...merged,
+                ...data,
+                email: data.email || base.email,
+                avatar_url: user?.user_metadata?.avatar_url || data.avatar_url || '',
+              };
+            }
           }
+
+          const mine = allPosts
+            .filter((post) => {
+              const postAuthor = (post.author_name || '').toLowerCase();
+              const myName = (merged.name || '').toLowerCase();
+              const byId = user?.id && (post.author_id === user.id || post.user_id === user.id || post.author_user_id === user.id);
+              return byId || postAuthor === myName;
+            })
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+          setProfile(merged);
+          setPosts(mine.slice(0, 3));
+          setDraft({
+            name: merged.name || '',
+            phone: merged.phone || '',
+            state: merged.state || '',
+            district: merged.district || '',
+            taluk: merged.taluk || '',
+            village: merged.village || '',
+            preferred_language: merged.preferred_language || 'en',
+          });
+          setImageFailed(false);
+          setFriendship({ status: 'none' });
+          return;
         }
 
-        const mine = allPosts
-          .filter((post) => (post.author_name || '').toLowerCase() === (merged.name || '').toLowerCase())
+        // Public user profile by userId.
+        const target = await getUserById(userId);
+        if (!target) {
+          toast.error('User profile not found');
+          setProfile(fallbackProfile(user));
+          setPosts([]);
+          return;
+        }
+
+        const publicPosts = allPosts
+          .filter((post) => {
+            const byId = post.author_id === target.id || post.user_id === target.id || post.author_user_id === target.id;
+            const byName = (post.author_name || '').toLowerCase() === (target.name || '').toLowerCase();
+            return byId || byName;
+          })
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-        setProfile(merged);
-        setRecentPosts(mine.slice(0, 3));
-        setPublicPosts([]);
-        setDraft({
-          name: merged.name || '',
-          phone: merged.phone || '',
-          state: merged.state || '',
-          district: merged.district || '',
-          taluk: merged.taluk || '',
-          village: merged.village || '',
-          preferred_language: merged.preferred_language || 'en',
+        setProfile({
+          ...target,
+          avatar_url: target.avatar_url || '',
         });
+        setPosts(publicPosts.slice(0, 3));
         setImageFailed(false);
+        await loadFriendship(target.id);
       } catch {
         toast.error('Unable to load profile right now');
       } finally {
@@ -155,7 +201,7 @@ export default function Profile() {
     };
 
     loadProfile();
-  }, [isPublicProfile, requestedUser, user]);
+  }, [isLegacyNameProfile, isOwnProfile, queryUserName, user, userId]);
 
   const onSave = async () => {
     if (!user?.id) return;
@@ -176,13 +222,11 @@ export default function Profile() {
       const { data, error } = await supabase.from('users').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) throw error;
 
-      const updated = {
-        ...profile,
+      setProfile((prev) => ({
+        ...prev,
         ...data,
-        avatar_url: user?.user_metadata?.avatar_url || data?.avatar_url || profile?.avatar_url || '',
-      };
-
-      setProfile(updated);
+        avatar_url: user?.user_metadata?.avatar_url || data?.avatar_url || prev?.avatar_url || '',
+      }));
       setShowEdit(false);
       toast.success('Profile updated successfully');
     } catch {
@@ -192,16 +236,51 @@ export default function Profile() {
     }
   };
 
+  const onAddFriend = async () => {
+    if (!user?.id || !profile?.id) return;
+    const result = await sendFriendRequest(user.id, profile.id);
+    if (result.error) {
+      toast.error(result.error.message || 'Unable to send friend request');
+      return;
+    }
+    toast.success('Friend request sent');
+    setFriendship({ status: 'request_sent' });
+  };
+
+  const onAcceptFriend = async () => {
+    if (!friendship.requestId || !user?.id || !profile?.id) return;
+    await acceptFriendRequest(friendship.requestId, profile.id, user.id);
+    toast.success('Friend request accepted');
+    await loadFriendship(profile.id);
+  };
+
+  const onDeclineFriend = async () => {
+    if (!friendship.requestId || !profile?.id) return;
+    await declineFriendRequest(friendship.requestId);
+    toast.success('Friend request declined');
+    await loadFriendship(profile.id);
+  };
+
+  const onCancelRequest = async () => {
+    if (!friendship.requestId || !profile?.id) return;
+    await cancelFriendRequest(friendship.requestId);
+    toast.success('Request canceled');
+    await loadFriendship(profile.id);
+  };
+
+  const onRemoveFriend = async () => {
+    if (!user?.id || !profile?.id) return;
+    await removeFriend(user.id, profile.id);
+    toast.success('Friend removed');
+    await loadFriendship(profile.id);
+  };
+
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
   const avatarText = (profile?.name || user?.email || 'F').trim().charAt(0).toUpperCase();
   const languageCode = profile?.preferred_language || 'en';
   const locationText = `${profile?.state || 'Karnataka'}, ${profile?.district || 'Hassan'}`;
-  const postsCount = isPublicProfile ? publicPosts.length : recentPosts.length;
 
-  const joinedLabel = useMemo(() => {
-    if (isPublicProfile) return formatJoinDate(publicPosts[0]?.created_at || profile?.created_at);
-    return formatJoinDate(user?.created_at || profile?.created_at);
-  }, [isPublicProfile, profile?.created_at, publicPosts, user?.created_at]);
+  const joinedLabel = useMemo(() => formatJoinDate(profile?.created_at || user?.created_at), [profile?.created_at, user?.created_at]);
 
   if (loading) {
     return (
@@ -213,76 +292,99 @@ export default function Profile() {
 
   return (
     <div className="page-wrap" style={{ gap: '1.1rem' }}>
-      <section className="panel" style={{ padding: 0, overflow: 'hidden' }}>
-        <div
-          style={{
-            height: '72px',
-            background: 'linear-gradient(180deg, #f0fdf4 0%, #ecfdf3 100%)',
-            borderBottom: '1px solid #dcfce7',
-            position: 'relative',
-          }}
-        />
+      <section className="panel" style={{ padding: '1.4rem', background: '#fff' }}>
+        <div style={{ display: 'grid', gap: '0.9rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gap: '0.65rem' }}>
+              <div>
+                {avatarUrl && !imageFailed ? (
+                  <img
+                    src={avatarUrl}
+                    alt={profile?.name || 'Profile'}
+                    onError={() => setImageFailed(true)}
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      border: '3px solid #16a34a',
+                      objectFit: 'cover',
+                      background: '#fff',
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      border: '3px solid #16a34a',
+                      background: '#16a34a',
+                      color: '#fff',
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontSize: '2.5rem',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {avatarText}
+                  </div>
+                )}
+              </div>
 
-        <div style={{ padding: '0 1.4rem 1.4rem' }}>
-          <div style={{ marginTop: '-50px', marginLeft: '0.6rem' }}>
-            {avatarUrl && !imageFailed ? (
-              <img
-                src={avatarUrl}
-                alt={profile?.name || 'Profile'}
-                onError={() => setImageFailed(true)}
+              <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#111827' }}>{profile?.name || 'Farmer'}</h2>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>{profile?.email || '-'}</p>
+              <span
                 style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '50%',
-                  border: '4px solid #fff',
-                  objectFit: 'cover',
-                  background: '#fff',
-                  display: 'block',
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '50%',
-                  border: '4px solid #fff',
-                  background: '#16a34a',
-                  color: '#fff',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: '2.5rem',
-                  fontWeight: 700,
+                  width: 'fit-content',
+                  background: '#dcfce7',
+                  color: '#166534',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '999px',
+                  padding: '0.25rem 0.65rem',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
                 }}
               >
-                {avatarText}
+                📍 {locationText}
+              </span>
+            </div>
+
+            {!isOwnProfile && !isLegacyNameProfile ? (
+              <div style={{ display: 'grid', gap: '0.5rem', minWidth: '220px' }}>
+                {friendship.status === 'none' ? (
+                  <button type="button" className="primary-btn" onClick={onAddFriend}>➕ Add Friend</button>
+                ) : null}
+
+                {friendship.status === 'request_sent' ? (
+                  <>
+                    <button type="button" className="ghost-btn" disabled>Request Sent ⏳</button>
+                    <button type="button" className="ghost-btn" onClick={onCancelRequest}>Cancel Request</button>
+                  </>
+                ) : null}
+
+                {friendship.status === 'request_received' ? (
+                  <>
+                    <button type="button" className="primary-btn" onClick={onAcceptFriend}>✅ Accept Friend Request</button>
+                    <button type="button" className="ghost-btn" style={{ borderColor: '#ef4444', color: '#b91c1c' }} onClick={onDeclineFriend}>❌ Decline</button>
+                  </>
+                ) : null}
+
+                {friendship.status === 'friends' ? (
+                  <>
+                    <button type="button" className="ghost-btn" style={{ borderColor: '#16a34a', color: '#166534' }} disabled>👥 Friends ✓</button>
+                    <button type="button" className="primary-btn" style={{ background: '#f97316' }} onClick={() => navigate(`/app/chat?user=${profile?.id}`)}>💬 Send Message</button>
+                    <button type="button" className="ghost-btn" style={{ borderColor: '#ef4444', color: '#b91c1c' }} onClick={onRemoveFriend}>Remove Friend</button>
+                  </>
+                ) : null}
               </div>
-            )}
+            ) : null}
           </div>
 
-          <div style={{ marginTop: '0.7rem', display: 'grid', gap: '0.35rem' }}>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#111827' }}>{profile?.name || 'Farmer'}</h2>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>{profile?.email || '-'}</p>
-            <span
-              style={{
-                width: 'fit-content',
-                background: '#dcfce7',
-                color: '#166534',
-                border: '1px solid #bbf7d0',
-                borderRadius: '999px',
-                padding: '0.25rem 0.65rem',
-                fontWeight: 600,
-                fontSize: '0.82rem',
-              }}
-            >
-              📍 {locationText}
-            </span>
-          </div>
-
-          <div style={{ marginTop: '1rem', display: 'grid', gap: '0.7rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+          <div style={{ marginTop: '0.4rem', display: 'grid', gap: '0.7rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
             <div style={{ border: '1px solid #d1fae5', borderRadius: '10px', padding: '0.65rem', background: '#f0fdf4' }}>
               <p style={{ margin: 0, color: '#166534', fontSize: '0.8rem' }}>Posts</p>
-              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{postsCount}</p>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{posts.length}</p>
             </div>
             <div style={{ border: '1px solid #dcfce7', borderRadius: '10px', padding: '0.65rem', background: '#fff' }}>
               <p style={{ margin: 0, color: '#166534', fontSize: '0.8rem' }}>Joined</p>
@@ -302,7 +404,8 @@ export default function Profile() {
           <InfoRow label="Full Name" value={profile?.name} />
           <InfoRow label="Email" value={profile?.email} />
           <InfoRow label="Phone" value={profile?.phone || 'Not added'} />
-          <InfoRow label="Preferred Language" value={`${languageFlag(languageCode)} ${languageLabel(languageCode)}`} />
+          <InfoRow label="Preferred Language" value={languageLabel(languageCode)} />
+          {profile?.user_uid ? <InfoRow label="User ID" value={profile?.user_uid} /> : null}
         </article>
 
         <article style={{ border: '1px solid #d1fae5', borderRadius: '12px', padding: '1rem', background: '#fff' }}>
@@ -314,7 +417,7 @@ export default function Profile() {
         </article>
       </section>
 
-      {!isPublicProfile ? (
+      {isOwnProfile ? (
         <section className="panel" style={{ textAlign: 'center' }}>
           <button
             type="button"
@@ -336,22 +439,17 @@ export default function Profile() {
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>Recent Forum Posts</h3>
-        {(isPublicProfile ? publicPosts : recentPosts).length === 0 ? (
+        {posts.length === 0 ? (
           <p className="page-muted">No posts yet. Share your farming experience!</p>
         ) : (
           <div style={{ display: 'grid', gap: '0.75rem' }}>
-            {(isPublicProfile ? publicPosts : recentPosts).slice(0, 3).map((post) => (
+            {posts.map((post) => (
               <article key={post.id} style={{ border: '1px solid #dcfce7', borderRadius: '10px', padding: '0.75rem' }}>
                 <p style={{ margin: 0, fontWeight: 700 }}>{post.title}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.4rem', gap: '0.7rem', flexWrap: 'wrap' }}>
                   <span className="forum-category-badge">{post.category || 'general'}</span>
                   <span className="page-muted">{formatJoinDate(post.created_at)}</span>
-                  <button
-                    type="button"
-                    className="ghost-btn"
-                    onClick={() => navigate('/app/community')}
-                    style={{ color: '#15803d', borderColor: '#bbf7d0' }}
-                  >
+                  <button type="button" className="ghost-btn" onClick={() => navigate('/app/community')} style={{ color: '#15803d', borderColor: '#bbf7d0' }}>
                     View Post
                   </button>
                 </div>
@@ -365,27 +463,13 @@ export default function Profile() {
         <div
           role="presentation"
           onClick={() => setShowEdit(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.45)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 200,
-            padding: '1rem',
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', display: 'grid', placeItems: 'center', zIndex: 200, padding: '1rem' }}
         >
           <div
             role="dialog"
             aria-modal="true"
             onClick={(event) => event.stopPropagation()}
-            style={{
-              width: 'min(560px, 100%)',
-              background: '#fff',
-              borderRadius: '14px',
-              padding: '1rem',
-              border: '1px solid #dcfce7',
-            }}
+            style={{ width: 'min(560px, 100%)', background: '#fff', borderRadius: '14px', padding: '1rem', border: '1px solid #dcfce7' }}
           >
             <h3 style={{ marginTop: 0 }}>Edit Profile</h3>
             <div className="soil-form-grid">
@@ -408,10 +492,7 @@ export default function Profile() {
                 <input value={draft.village} onChange={(event) => setDraft((prev) => ({ ...prev, village: event.target.value }))} />
               </label>
               <label>Language
-                <select
-                  value={draft.preferred_language}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, preferred_language: event.target.value }))}
-                >
+                <select value={draft.preferred_language} onChange={(event) => setDraft((prev) => ({ ...prev, preferred_language: event.target.value }))}>
                   <option value="en">English</option>
                   <option value="hi">Hindi</option>
                   <option value="kn">Kannada</option>
