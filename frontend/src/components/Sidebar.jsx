@@ -26,6 +26,7 @@ import { useRole } from '../context/RoleContext';
 
 const farmerNavItems = [
   { to: '/app', key: 'home', icon: RiHome5Line },
+  { to: '/app/farmer/bookings', label: 'Track Transport', icon: RiTruckLine },
   { to: '/app/weather', key: 'weather', icon: RiCloudy2Line },
   { to: '/app/market-prices', key: 'marketPrices', icon: RiLineChartLine },
   { to: '/app/schemes', key: 'schemes', icon: RiGovernmentLine },
@@ -46,15 +47,15 @@ const farmerNavItems = [
 
 const buyerNavItems = [
   { to: '/app/buyer', label: 'Browse Produce', icon: RiShoppingBag3Line },
-  { to: '/app/buyer#orders', label: 'My Orders', icon: RiFileList3Line },
+  { to: '/app/buyer/orders', label: 'My Orders', icon: RiFileList3Line },
   { to: '/app/chat', label: 'Messages', icon: RiMessage2Line },
   { to: '/app/settings', label: 'Settings', icon: RiSettings3Line },
 ];
 
 const transporterNavItems = [
   { to: '/app/transporter', label: 'Available Bookings', icon: RiFileList3Line },
-  { to: '/app/transporter#accepted', label: 'My Accepted Jobs', icon: RiTruckLine },
-  { to: '/app/transporter#map', label: 'Route Map', icon: RiMapPin2Line },
+  { to: '/app/transporter/accepted-jobs', label: 'My Accepted Jobs', icon: RiTruckLine },
+  { to: '/app/transporter/route-map', label: 'Route Map', icon: RiMapPin2Line },
   { to: '/app/settings', label: 'Settings', icon: RiSettings3Line },
 ];
 

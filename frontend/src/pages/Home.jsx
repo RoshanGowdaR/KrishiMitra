@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../context/RoleContext';
 import { playGreeting } from '../services/voiceService';
+import { getGreetingIST } from '../utils/istTime';
 
 const quickActionMeta = [
   {
@@ -35,6 +37,7 @@ export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { role } = useRole();
   const greetedRef = useRef(false);
 
   useEffect(() => {
@@ -69,11 +72,13 @@ export default function Home() {
     { text: t('home.updates.1.text'), time: t('home.updates.1.time') },
     { text: t('home.updates.2.text'), time: t('home.updates.2.time') },
   ];
+  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Farmer';
+  const greetingText = getGreetingIST(roleLabel);
 
   return (
     <div className="dashboard-home">
       <section className="dashboard-home-header">
-        <h2>{t('home.greeting')}</h2>
+        <h2>{greetingText}</h2>
         <p>{t('home.subtitle')}</p>
       </section>
 

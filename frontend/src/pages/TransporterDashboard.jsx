@@ -68,20 +68,81 @@ const statusColor = {
   delivered: { bg: '#dcfce7', text: '#166534' },
 };
 
+const parseRouteMeta = (value) => {
+  if (!value) return null;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const getDisplayFare = (booking) => {
+  const numeric = Number(booking?.estimated_cost || 0);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  return Math.max(600, Math.round(Number(booking?.quantity_kg || 0) * 4.5));
+};
+
+const getDisplayFrom = (booking) => {
+  const meta = parseRouteMeta(booking?.route_meta);
+  if (meta?.from) return meta.from;
+  const district = String(booking?.pickup_district || '').trim();
+  const state = String(booking?.pickup_state || '').trim();
+  return [district, state].filter(Boolean).join(', ') || 'Location not provided';
+};
+
+const getDisplayTo = (booking) => {
+  const meta = parseRouteMeta(booking?.route_meta);
+  const destination = String(booking?.destination || '').trim();
+  return meta?.to || destination || 'Destination not provided';
+};
+
+const ACCEPTED_JOBS_STORAGE_KEY = 'transporter_accepted_jobs';
+
+function readSavedAcceptedJobs() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ACCEPTED_JOBS_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function TransporterDashboard() {
   const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem('transporter_profile');
-    return saved ? JSON.parse(saved) : {
+    const defaults = {
       name: '',
       phone: '',
       vehicle_type: 'Truck (Small)',
       operating_states: [],
       available: true,
     };
+
+    const saved = localStorage.getItem('transporter_profile');
+    if (!saved) return defaults;
+
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        name: parsed?.name || '',
+        phone: parsed?.phone || '',
+        // Backward-compatible key mapping from old dashboard structure.
+        vehicle_type: parsed?.vehicle_type || parsed?.vehicleType || 'Truck (Small)',
+        operating_states: Array.isArray(parsed?.operating_states)
+          ? parsed.operating_states
+          : Array.isArray(parsed?.states)
+            ? parsed.states
+            : [],
+        available: typeof parsed?.available === 'boolean' ? parsed.available : true,
+      };
+    } catch {
+      return defaults;
+    }
   });
 
   const [availableBookings, setAvailableBookings] = useState([]);
-  const [acceptedJobs, setAcceptedJobs] = useState([]);
+  const [acceptedJobs, setAcceptedJobs] = useState(() => readSavedAcceptedJobs());
   const [loading, setLoading] = useState(true);
 
   const [acceptingBooking, setAcceptingBooking] = useState(null);
@@ -116,6 +177,10 @@ export default function TransporterDashboard() {
   useEffect(() => {
     fetchAvailableBookings();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(ACCEPTED_JOBS_STORAGE_KEY, JSON.stringify(acceptedJobs));
+  }, [acceptedJobs]);
 
   const earnings = useMemo(() => {
     const delivered = acceptedJobs.filter((job) => job.status === 'delivered');
@@ -249,7 +314,7 @@ export default function TransporterDashboard() {
             {VEHICLES.map((vehicle) => <option key={vehicle} value={vehicle}>{vehicle}</option>)}
           </select>
           <input
-            value={profile.operating_states.join(', ')}
+            value={(profile.operating_states || []).join(', ')}
             onChange={(event) => {
               const states = event.target.value.split(',').map((item) => item.trim()).filter(Boolean);
               setProfile((prev) => ({ ...prev, operating_states: states }));
@@ -289,12 +354,12 @@ export default function TransporterDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem', flexWrap: 'wrap' }}>
                 <p style={{ margin: 0, fontWeight: 800 }}>📦 {booking.commodity} - {booking.quantity_kg} kg</p>
                 <span style={{ background: '#dcfce7', color: '#15803d', borderRadius: 999, padding: '0.2rem 0.7rem', fontWeight: 700 }}>
-                  ₹{Number(booking.estimated_cost || 0).toLocaleString('en-IN')}
+                  ₹{getDisplayFare(booking).toLocaleString('en-IN')}
                 </span>
               </div>
 
-              <p style={{ margin: '0.55rem 0 0' }}>FROM: 📍 {booking.pickup_district}, {booking.pickup_state}</p>
-              <p style={{ margin: '0.2rem 0 0' }}>→ TO: 🎯 {booking.destination}</p>
+              <p style={{ margin: '0.55rem 0 0' }}>FROM: 📍 {getDisplayFrom(booking)}</p>
+              <p style={{ margin: '0.2rem 0 0' }}>→ TO: 🎯 {getDisplayTo(booking)}</p>
               <p style={{ margin: '0.2rem 0 0' }}>Pickup Date: 📅 {booking.pickup_date}</p>
               <p style={{ margin: '0.2rem 0 0' }}>Farmer: 👨‍🌾 {booking.farmer_name}</p>
 

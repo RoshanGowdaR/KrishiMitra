@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { createListing, getListings } from '../services/api';
+import { estimateTransportPrice } from '../services/marketService';
+import { formatDateTimeIST } from '../utils/istTime';
 
 const bookingStepMap = {
   pending: 1,
@@ -22,16 +24,81 @@ const statusBadge = {
 };
 
 const today = new Date().toISOString().slice(0, 10);
+const LOCAL_TRANSPORT_BOOKINGS_KEY = 'krishimitra_farmer_transport_bookings';
+
+const readLocalBookings = (farmerId) => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LOCAL_TRANSPORT_BOOKINGS_KEY) || '[]');
+    const rows = Array.isArray(parsed) ? parsed : [];
+    return farmerId ? rows.filter((item) => item.farmer_id === farmerId) : rows;
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalBookings = (bookings) => {
+  localStorage.setItem(LOCAL_TRANSPORT_BOOKINGS_KEY, JSON.stringify(bookings));
+};
+
+const upsertLocalBooking = (booking) => {
+  const existing = readLocalBookings();
+  const index = existing.findIndex((item) => item.id === booking.id);
+  if (index >= 0) {
+    existing[index] = booking;
+  } else {
+    existing.unshift(booking);
+  }
+  writeLocalBookings(existing);
+};
+
+const getFriendlyInsertError = (error) => {
+  const message = String(error?.message || '').toLowerCase();
+  if (message.includes('violates row-level security policy')) {
+    return 'Transport table policy is blocking inserts (RLS). Please update Supabase policy.';
+  }
+  if (message.includes('column') && message.includes('does not exist')) {
+    return 'Transport table schema mismatch detected. Please sync column names in Supabase.';
+  }
+  if (message.includes('invalid input syntax for type uuid')) {
+    return 'Invalid farmer ID format for booking request.';
+  }
+  return error?.message || 'Please try again.';
+};
+
+const combineAddress = ({ state, district, taluk, place }) => ([
+  place,
+  taluk,
+  district,
+  state,
+  'India',
+].filter(Boolean).join(', '));
+
+const parseColumnNameFromSupabaseError = (error) => {
+  const message = String(error?.message || '');
+  const match = message.match(/column\s+"([^"]+)"\s+does\s+not\s+exist/i);
+  return match?.[1] || null;
+};
+
+const insertBookingWithSchemaFallback = async (payload) => {
+  let nextPayload = { ...payload };
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const { error } = await supabase.from('transport_bookings').insert(nextPayload);
+    if (!error) return { error: null, insertedPayload: nextPayload };
+
+    const badColumn = parseColumnNameFromSupabaseError(error);
+    if (!badColumn || !(badColumn in nextPayload)) {
+      return { error, insertedPayload: nextPayload };
+    }
+
+    delete nextPayload[badColumn];
+  }
+
+  return { error: new Error('Could not insert booking with current transport_bookings schema.'), insertedPayload: nextPayload };
+};
 
 const formatDateTime = (dateText) => {
-  if (!dateText) return '-';
-  return new Date(dateText).toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTimeIST(dateText);
 };
 
 function BookingProgress({ status }) {
@@ -105,6 +172,9 @@ export default function Marketplace() {
   const [showListingModal, setShowListingModal] = useState(false);
   const [showTransportModal, setShowTransportModal] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [estimatingFare, setEstimatingFare] = useState(false);
+  const [fareSummary, setFareSummary] = useState('');
 
   const [listingForm, setListingForm] = useState({
     farmer_name: '',
@@ -121,13 +191,131 @@ export default function Marketplace() {
   const [transportForm, setTransportForm] = useState({
     pickup_state: 'Karnataka',
     pickup_district: 'Bengaluru',
-    destination: 'nearest_mandi',
+    pickup_taluk: '',
+    pickup_place: '',
+    to_state: '',
+    to_district: '',
+    to_taluk: '',
+    to_place: '',
     commodity: 'rice',
     quantity_kg: '',
+    estimated_cost: '',
     pickup_date: today,
     farmer_name: user?.user_metadata?.full_name || '',
     farmer_phone: user?.user_metadata?.phone || '',
   });
+
+  const detectPickupLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}`;
+          const response = await fetch(url, {
+            headers: {
+              Accept: 'application/json',
+            },
+          });
+
+          if (!response.ok) throw new Error('Reverse geocoding failed');
+          const data = await response.json();
+          const address = data?.address || {};
+
+          const state = address.state || address.region || '';
+          const district = address.state_district || address.county || address.city_district || address.city || '';
+          const taluk = address.suburb || address.town || address.municipality || address.village || '';
+          const place = address.road || address.neighbourhood || address.hamlet || address.village || address.town || '';
+
+          setTransportForm((prev) => ({
+            ...prev,
+            pickup_state: state || prev.pickup_state,
+            pickup_district: district || prev.pickup_district,
+            pickup_taluk: taluk || prev.pickup_taluk,
+            pickup_place: place || prev.pickup_place,
+          }));
+
+          toast.success('Pickup location detected');
+        } catch {
+          toast.error('Could not detect location details. Please fill manually.');
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      () => {
+        setDetectingLocation(false);
+        toast.error('Location permission denied. Please fill pickup address manually.');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+      }
+    );
+  };
+
+  const calculateFare = async (quantityOverride) => {
+    const quantityInput = quantityOverride ?? transportForm.quantity_kg;
+    const quantity = Number(quantityInput || 0);
+    if (!quantity) {
+      toast.error('Enter quantity to estimate fare.');
+      return null;
+    }
+
+    if (!transportForm.pickup_state || !transportForm.pickup_district || !transportForm.pickup_taluk || !transportForm.pickup_place) {
+      toast.error('Please fill complete pickup details (state, district, taluk, place).');
+      return null;
+    }
+
+    if (!transportForm.to_state || !transportForm.to_district || !transportForm.to_taluk || !transportForm.to_place) {
+      toast.error('Please fill complete destination details (state, district, taluk, place).');
+      return null;
+    }
+
+    const fromAddress = combineAddress({
+      state: transportForm.pickup_state,
+      district: transportForm.pickup_district,
+      taluk: transportForm.pickup_taluk,
+      place: transportForm.pickup_place,
+    });
+
+    const toAddress = combineAddress({
+      state: transportForm.to_state,
+      district: transportForm.to_district,
+      taluk: transportForm.to_taluk,
+      place: transportForm.to_place,
+    });
+
+    setEstimatingFare(true);
+    try {
+      const estimate = await estimateTransportPrice({
+        commodity: transportForm.commodity,
+        quantityKg: quantity,
+        fromAddress,
+        toAddress,
+      });
+
+      setTransportForm((prev) => ({
+        ...prev,
+        estimated_cost: String(estimate.estimatedCost),
+      }));
+      setFareSummary(estimate.summary || 'Fare estimated using Groq');
+      toast.success(`Estimated fare: ₹${estimate.estimatedCost.toLocaleString('en-IN')}`);
+      return estimate.estimatedCost;
+    } catch {
+      const fallback = Math.max(700, Math.round(500 + (quantity / 100) * 65));
+      setTransportForm((prev) => ({ ...prev, estimated_cost: String(fallback) }));
+      setFareSummary('Fallback fare used because AI estimate was unavailable.');
+      toast('Using fallback transport estimate.', { icon: 'ℹ️' });
+      return fallback;
+    } finally {
+      setEstimatingFare(false);
+    }
+  };
 
   const loadListings = async () => {
     setLoadingListings(true);
@@ -156,10 +344,20 @@ export default function Marketplace() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Unable to load bookings right now.');
-      setBookings([]);
+      const localRows = readLocalBookings(user.id);
+      if (localRows.length > 0) {
+        setBookings(localRows);
+      } else {
+        setBookings([]);
+      }
     } else {
-      setBookings(data || []);
+      const remoteRows = data || [];
+      const localRows = readLocalBookings(user.id);
+      if (remoteRows.length === 0 && localRows.length > 0) {
+        setBookings(localRows);
+      } else {
+        setBookings(remoteRows);
+      }
     }
     setLoadingBookings(false);
   };
@@ -219,45 +417,79 @@ export default function Marketplace() {
       return;
     }
 
-    const estimatedCost = Math.round(500 + (quantity / 100) * 50);
+    const estimatedCost = Number(transportForm.estimated_cost || 0) || await calculateFare(quantity);
+    if (!estimatedCost) {
+      toast.error('Could not estimate transport price.');
+      return;
+    }
+
+    const fromShort = [transportForm.pickup_place, transportForm.pickup_taluk, transportForm.pickup_district].filter(Boolean).join(', ');
+    const fromAddress = combineAddress({
+      state: transportForm.pickup_state,
+      district: transportForm.pickup_district,
+      taluk: transportForm.pickup_taluk,
+      place: transportForm.pickup_place,
+    });
+    const toAddress = combineAddress({
+      state: transportForm.to_state,
+      district: transportForm.to_district,
+      taluk: transportForm.to_taluk,
+      place: transportForm.to_place,
+    });
 
     const payload = {
       farmer_id: user.id,
       farmer_name: transportForm.farmer_name,
       farmer_phone: transportForm.farmer_phone,
       pickup_state: transportForm.pickup_state,
-      pickup_district: transportForm.pickup_district,
-      destination: transportForm.destination,
+      pickup_district: fromShort || transportForm.pickup_district,
+      destination: toAddress,
       commodity: transportForm.commodity,
       quantity_kg: quantity,
       pickup_date: transportForm.pickup_date,
       estimated_cost: estimatedCost,
       status: 'pending',
-      updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await supabase
-      .from('transport_bookings')
-      .insert(payload)
-      .select('*')
-      .single();
+    const { error: finalError, insertedPayload } = await insertBookingWithSchemaFallback(payload);
 
-    if (error) {
-      toast.error('Transport booking failed. Please try again.');
-      return;
+    const localBooking = {
+      id: `local-${Date.now()}`,
+      ...(insertedPayload || payload),
+      created_at: new Date().toISOString(),
+    };
+
+    if (finalError) {
+      upsertLocalBooking(localBooking);
+      toast.error(getFriendlyInsertError(finalError));
+      toast.success('Booking saved locally so tracking still works.');
+      console.warn('Transport booking insert failed:', finalError);
+    } else {
+      upsertLocalBooking(localBooking);
+      toast.success('Transport booked successfully.');
     }
 
     setShowTransportModal(false);
-    setBookingSuccess(data);
+    setBookingSuccess(localBooking);
     setTransportForm((prev) => ({
       ...prev,
       quantity_kg: '',
+      estimated_cost: '',
       pickup_date: today,
     }));
+    setFareSummary('');
     await loadBookings();
   };
 
   const cancelBooking = async (bookingId) => {
+    if (String(bookingId).startsWith('local-')) {
+      const allRows = readLocalBookings();
+      writeLocalBookings(allRows.filter((row) => row.id !== bookingId));
+      toast.success('Local booking removed');
+      loadBookings();
+      return;
+    }
+
     const { error } = await supabase
       .from('transport_bookings')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
@@ -489,12 +721,25 @@ export default function Marketplace() {
             <form className="soil-form-grid" onSubmit={submitTransport}>
               <label>Pickup State<input value={transportForm.pickup_state} onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_state: event.target.value }))} required /></label>
               <label>Pickup District<input value={transportForm.pickup_district} onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_district: event.target.value }))} required /></label>
-              <label>Destination<select value={transportForm.destination} onChange={(event) => setTransportForm((prev) => ({ ...prev, destination: event.target.value }))}><option value="nearest_mandi">Nearest Mandi</option><option value="storage_facility">Storage Facility</option><option value="direct_to_buyer">Direct to Buyer</option></select></label>
+              <label>Pickup Taluk<input value={transportForm.pickup_taluk} onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_taluk: event.target.value }))} required /></label>
+              <label>Pickup Place<input value={transportForm.pickup_place} onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_place: event.target.value }))} required /></label>
+              <button type="button" className="ghost-btn" onClick={detectPickupLocation} disabled={detectingLocation}>
+                {detectingLocation ? 'Detecting Location...' : 'Detect My Location'}
+              </button>
+              <label>To State<input value={transportForm.to_state} onChange={(event) => setTransportForm((prev) => ({ ...prev, to_state: event.target.value }))} required /></label>
+              <label>To District<input value={transportForm.to_district} onChange={(event) => setTransportForm((prev) => ({ ...prev, to_district: event.target.value }))} required /></label>
+              <label>To Taluk<input value={transportForm.to_taluk} onChange={(event) => setTransportForm((prev) => ({ ...prev, to_taluk: event.target.value }))} required /></label>
+              <label>To Place<input value={transportForm.to_place} onChange={(event) => setTransportForm((prev) => ({ ...prev, to_place: event.target.value }))} required /></label>
               <label>Commodity<input value={transportForm.commodity} onChange={(event) => setTransportForm((prev) => ({ ...prev, commodity: event.target.value }))} required /></label>
               <label>Quantity (kg)<input type="number" min="1" value={transportForm.quantity_kg} onChange={(event) => setTransportForm((prev) => ({ ...prev, quantity_kg: event.target.value }))} required /></label>
+              <label>Estimated Cost (INR)<input type="number" min="1" value={transportForm.estimated_cost} onChange={(event) => setTransportForm((prev) => ({ ...prev, estimated_cost: event.target.value }))} required /></label>
               <label>Pickup Date<input type="date" min={today} value={transportForm.pickup_date} onChange={(event) => setTransportForm((prev) => ({ ...prev, pickup_date: event.target.value }))} required /></label>
               <label>Farmer Name<input value={transportForm.farmer_name} onChange={(event) => setTransportForm((prev) => ({ ...prev, farmer_name: event.target.value }))} required /></label>
               <label>Farmer Phone<input value={transportForm.farmer_phone} onChange={(event) => setTransportForm((prev) => ({ ...prev, farmer_phone: event.target.value }))} required /></label>
+              <button type="button" className="ghost-btn" onClick={() => calculateFare()} disabled={estimatingFare}>
+                {estimatingFare ? 'Estimating Fare...' : 'Estimate Fare with Groq'}
+              </button>
+              {fareSummary ? <p className="page-muted" style={{ margin: 0 }}>{fareSummary}</p> : null}
               <button type="submit" className="primary-btn">Find Transport</button>
             </form>
           </section>

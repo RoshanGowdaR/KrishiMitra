@@ -13,18 +13,12 @@ import {
   subscribeToFriendRequestChanges,
   subscribeToMessages,
 } from '../services/socialService';
+import { formatDateTimeIST } from '../utils/istTime';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const formatDateTime = (dateText) => {
-  if (!dateText) return '-';
-  return new Date(dateText).toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTimeIST(dateText);
 };
 
 const avatarLetter = (name) => (name || 'F').trim().charAt(0).toUpperCase();

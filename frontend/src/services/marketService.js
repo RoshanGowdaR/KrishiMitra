@@ -87,3 +87,55 @@ If commodity not found in that region suggest nearest available market.`;
     return callGroq(SECONDARY_GROQ_API_KEY, prompt);
   }
 };
+
+const parseTransportFare = (responseRows) => {
+  const row = Array.isArray(responseRows) ? responseRows[0] : null;
+  const amount = Number(row?.estimated_cost_inr || row?.estimated_fare || row?.price || 0);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error('Invalid estimated transport fare');
+  }
+
+  return {
+    estimatedCost: Math.round(amount),
+    distanceKm: Number(row?.distance_km || 0) || null,
+    summary: row?.reason || row?.pricing_logic || 'Estimated by Groq',
+  };
+};
+
+export const estimateTransportPrice = async ({
+  commodity,
+  quantityKg,
+  fromAddress,
+  toAddress,
+}) => {
+  const prompt = `You are an India logistics pricing assistant.
+Estimate realistic one-way truck transport fare in INR for agricultural produce.
+
+Inputs:
+- Commodity: ${commodity}
+- Quantity (kg): ${quantityKg}
+- From: ${fromAddress}
+- To: ${toAddress}
+
+Return ONLY valid JSON array with exactly one object:
+[
+  {
+    "estimated_cost_inr": 2450,
+    "distance_km": 128,
+    "reason": "Short explanation in one line"
+  }
+]
+
+Rules:
+- amount must be positive integer in INR
+- distance_km should be realistic approximation
+- no markdown, no extra text`;
+
+  try {
+    const data = await callGroq(PRIMARY_GROQ_API_KEY, prompt);
+    return parseTransportFare(data);
+  } catch {
+    const data = await callGroq(SECONDARY_GROQ_API_KEY, prompt);
+    return parseTransportFare(data);
+  }
+};

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { formatDateTimeIST } from '../utils/istTime';
 const REPORTS_STORAGE_KEY = 'krishimitra_pending_reports';
 
 const ISSUE_TYPES = [
@@ -83,7 +84,7 @@ export default function Reports() {
         {history.map((item) => (
           <article key={item.id} className="social-user-card">
             <p><strong>{item.issueType}</strong></p>
-            <p className="page-muted">{new Date(item.createdAt).toLocaleString('en-IN')}</p>
+            <p className="page-muted">{formatDateTimeIST(item.createdAt)}</p>
             <span className="forum-category-badge">Pending Review</span>
           </article>
         ))}

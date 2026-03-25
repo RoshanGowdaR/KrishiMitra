@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { sendChatbotMessage } from '../services/api';
 import { speakText, startVoiceInput, detectTextLanguage } from '../services/voiceService';
+import { formatDateTimeIST, formatTimeIST } from '../utils/istTime';
 
 const LANG_NAMES = {
   en: 'English',
@@ -44,9 +45,7 @@ const formatChatTitle = (content = '') => {
 
 const formatThreadTime = (iso) => {
   if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString([], {
+  return formatDateTimeIST(iso, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -249,7 +248,7 @@ export default function Chatbot() {
     const userMessage = {
       role: 'user',
       content: cleanMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: formatTimeIST(new Date().toISOString(), { hour: '2-digit', minute: '2-digit' }),
     };
 
     addMessageToThread(threadId, userMessage);
@@ -277,7 +276,7 @@ export default function Chatbot() {
       const botMessage = {
         role: 'assistant',
         content: botText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: formatTimeIST(new Date().toISOString(), { hour: '2-digit', minute: '2-digit' }),
       };
 
       addMessageToThread(threadId, botMessage);

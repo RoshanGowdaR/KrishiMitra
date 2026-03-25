@@ -33,7 +33,11 @@ import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
 import BuyerDashboard from './pages/BuyerDashboard';
 import TransporterDashboard from './pages/TransporterDashboard';
-import { RoleProvider, useRole } from './context/RoleContext';
+import BuyerOrders from './pages/BuyerOrders';
+import TransporterAcceptedJobs from './pages/TransporterAcceptedJobs';
+import TransporterRouteMap from './pages/TransporterRouteMap';
+import FarmerBookingTracker from './pages/FarmerBookingTracker';
+import { RoleProvider } from './context/RoleContext';
 
 const STORAGE_KEY = 'krishimitra_language';
 const SIDEBAR_PIN_KEY = 'krishimitra_sidebar_pinned';
@@ -57,7 +61,6 @@ function PageTransition({ children }) {
 }
 
 function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguageModal }) {
-  const { role } = useRole();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarHovered, setSidebarHovered] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 980);
@@ -138,16 +141,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
         <main className="content">
           <PageTransition>
             <Routes>
-              <Route
-                index
-                element={
-                  role === 'buyer'
-                    ? <Navigate to="/app/buyer" replace />
-                    : role === 'transporter'
-                      ? <Navigate to="/app/transporter" replace />
-                      : <Home />
-                }
-              />
+              <Route index element={<Home />} />
               <Route path="weather" element={<Weather />} />
               <Route path="market-prices" element={<MarketPrices />} />
               <Route path="market" element={<MarketPrices />} />
@@ -164,11 +158,15 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="profile/:userId" element={<Profile />} />
               <Route path="chat" element={<Chat />} />
               <Route path="notifications" element={<Notifications />} />
+              <Route path="farmer/bookings" element={<FarmerBookingTracker />} />
               <Route path="community" element={<Community />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
               <Route path="buyer" element={<BuyerDashboard />} />
+              <Route path="buyer/orders" element={<BuyerOrders />} />
               <Route path="transporter" element={<TransporterDashboard />} />
+              <Route path="transporter/accepted-jobs" element={<TransporterAcceptedJobs />} />
+              <Route path="transporter/route-map" element={<TransporterRouteMap />} />
             </Routes>
           </PageTransition>
         </main>

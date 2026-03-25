@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { authedFetch } from '../lib/authFetch';
 import i18n from '../i18n';
+import { formatDateIST } from '../utils/istTime';
 
 const STORAGE_NOTIFICATIONS = 'krishimitra_notification_settings';
 const STORAGE_PREFERENCES = 'krishimitra_app_preferences';
@@ -60,7 +61,7 @@ export default function Settings() {
 
   const accountCreatedAt = useMemo(() => {
     if (!user?.created_at) return 'Unknown';
-    return new Date(user.created_at).toLocaleDateString('en-IN', {
+    return formatDateIST(user.created_at, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

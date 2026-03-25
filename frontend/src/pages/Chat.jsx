@@ -15,19 +15,28 @@ import {
   subscribeToMessages,
   uploadChatMedia,
 } from '../services/socialService';
+import {
+  formatDateIST,
+  formatTimeIST,
+  getDateKeyIST,
+  getRelativeDateKeyIST,
+} from '../utils/istTime';
 
-const formatTime = (dateText) => new Date(dateText).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+const formatTime = (dateText) => formatTimeIST(dateText);
 
 const groupDateLabel = (dateText) => {
-  const date = new Date(dateText);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+  const dateKey = getDateKeyIST(dateText);
+  const todayKey = getRelativeDateKeyIST(0);
+  const yesterdayKey = getRelativeDateKeyIST(-1);
 
-  const dateKey = date.toDateString();
-  if (dateKey === today.toDateString()) return 'Today';
-  if (dateKey === yesterday.toDateString()) return 'Yesterday';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (dateKey === todayKey) return 'Today';
+  if (dateKey === yesterdayKey) return 'Yesterday';
+
+  return formatDateIST(dateText, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 const isImage = (type) => String(type || '').toLowerCase().includes('image');

@@ -12,6 +12,7 @@ import {
   removeFriend,
   sendFriendRequest,
 } from '../services/socialService';
+import { formatDateIST } from '../utils/istTime';
 
 const API = 'http://127.0.0.1:8000/api/v1';
 
@@ -25,8 +26,7 @@ const languageLabel = (code) => {
 };
 
 const formatJoinDate = (dateText) => {
-  if (!dateText) return '-';
-  return new Date(dateText).toLocaleDateString('en-IN', {
+  return formatDateIST(dateText, {
     year: 'numeric',
     month: 'short',
     day: '2-digit',
