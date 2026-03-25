@@ -159,7 +159,7 @@ const CROP_IMAGES = {
   'Bottle Gourd': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Lagenaria_siceraria_%28bottle_gourd%29.jpg/320px-Lagenaria_siceraria_%28bottle_gourd%29.jpg',
 };
 
-const getCropImage = (cropName) => CROP_IMAGES[cropName]
+export const getCropImage = (cropName) => CROP_IMAGES[cropName]
   || 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=150&h=150&fit=crop';
 
 const PEST_IMAGES = {
