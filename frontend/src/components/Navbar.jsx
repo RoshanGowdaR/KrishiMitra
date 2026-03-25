@@ -5,7 +5,7 @@ import { RiLogoutBoxRLine } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getUnreadCounts, subscribeToMessages } from '../services/socialService';
+import { getNotificationSummary, getUnreadCounts, subscribeToFriendRequestChanges, subscribeToMessages } from '../services/socialService';
 
 export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const { t } = useTranslation();
@@ -14,6 +14,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const activeLanguage = supportedLanguages.find((item) => item.code === language);
 
   const avatarUrl = user?.user_metadata?.avatar_url;
@@ -36,16 +37,30 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   useEffect(() => {
     if (!user?.id) return undefined;
 
-    getUnreadCounts(user.id).then((counts) => {
+    const loadBadges = async () => {
+      const [counts, summary] = await Promise.all([
+        getUnreadCounts(user.id),
+        getNotificationSummary(user.id),
+      ]);
+
       setTotalUnread(Object.values(counts || {}).reduce((sum, value) => sum + Number(value || 0), 0));
-    });
+      setNotificationCount(Number(summary?.total || 0));
+    };
+
+    loadBadges();
 
     const sub = subscribeToMessages(user.id, () => {
       setTotalUnread((prev) => prev + 1);
+      setNotificationCount((prev) => prev + 1);
+    });
+
+    const requestSub = subscribeToFriendRequestChanges(user.id, () => {
+      loadBadges();
     });
 
     return () => {
       if (sub?.unsubscribe) sub.unsubscribe();
+      if (requestSub?.unsubscribe) requestSub.unsubscribe();
     };
   }, [user?.id]);
 
@@ -79,6 +94,55 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
           <RiTranslate2 />
           <span>{activeLanguage?.native || language.toUpperCase()}</span>
         </button>
+
+        <div
+          onClick={() => navigate('/app/notifications')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              navigate('/app/notifications');
+            }
+          }}
+          style={{
+            position: 'relative',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            borderRadius: '50%',
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+          }}
+          title="Open notifications"
+        >
+          🔔
+          {notificationCount > 0 ? (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {notificationCount > 9 ? '9+' : notificationCount}
+            </span>
+          ) : null}
+        </div>
 
         <div
           onClick={() => navigate('/app/chat')}

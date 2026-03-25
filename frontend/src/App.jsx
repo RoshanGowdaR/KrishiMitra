@@ -30,6 +30,7 @@ import Community from './pages/Community';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Chat from './pages/Chat';
+import Notifications from './pages/Notifications';
 
 const STORAGE_KEY = 'krishimitra_language';
 const SIDEBAR_PIN_KEY = 'krishimitra_sidebar_pinned';
@@ -149,6 +150,7 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="profile" element={<Profile />} />
               <Route path="profile/:userId" element={<Profile />} />
               <Route path="chat" element={<Chat />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="community" element={<Community />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />

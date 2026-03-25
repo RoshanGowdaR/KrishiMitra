@@ -1,25 +1,72 @@
 import { supabase } from '../lib/supabase';
 
+const normalizeUser = (row = {}) => {
+  const displayName = row.name || row.full_name || row.username || (row.email ? String(row.email).split('@')[0] : '') || 'Farmer';
+  return {
+    ...row,
+    name: displayName,
+    user_uid: row.user_uid || row.user_id || row.uid || row.id?.toString()?.slice(0, 8)?.toUpperCase() || '',
+  };
+};
+
 // Search users by UID or name.
 export const searchUsers = async (query) => {
   if (!query?.trim()) return [];
 
   const cleaned = query.trim();
-  const isUidLike = /^[a-zA-Z0-9-]{6,}$/.test(cleaned);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleaned);
 
-  let builder = supabase
-    .from('users')
-    .select('id, user_uid, name, email, state, district, preferred_language, avatar_url')
-    .limit(10);
+  if (isUuid) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', cleaned)
+      .limit(1);
 
-  if (isUidLike) {
-    builder = builder.or(`user_uid.ilike.%${cleaned}%,id::text.ilike.%${cleaned}%`);
-  } else {
-    builder = builder.or(`name.ilike.%${cleaned}%,district.ilike.%${cleaned}%,state.ilike.%${cleaned}%`);
+    if (error) {
+      console.error('searchUsers failed:', error.message);
+      return [];
+    }
+
+    return (data || []).map((row) => ({
+      ...normalizeUser(row),
+    }));
   }
 
-  const { data } = await builder;
-  return data || [];
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .limit(500);
+
+  if (error) {
+    console.error('searchUsers failed:', error.message);
+    return [];
+  }
+
+  const needle = cleaned.toLowerCase();
+  const filtered = (data || []).filter((row) => {
+    const idText = (row.id || '').toString();
+    const idShort = idText.replace(/-/g, '').slice(0, 8).toLowerCase();
+    const uid = (row.user_uid || row.user_id || row.uid || '').toString().toLowerCase();
+    const name = (row.name || '').toString().toLowerCase();
+    const district = (row.district || '').toString().toLowerCase();
+    const state = (row.state || '').toString().toLowerCase();
+    const email = (row.email || '').toString().toLowerCase();
+
+    return (
+      uid.includes(needle) ||
+      idText.toLowerCase().includes(needle) ||
+      idShort.includes(needle) ||
+      name.includes(needle) ||
+      district.includes(needle) ||
+      state.includes(needle) ||
+      email.includes(needle)
+    );
+  });
+
+  return filtered.slice(0, 10).map((row) => ({
+    ...normalizeUser(row),
+  }));
 };
 
 // Get user by ID.
@@ -29,7 +76,7 @@ export const getUserById = async (userId) => {
     .select('*')
     .eq('id', userId)
     .single();
-  return data;
+  return data ? normalizeUser(data) : null;
 };
 
 // Send friend request.
@@ -63,22 +110,66 @@ export const declineFriendRequest = async (requestId) => {
 
 // Get friend requests for user (incoming).
 export const getFriendRequests = async (userId) => {
-  const { data } = await supabase
+  const { data: requests, error } = await supabase
     .from('friend_requests')
-    .select('*, sender:users!friend_requests_sender_id_fkey(id, name, state, district, avatar_url)')
+    .select('id, sender_id, receiver_id, status, created_at')
     .eq('receiver_id', userId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
-  return data || [];
+
+  if (error) {
+    console.error('getFriendRequests failed:', error.message);
+    return [];
+  }
+
+  if (!requests?.length) return [];
+
+  const senderIds = [...new Set(requests.map((row) => row.sender_id).filter(Boolean))];
+  const { data: senders } = await supabase
+    .from('users')
+    .select('*')
+    .in('id', senderIds);
+
+  const senderMap = {};
+  (senders || []).forEach((sender) => {
+    senderMap[sender.id] = normalizeUser(sender);
+  });
+
+  return requests.map((row) => ({
+    ...row,
+    sender: senderMap[row.sender_id] || null,
+  }));
 };
 
 // Get friends list.
 export const getFriends = async (userId) => {
-  const { data } = await supabase
+  const { data: rows, error } = await supabase
     .from('friends')
-    .select('*, friend:users!friends_user2_id_fkey(id, name, email, state, district, avatar_url)')
+    .select('id, user1_id, user2_id, created_at')
     .eq('user1_id', userId);
-  return data || [];
+
+  if (error) {
+    console.error('getFriends failed:', error.message);
+    return [];
+  }
+
+  if (!rows?.length) return [];
+
+  const friendIds = [...new Set(rows.map((row) => row.user2_id).filter(Boolean))];
+  const { data: friendsData } = await supabase
+    .from('users')
+    .select('*')
+    .in('id', friendIds);
+
+  const friendMap = {};
+  (friendsData || []).forEach((friend) => {
+    friendMap[friend.id] = normalizeUser(friend);
+  });
+
+  return rows.map((row) => ({
+    ...row,
+    friend: friendMap[row.user2_id] || null,
+  }));
 };
 
 // Check friendship status and request metadata.
@@ -186,6 +277,60 @@ export const getUnreadCounts = async (userId) => {
   return counts;
 };
 
+// Get aggregated unread message count.
+export const getUnreadMessageTotal = async (userId) => {
+  const counts = await getUnreadCounts(userId);
+  return Object.values(counts || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+};
+
+// Get recent status updates for requests sent by current user.
+export const getSentFriendRequestUpdates = async (userId) => {
+  const { data: requests, error } = await supabase
+    .from('friend_requests')
+    .select('id, status, created_at, receiver_id')
+    .eq('sender_id', userId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('getSentFriendRequestUpdates failed:', error.message);
+    return [];
+  }
+
+  if (!requests?.length) return [];
+
+  const receiverIds = [...new Set(requests.map((row) => row.receiver_id).filter(Boolean))];
+  const { data: receivers } = await supabase
+    .from('users')
+    .select('*')
+    .in('id', receiverIds);
+
+  const receiverMap = {};
+  (receivers || []).forEach((receiver) => {
+    receiverMap[receiver.id] = normalizeUser(receiver);
+  });
+
+  return requests.map((row) => ({
+    ...row,
+    receiver: receiverMap[row.receiver_id] || null,
+  }));
+};
+
+// Get global notification summary used for badges.
+export const getNotificationSummary = async (userId) => {
+  const [incomingRequests, unreadTotal] = await Promise.all([
+    getFriendRequests(userId),
+    getUnreadMessageTotal(userId),
+  ]);
+
+  return {
+    pendingFriendRequests: incomingRequests.length,
+    unreadMessages: unreadTotal,
+    total: incomingRequests.length + unreadTotal,
+  };
+};
+
 // Subscribe to new messages (realtime).
 export const subscribeToMessages = (userId, callback) => {
   return supabase
@@ -195,6 +340,25 @@ export const subscribeToMessages = (userId, callback) => {
       schema: 'public',
       table: 'messages',
       filter: `receiver_id=eq.${userId}`,
+    }, callback)
+    .subscribe();
+};
+
+// Subscribe to friend request inserts/updates relevant to the user.
+export const subscribeToFriendRequestChanges = (userId, callback) => {
+  return supabase
+    .channel(`friend-requests-${userId}`)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'friend_requests',
+      filter: `receiver_id=eq.${userId}`,
+    }, callback)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'friend_requests',
+      filter: `sender_id=eq.${userId}`,
     }, callback)
     .subscribe();
 };
