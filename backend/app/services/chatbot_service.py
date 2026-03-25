@@ -1,15 +1,10 @@
 from typing import Any
 
-import httpx
+import httpx  # noqa: F401
 from fastapi import HTTPException
 
-from app.config import get_settings
-
-GEMINI_MODEL = "gemini-1.5-flash"
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
-)
+from app.config import get_settings  # noqa: F401
+from app.services.groq_client import groq_client
 
 SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "en", "name": "English", "language_code": "en-IN", "voice_name": "en-IN-Wavenet-A"},
@@ -25,28 +20,6 @@ SUPPORTED_LANGUAGES: list[dict[str, str]] = [
 ]
 
 
-def _get_api_key() -> str:
-    api_key = get_settings().gemini_api_key
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
-    return api_key
-
-
-def _extract_text(payload: dict[str, Any]) -> str:
-    candidates = payload.get("candidates", [])
-    if not candidates:
-        raise HTTPException(status_code=502, detail="Gemini returned no candidates")
-
-    content = candidates[0].get("content", {})
-    parts = content.get("parts", [])
-    for part in parts:
-        text = part.get("text")
-        if isinstance(text, str) and text.strip():
-            return text.strip()
-
-    raise HTTPException(status_code=502, detail="Gemini returned an empty response")
-
-
 def _normalize_history(conversation_history: list[dict[str, str]]) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for item in conversation_history:
@@ -56,29 +29,6 @@ def _normalize_history(conversation_history: list[dict[str, str]]) -> list[dict[
             continue
         normalized.append({"role": role, "content": content})
     return normalized
-
-
-async def _call_gemini(
-    contents: list[dict[str, Any]],
-    system_prompt: str,
-) -> str:
-    params = {"key": _get_api_key()}
-    payload = {
-        "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": contents,
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            response = await client.post(GEMINI_API_URL, params=params, json=payload)
-            response.raise_for_status()
-            raw_payload = response.json()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail="Gemini API returned an error") from exc
-    except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail="Unable to reach Gemini API") from exc
-
-    return _extract_text(raw_payload)
 
 
 async def get_chat_response(
@@ -91,27 +41,42 @@ async def get_chat_response(
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     normalized_history = _normalize_history(conversation_history)
-    model_contents: list[dict[str, Any]] = []
 
-    for item in normalized_history:
-        role = "user" if item["role"] == "user" else "model"
-        model_contents.append(
-            {
-                "role": role,
-                "parts": [{"text": item["content"]}],
-            }
-        )
+    system_prompt = """You are KrishiMitra, an expert 
+Indian agricultural AI assistant helping farmers.
+You provide practical advice on:
+- Crop management and cultivation
+- Pest and disease identification and treatment
+- Weather interpretation for farming
+- Government schemes and subsidies
+- Market prices and selling strategies
+- Soil health and fertilizer recommendations
 
-    model_contents.append({"role": "user", "parts": [{"text": clean_message}]})
+Rules:
+- Always respond in the SAME language as the user
+- If user writes in Kannada reply in Kannada
+- If user writes in Hindi reply in Hindi
+- Keep responses concise and practical
+- Use simple language farmers can understand
+- Always give actionable advice
+- If asking about a crop disease suggest treatment"""
 
-    system_prompt = (
-        "You are KrishiMitra, an expert Indian agricultural assistant. Provide practical, "
-        "region-aware advice to farmers about crops, weather, market prices, government schemes, "
-        "and disease management. Keep responses clear and actionable. Respond in the same language "
-        f"as the user message. Preferred response language code: {language}."
+    messages = [{"role": "system", "content": system_prompt}]
+
+    for msg in normalized_history[-10:]:
+        if msg.get("role") and msg.get("content"):
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"],
+            })
+
+    messages.append({"role": "user", "content": clean_message})
+
+    response_text = await groq_client.chat(
+        messages=messages,
+        temperature=0.7,
+        max_tokens=512,
     )
-
-    response_text = await _call_gemini(model_contents, system_prompt=system_prompt)
 
     updated_history = normalized_history + [
         {"role": "user", "content": clean_message},
@@ -122,6 +87,8 @@ async def get_chat_response(
         "response_text": response_text,
         "conversation_history": updated_history,
         "language": language,
+        "response": response_text,
+        "history": updated_history,
     }
 
 
@@ -130,22 +97,20 @@ async def translate_text(text: str, target_language: str) -> str:
     if not clean_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
-    contents = [
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a translation assistant for Indian agriculture use-cases.",
+        },
         {
             "role": "user",
-            "parts": [
-                {
-                    "text": (
-                        "Translate the following text into language code "
-                        f"'{target_language}'. Return only translated text.\n\n{clean_text}"
-                    )
-                }
-            ],
-        }
+            "content": (
+                "Translate the following text into language code "
+                f"'{target_language}'. Return only translated text.\n\n{clean_text}"
+            ),
+        },
     ]
-
-    system_prompt = "You are a translation assistant for Indian agriculture use-cases."
-    return await _call_gemini(contents, system_prompt=system_prompt)
+    return await groq_client.chat(messages=messages, temperature=0.2, max_tokens=256)
 
 
 async def text_to_speech_info(text: str, language: str) -> dict[str, str]:

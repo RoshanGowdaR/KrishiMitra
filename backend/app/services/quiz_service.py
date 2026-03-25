@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
+from app.services.chatbot_service import translate_text
+
 QUIZ_CATEGORIES = {
     "crop_management",
     "soil_health",
@@ -15,6 +17,7 @@ QUIZ_CATEGORIES = {
 QUIZ_DIFFICULTIES = {"beginner", "intermediate", "advanced"}
 
 _LEADERBOARD: list[dict[str, Any]] = []
+_QUIZ_TRANSLATION_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 _QUIZZES: list[dict[str, Any]] = [
     {
@@ -289,10 +292,51 @@ def _sanitize_quiz(quiz: dict[str, Any]) -> dict[str, Any]:
         "id": quiz["id"],
         "title": quiz["title"],
         "category": quiz["category"],
-        "difficulty": quiz["difficulty"],
+        "difficulty": "beginner",
         "language": quiz["language"],
         "questions": quiz["questions"],
     }
+
+
+def _base_id(quiz_id: str) -> str:
+    if quiz_id.endswith("-en"):
+        return quiz_id[:-3]
+    if quiz_id.endswith("-hi"):
+        return quiz_id[:-3]
+    return quiz_id
+
+
+async def _translate_quiz(quiz: dict[str, Any], target_language: str) -> dict[str, Any]:
+    cache_key = (quiz["id"], target_language)
+    if cache_key in _QUIZ_TRANSLATION_CACHE:
+        return _QUIZ_TRANSLATION_CACHE[cache_key]
+
+    translated_questions = []
+    for question in quiz["questions"]:
+        translated_question = await translate_text(question["question"], target_language)
+        translated_options = [await translate_text(option, target_language) for option in question["options"]]
+        translated_correct = translated_options[question["options"].index(question["correct_answer"])]
+        translated_explanation = await translate_text(question["explanation"], target_language)
+
+        translated_questions.append({
+            "id": question["id"],
+            "question": translated_question,
+            "options": translated_options,
+            "correct_answer": translated_correct,
+            "explanation": translated_explanation,
+        })
+
+    translated_title = await translate_text(quiz["title"], target_language)
+    translated_quiz = {
+        "id": f"{_base_id(quiz['id'])}-{target_language}",
+        "title": translated_title,
+        "category": quiz["category"],
+        "difficulty": "beginner",
+        "language": target_language,
+        "questions": translated_questions,
+    }
+    _QUIZ_TRANSLATION_CACHE[cache_key] = translated_quiz
+    return translated_quiz
 
 
 async def get_quizzes(
@@ -302,6 +346,11 @@ async def get_quizzes(
 ) -> list[dict[str, Any]]:
     normalized_language = language.strip().lower()
     filtered = [quiz for quiz in _QUIZZES if quiz["language"] == normalized_language]
+
+    if not filtered:
+        english_quizzes = [quiz for quiz in _QUIZZES if quiz["language"] == "en"]
+        translated = [await _translate_quiz(quiz, normalized_language) for quiz in english_quizzes]
+        filtered = translated
 
     if category:
         normalized_category = category.strip().lower()
@@ -325,6 +374,12 @@ async def get_quiz_by_id(quiz_id: str, language: str = "en") -> dict[str, Any]:
     for quiz in _QUIZZES:
         if quiz["id"] == normalized_id and quiz["language"] == normalized_language:
             return _sanitize_quiz(quiz)
+
+    target_base = _base_id(normalized_id)
+    for quiz in _QUIZZES:
+        if _base_id(quiz["id"]) == target_base and quiz["language"] == "en":
+            translated = await _translate_quiz(quiz, normalized_language)
+            return _sanitize_quiz(translated)
 
     raise HTTPException(status_code=404, detail="Quiz not found")
 

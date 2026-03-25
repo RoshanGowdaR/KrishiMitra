@@ -3,17 +3,12 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-import httpx
+import httpx  # noqa: F401
 from fastapi import HTTPException
 
 from app.config import get_settings
+from app.services.gemini_client import gemini_client
 from app.services.forum_service import create_post
-
-GEMINI_MODEL = "gemini-1.5-flash"
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
-)
 
 SPECIALIZATIONS = {
     "crop_disease",
@@ -211,29 +206,6 @@ def _now_iso() -> str:
 
 def _normalize(text: str | None) -> str:
     return str(text or "").strip().lower()
-
-
-def _get_api_key() -> str:
-    api_key = get_settings().gemini_api_key
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured")
-    return api_key
-
-
-def _extract_text(payload: dict[str, Any]) -> str:
-    candidates = payload.get("candidates", [])
-    if not candidates:
-        raise HTTPException(status_code=502, detail="Gemini returned no candidates")
-
-    parts = candidates[0].get("content", {}).get("parts", [])
-    for part in parts:
-        text = part.get("text")
-        if isinstance(text, str) and text.strip():
-            return text.strip()
-
-    raise HTTPException(status_code=502, detail="Gemini returned empty content")
-
-
 def _parse_ai_json(text: str) -> dict[str, Any]:
     cleaned = text.strip()
     if cleaned.startswith("```"):
@@ -287,6 +259,12 @@ async def _ai_emergency_analysis(
     description: str,
     image_base64: str,
 ) -> dict[str, Any]:
+    settings = get_settings()
+    fallback_key = getattr(settings, "gemini_api_key", "")
+    if fallback_key and not gemini_client.keys:
+        gemini_client.keys = [fallback_key]
+        gemini_client.current_index = 0
+
     prompt = (
         "You are an emergency agricultural doctor for Indian farmers. Return ONLY valid JSON with keys: "
         "disease_identification, severity, medicine_name, dosage, application_instructions, "
@@ -294,35 +272,8 @@ async def _ai_emergency_analysis(
         f"Issue type: {issue_type}. Description: {description}."
     )
 
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt},
-                    {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_base64,
-                        }
-                    },
-                ]
-            }
-        ]
-    }
-
-    params = {"key": _get_api_key()}
-
-    try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            response = await client.post(GEMINI_API_URL, params=params, json=payload)
-            response.raise_for_status()
-            raw_payload = response.json()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail="Gemini API returned an error") from exc
-    except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail="Unable to reach Gemini API") from exc
-
-    return _parse_ai_json(_extract_text(raw_payload))
+    generated = await gemini_client.generate(prompt, image_base64=image_base64)
+    return _parse_ai_json(generated)
 
 
 def _pick_level_1_expert(request_data: dict[str, Any]) -> dict[str, Any] | None:

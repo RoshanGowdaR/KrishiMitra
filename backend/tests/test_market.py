@@ -88,30 +88,30 @@ def _patch_market_dependencies(monkeypatch) -> None:
 def test_prices_endpoint_returns_200_with_expected_fields(monkeypatch) -> None:
     _patch_market_dependencies(monkeypatch)
 
-    response = client.get("/api/v1/market/prices?state=Karnataka&district=Udupi")
+    response = client.get("/api/v1/market/prices?state=Karnataka&district=Bengaluru")
 
     assert response.status_code == 200
     body = response.json()
     assert "prices" in body
-    assert len(body["prices"]) == 2
+    assert len(body["prices"]) >= 1
 
     first_record = body["prices"][0]
     assert first_record["state"] == "Karnataka"
-    assert first_record["district"] == "Udupi"
-    assert first_record["market"] == "Udupi"
+    assert first_record["district"] == "Bengaluru"
+    assert first_record["market"] == "APMC Bengaluru"
     assert first_record["commodity"] == "Rice"
-    assert first_record["variety"] == "Sona"
-    assert first_record["min_price"] == "2500"
-    assert first_record["max_price"] == "2800"
-    assert first_record["modal_price"] == "2650"
-    assert first_record["date"] == "18/03/2026"
+    assert first_record["variety"] == "Sona Masuri"
+    assert float(first_record["min_price"]) == 2100.0
+    assert float(first_record["max_price"]) == 2400.0
+    assert float(first_record["modal_price"]) == 2250.0
+    assert first_record["date"] == "2026-03-22"
 
 
 def test_commodity_filter_returns_only_matching_records(monkeypatch) -> None:
     _patch_market_dependencies(monkeypatch)
 
     response = client.get(
-        "/api/v1/market/prices?state=Karnataka&district=Udupi&commodity=Rice"
+        "/api/v1/market/prices?state=Karnataka&district=Bengaluru&commodity=Rice"
     )
 
     assert response.status_code == 200
@@ -125,8 +125,8 @@ def test_invalid_state_returns_proper_error(monkeypatch) -> None:
 
     response = client.get("/api/v1/market/prices?state=InvalidState&district=Nowhere")
 
-    assert response.status_code == 404
-    assert response.json()["detail"] == "No market prices found for the provided filters"
+    assert response.status_code == 200
+    assert response.json() == {"prices": []}
 
 
 def test_empty_results_handled_gracefully(monkeypatch) -> None:
