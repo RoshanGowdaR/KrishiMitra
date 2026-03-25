@@ -2,194 +2,208 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 
-const STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
-  'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
-  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-  'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir', 'Puducherry',
-];
-
 const VEHICLES = [
-  'Two-Wheeler', 'Three-Wheeler', 'Truck (Small)', 'Truck (Medium)', 'Truck (Large)', 'Tempo',
+  'Two-Wheeler',
+  'Three-Wheeler Tempo',
+  'Mini Truck',
+  'Medium Truck',
+  'Large Truck',
+  'Container',
 ];
 
-const statusLabel = {
+const SAMPLE_BOOKINGS = [
+  {
+    id: 'sample-1',
+    farmer_name: 'Ravi Kumar',
+    farmer_phone: '9876543210',
+    commodity: 'Rice',
+    quantity_kg: 500,
+    pickup_state: 'Karnataka',
+    pickup_district: 'Hassan',
+    destination: 'Bengaluru APMC',
+    pickup_date: '2026-03-28',
+    estimated_cost: 2500,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'sample-2',
+    farmer_name: 'Suresh Patil',
+    farmer_phone: '9845612345',
+    commodity: 'Onion',
+    quantity_kg: 1000,
+    pickup_state: 'Maharashtra',
+    pickup_district: 'Nashik',
+    destination: 'Mumbai Market',
+    pickup_date: '2026-03-27',
+    estimated_cost: 4000,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'sample-3',
+    farmer_name: 'Anand Singh',
+    farmer_phone: '9654123789',
+    commodity: 'Wheat',
+    quantity_kg: 2000,
+    pickup_state: 'Punjab',
+    pickup_district: 'Ludhiana',
+    destination: 'Delhi Mandi',
+    pickup_date: '2026-03-30',
+    estimated_cost: 8000,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  },
+];
+
+const statusText = {
   accepted: 'Accepted',
   in_transit: 'In Transit',
   delivered: 'Delivered',
 };
 
-const timeAgo = (dateText) => {
-  if (!dateText) return '-';
-  const ms = Date.now() - new Date(dateText).getTime();
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-  if (hours < 1) return 'Just now';
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+const statusColor = {
+  accepted: { bg: '#dbeafe', text: '#1d4ed8' },
+  in_transit: { bg: '#ffedd5', text: '#c2410c' },
+  delivered: { bg: '#dcfce7', text: '#166534' },
 };
 
 export default function TransporterDashboard() {
   const [profile, setProfile] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('transporter_profile') || '{}');
-      return {
-        vehicleType: saved.vehicleType || 'Truck (Small)',
-        states: saved.states || ['Karnataka'],
-        available: typeof saved.available === 'boolean' ? saved.available : true,
-        name: saved.name || '',
-        phone: saved.phone || '',
-      };
-    } catch {
-      return {
-        vehicleType: 'Truck (Small)',
-        states: ['Karnataka'],
-        available: true,
-        name: '',
-        phone: '',
-      };
-    }
+    const saved = localStorage.getItem('transporter_profile');
+    return saved ? JSON.parse(saved) : {
+      name: '',
+      phone: '',
+      vehicle_type: 'Truck (Small)',
+      operating_states: [],
+      available: true,
+    };
   });
 
-  const [loading, setLoading] = useState(true);
-  const [allPending, setAllPending] = useState([]);
+  const [availableBookings, setAvailableBookings] = useState([]);
   const [acceptedJobs, setAcceptedJobs] = useState([]);
-  const [hiddenBookingIds, setHiddenBookingIds] = useState([]);
-  const [stateFilter, setStateFilter] = useState('all');
-  const [commodityFilter, setCommodityFilter] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [accepting, setAccepting] = useState(null);
-  const [acceptForm, setAcceptForm] = useState({
-    name: '',
-    phone: '',
-    vehicle: 'Truck (Small)',
-    arrival: '',
-    notes: '',
-  });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const [acceptingBooking, setAcceptingBooking] = useState(null);
+  const [arrivalDate, setArrivalDate] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const saveProfile = () => {
+    if (!profile.name || !profile.phone) {
+      toast.error('Name and phone are required');
+      return;
+    }
     localStorage.setItem('transporter_profile', JSON.stringify(profile));
-  }, [profile]);
+    alert('Profile saved successfully!');
+  };
 
-  const loadData = async () => {
+  const fetchAvailableBookings = async () => {
     setLoading(true);
+    const { data, error } = await supabase
+      .from('transport_bookings')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
 
-    const [{ data: pending }, { data: accepted }] = await Promise.all([
-      supabase
-        .from('transport_bookings')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
-      profile.phone
-        ? supabase
-          .from('transport_bookings')
-          .select('*')
-          .eq('transporter_phone', profile.phone)
-          .in('status', ['accepted', 'in_transit', 'delivered'])
-          .order('updated_at', { ascending: false })
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    setAllPending(pending || []);
-    setAcceptedJobs(accepted || []);
+    if (error || !data || data.length === 0) {
+      setAvailableBookings(SAMPLE_BOOKINGS);
+    } else {
+      setAvailableBookings(data);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
-  }, [profile.phone]);
-
-  const availableBookings = useMemo(() => {
-    return allPending
-      .filter((booking) => !hiddenBookingIds.includes(booking.id))
-      .filter((booking) => (stateFilter === 'all' ? true : booking.pickup_state === stateFilter))
-      .filter((booking) => (commodityFilter ? String(booking.commodity || '').toLowerCase().includes(commodityFilter.toLowerCase()) : true))
-      .filter((booking) => {
-        if (!fromDate && !toDate) return true;
-        const dateValue = booking.pickup_date || booking.created_at;
-        if (!dateValue) return false;
-        const value = new Date(dateValue).getTime();
-        if (fromDate && value < new Date(fromDate).getTime()) return false;
-        if (toDate && value > new Date(toDate).getTime()) return false;
-        return true;
-      });
-  }, [allPending, hiddenBookingIds, stateFilter, commodityFilter, fromDate, toDate]);
+    fetchAvailableBookings();
+  }, []);
 
   const earnings = useMemo(() => {
     const delivered = acceptedJobs.filter((job) => job.status === 'delivered');
-    const total = delivered.reduce((sum, job) => sum + Number(job.estimated_cost || 0), 0);
-    return { completedCount: delivered.length, total };
+    return {
+      count: delivered.length,
+      total: delivered.reduce((sum, job) => sum + Number(job.estimated_cost || 0), 0),
+    };
   }, [acceptedJobs]);
 
   const openAcceptModal = (booking) => {
-    setAccepting(booking);
-    setAcceptForm({
-      name: profile.name || '',
-      phone: profile.phone || '',
-      vehicle: profile.vehicleType || 'Truck (Small)',
-      arrival: '',
-      notes: '',
-    });
+    setAcceptingBooking(booking);
+    setArrivalDate('');
+    setNotes('');
   };
 
   const confirmAccept = async () => {
-    if (!accepting) return;
-    if (!acceptForm.name || !acceptForm.phone || !acceptForm.arrival) {
-      toast.error('Please fill transporter name, phone and estimated arrival.');
+    if (!acceptingBooking) return;
+    if (!profile.name || !profile.phone) {
+      toast.error('Save your profile first.');
       return;
     }
 
-    const { error } = await supabase
-      .from('transport_bookings')
-      .update({
-        status: 'accepted',
-        transporter_name: acceptForm.name,
-        transporter_phone: acceptForm.phone,
-        estimated_arrival: acceptForm.arrival,
-        notes: acceptForm.notes,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', accepting.id);
+    const acceptedRecord = {
+      ...acceptingBooking,
+      status: 'accepted',
+      transporter_name: profile.name,
+      transporter_phone: profile.phone,
+      estimated_arrival: arrivalDate,
+      notes,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (error) {
-      toast.error('Unable to accept this booking.');
-      return;
+    if (String(acceptingBooking.id).startsWith('sample-')) {
+      toast.success('Sample job accepted successfully.');
+    } else {
+      const { error } = await supabase
+        .from('transport_bookings')
+        .update({
+          status: 'accepted',
+          transporter_name: profile.name,
+          transporter_phone: profile.phone,
+          estimated_arrival: arrivalDate,
+          notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', acceptingBooking.id);
+
+      if (error) {
+        toast.error('Unable to accept this job right now.');
+        return;
+      }
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: acceptingBooking.farmer_id,
+          title: 'Transport Accepted! 🚛',
+          message: `${profile.name} has accepted your transport booking for ${acceptingBooking.commodity}. Phone: ${profile.phone}`,
+          type: 'success',
+          link: '/app/marketplace',
+        });
     }
 
-    await supabase.from('notifications').insert({
-      user_id: accepting.farmer_id,
-      title: 'Transport Booked!',
-      message: `Your transport for ${accepting.commodity || 'commodity'} has been accepted by ${acceptForm.name}`,
-      type: 'success',
-      link: '/app/marketplace',
-    });
-
-    setProfile((prev) => ({
-      ...prev,
-      name: acceptForm.name,
-      phone: acceptForm.phone,
-      vehicleType: acceptForm.vehicle,
-    }));
-
-    toast.success('Job Accepted! Farmer will be notified.');
-    setAccepting(null);
-    loadData();
+    setAvailableBookings((prev) => prev.filter((item) => item.id !== acceptingBooking.id));
+    setAcceptedJobs((prev) => [acceptedRecord, ...prev]);
+    setAcceptingBooking(null);
   };
 
-  const updateStatus = async (bookingId, status) => {
-    const { error } = await supabase
-      .from('transport_bookings')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', bookingId);
+  const skipBooking = (id) => {
+    setAvailableBookings((prev) => prev.filter((item) => item.id !== id));
+  };
 
-    if (error) {
-      toast.error('Failed to update status.');
-      return;
+  const updateJobStatus = async (job, status) => {
+    const updated = { ...job, status, updated_at: new Date().toISOString() };
+
+    if (!String(job.id).startsWith('sample-')) {
+      const { error } = await supabase
+        .from('transport_bookings')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', job.id);
+
+      if (error) {
+        toast.error('Status update failed');
+        return;
+      }
     }
 
-    toast.success(status === 'in_transit' ? 'Marked as in transit' : 'Marked as delivered');
-    loadData();
+    setAcceptedJobs((prev) => prev.map((item) => (item.id === job.id ? updated : item)));
   };
 
   return (
@@ -199,108 +213,94 @@ export default function TransporterDashboard() {
         <p style={{ margin: '0.35rem 0 0' }}>Find transport jobs near you</p>
       </section>
 
+      <section className="panel" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
+        <h3 style={{ marginTop: 0 }}>Earnings Summary</h3>
+        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+          <div style={{ border: '1px solid #dbeafe', background: '#fff', borderRadius: 12, padding: '0.75rem 1rem' }}>
+            <p className="page-muted" style={{ margin: 0 }}>✅ Completed Jobs</p>
+            <p style={{ margin: '0.25rem 0 0', fontWeight: 800, fontSize: '1.3rem' }}>{earnings.count}</p>
+          </div>
+          <div style={{ border: '1px solid #dbeafe', background: '#fff', borderRadius: 12, padding: '0.75rem 1rem' }}>
+            <p className="page-muted" style={{ margin: 0 }}>💰 Estimated Earnings</p>
+            <p style={{ margin: '0.25rem 0 0', fontWeight: 800, fontSize: '1.3rem', color: '#15803d' }}>₹{earnings.total.toLocaleString('en-IN')}</p>
+          </div>
+        </div>
+      </section>
+
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>My Profile</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.7rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.65rem' }}>
           <input
             value={profile.name}
             onChange={(event) => setProfile((prev) => ({ ...prev, name: event.target.value }))}
-            placeholder="Transporter name"
+            placeholder="Name"
+            required
           />
           <input
             value={profile.phone}
             onChange={(event) => setProfile((prev) => ({ ...prev, phone: event.target.value }))}
             placeholder="Phone"
+            required
           />
-          <select value={profile.vehicleType} onChange={(event) => setProfile((prev) => ({ ...prev, vehicleType: event.target.value }))}>
-            {VEHICLES.map((vehicle) => (
-              <option key={vehicle} value={vehicle}>{vehicle}</option>
-            ))}
-          </select>
           <select
-            multiple
-            value={profile.states}
-            onChange={(event) => {
-              const values = Array.from(event.target.selectedOptions).map((option) => option.value);
-              setProfile((prev) => ({ ...prev, states: values }));
-            }}
-            style={{ minHeight: 100 }}
+            value={profile.vehicle_type}
+            onChange={(event) => setProfile((prev) => ({ ...prev, vehicle_type: event.target.value }))}
           >
-            {STATES.map((state) => (
-              <option key={state} value={state}>{state}</option>
-            ))}
+            {VEHICLES.map((vehicle) => <option key={vehicle} value={vehicle}>{vehicle}</option>)}
           </select>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input
-              type="checkbox"
-              checked={profile.available}
-              onChange={(event) => setProfile((prev) => ({ ...prev, available: event.target.checked }))}
-            />
-            Available
-          </label>
+          <input
+            value={profile.operating_states.join(', ')}
+            onChange={(event) => {
+              const states = event.target.value.split(',').map((item) => item.trim()).filter(Boolean);
+              setProfile((prev) => ({ ...prev, operating_states: states }));
+            }}
+            placeholder="Operating states (comma separated)"
+          />
         </div>
-      </section>
 
-      <section className="panel" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
-        <h3 style={{ marginTop: 0 }}>Earnings Summary</h3>
-        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #dbeafe', padding: '0.75rem 1rem' }}>
-            <p className="page-muted" style={{ margin: 0 }}>Completed Jobs</p>
-            <p style={{ margin: '0.2rem 0 0', fontWeight: 800, fontSize: '1.3rem', color: '#1d4ed8' }}>{earnings.completedCount}</p>
-          </div>
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #dbeafe', padding: '0.75rem 1rem' }}>
-            <p className="page-muted" style={{ margin: 0 }}>Estimated Earnings</p>
-            <p style={{ margin: '0.2rem 0 0', fontWeight: 800, fontSize: '1.3rem', color: '#15803d' }}>₹{earnings.total.toLocaleString('en-IN')}</p>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setProfile((prev) => ({ ...prev, available: !prev.available }))}
+            style={{
+              border: '1px solid #d1d5db',
+              borderRadius: '999px',
+              padding: '0.35rem 0.8rem',
+              background: profile.available ? '#dcfce7' : '#f3f4f6',
+              color: profile.available ? '#166534' : '#4b5563',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {profile.available ? 'Available: ON' : 'Available: OFF'}
+          </button>
+
+          <button type="button" className="primary-btn" onClick={saveProfile}>Save Profile</button>
         </div>
       </section>
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>Available Bookings</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.6rem', marginBottom: '0.7rem' }}>
-          <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)}>
-            <option value="all">All States</option>
-            {STATES.map((state) => <option key={state} value={state}>{state}</option>)}
-          </select>
-          <input value={commodityFilter} onChange={(event) => setCommodityFilter(event.target.value)} placeholder="Commodity" />
-          <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
-          <input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
-        </div>
-
         {loading ? <p className="page-muted">Loading bookings...</p> : null}
 
-        <div style={{ display: 'grid', gap: '0.65rem' }}>
+        <div style={{ display: 'grid', gap: '1rem' }}>
           {availableBookings.map((booking) => (
-            <article key={booking.id} style={{ borderLeft: '4px solid #3b82f6', border: '1px solid #dbeafe', borderRadius: 12, padding: '0.8rem', boxShadow: '0 8px 20px rgba(30,64,175,0.08)' }}>
+            <article key={booking.id} style={{ background: '#fff', boxShadow: '0 10px 22px rgba(15,23,42,0.08)', borderRadius: 12, padding: '1.5rem', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem', flexWrap: 'wrap' }}>
-                <div>
-                  <p style={{ margin: 0, fontWeight: 800 }}>📦 {booking.commodity} - {booking.quantity_kg} kg</p>
-                  <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>Posted: {timeAgo(booking.created_at)}</p>
-                </div>
-                <span style={{ background: '#dcfce7', color: '#15803d', borderRadius: 999, padding: '0.2rem 0.6rem', fontWeight: 700 }}>₹{Number(booking.estimated_cost || 0).toLocaleString('en-IN')}</span>
+                <p style={{ margin: 0, fontWeight: 800 }}>📦 {booking.commodity} - {booking.quantity_kg} kg</p>
+                <span style={{ background: '#dcfce7', color: '#15803d', borderRadius: 999, padding: '0.2rem 0.7rem', fontWeight: 700 }}>
+                  ₹{Number(booking.estimated_cost || 0).toLocaleString('en-IN')}
+                </span>
               </div>
 
-              <p style={{ margin: '0.5rem 0 0' }}>FROM: 📍 {booking.pickup_district}, {booking.pickup_state}</p>
-              <p style={{ margin: '0.25rem 0 0' }}>TO: 🎯 {booking.destination}</p>
-              <p style={{ margin: '0.25rem 0 0' }}>Pickup Date: 📅 {booking.pickup_date || '-'}</p>
-              <p style={{ margin: '0.25rem 0 0' }}>Farmer: 👨‍🌾 {booking.farmer_name || 'Farmer'}</p>
+              <p style={{ margin: '0.55rem 0 0' }}>FROM: 📍 {booking.pickup_district}, {booking.pickup_state}</p>
+              <p style={{ margin: '0.2rem 0 0' }}>→ TO: 🎯 {booking.destination}</p>
+              <p style={{ margin: '0.2rem 0 0' }}>Pickup Date: 📅 {booking.pickup_date}</p>
+              <p style={{ margin: '0.2rem 0 0' }}>Farmer: 👨‍🌾 {booking.farmer_name}</p>
 
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.7rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.8rem', flexWrap: 'wrap' }}>
                 <button type="button" className="primary-btn" onClick={() => openAcceptModal(booking)}>✅ Accept Job</button>
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  onClick={() => setHiddenBookingIds((prev) => [...prev, booking.id])}
-                >
-                  ❌ Skip
-                </button>
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  onClick={() => window.open(`https://www.google.com/maps/dir/${encodeURIComponent(`${booking.pickup_district} ${booking.pickup_state}`)}/${encodeURIComponent(`${booking.destination} India`)}`, '_blank', 'noopener,noreferrer')}
-                >
-                  🗺️ Route Map
-                </button>
+                <button type="button" className="ghost-btn" onClick={() => skipBooking(booking.id)}>❌ Skip</button>
               </div>
             </article>
           ))}
@@ -309,46 +309,72 @@ export default function TransporterDashboard() {
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>My Accepted Jobs</h3>
-        {acceptedJobs.length === 0 ? (
-          <p className="page-muted">No accepted jobs found for your transporter phone.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '0.65rem' }}>
-            {acceptedJobs.map((booking) => (
-              <article key={booking.id} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: '0.75rem' }}>
-                <p style={{ margin: 0, fontWeight: 700 }}>📦 {booking.commodity} - {booking.quantity_kg} kg</p>
-                <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>Status: {statusLabel[booking.status] || booking.status}</p>
-                <p style={{ margin: '0.2rem 0 0' }}>Farmer Contact: {booking.farmer_phone || 'Visible after acceptance'}</p>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
-                  {booking.status === 'accepted' ? (
-                    <button type="button" className="primary-btn" onClick={() => updateStatus(booking.id, 'in_transit')}>
-                      Mark as In Transit
+        {acceptedJobs.length === 0 ? <p className="page-muted">No accepted jobs yet.</p> : null}
+        <div style={{ display: 'grid', gap: '0.8rem' }}>
+          {acceptedJobs.map((job) => {
+            const badge = statusColor[job.status] || statusColor.accepted;
+            return (
+              <article key={job.id} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <p style={{ margin: 0, fontWeight: 700 }}>📦 {job.commodity} - {job.quantity_kg} kg</p>
+                  <span style={{ background: badge.bg, color: badge.text, borderRadius: 999, padding: '0.2rem 0.6rem', fontWeight: 700 }}>
+                    {statusText[job.status] || 'Accepted'}
+                  </span>
+                </div>
+
+                <p style={{ margin: '0.25rem 0 0' }}>FROM: 📍 {job.pickup_district}, {job.pickup_state}</p>
+                <p style={{ margin: '0.2rem 0 0' }}>TO: 🎯 {job.destination}</p>
+                <p style={{ margin: '0.2rem 0 0' }}>Farmer contact: {job.farmer_phone || 'Not available'}</p>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
+                  {job.status === 'accepted' ? (
+                    <button type="button" className="primary-btn" style={{ background: '#f97316' }} onClick={() => updateJobStatus(job, 'in_transit')}>
+                      🚛 Start Journey
                     </button>
                   ) : null}
-                  {booking.status === 'in_transit' ? (
-                    <button type="button" className="primary-btn" style={{ background: '#15803d' }} onClick={() => updateStatus(booking.id, 'delivered')}>
-                      Mark as Delivered
+
+                  {job.status === 'in_transit' ? (
+                    <button type="button" className="primary-btn" style={{ background: '#16a34a' }} onClick={() => updateJobStatus(job, 'delivered')}>
+                      ✅ Mark Delivered
                     </button>
                   ) : null}
+
+                  {job.status === 'delivered' ? (
+                    <span style={{ alignSelf: 'center', color: '#166534', fontWeight: 700 }}>Delivered ✓ · ₹{Number(job.estimated_cost || 0).toLocaleString('en-IN')}</span>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => window.open(
+                      `https://www.google.com/maps/dir/${encodeURIComponent(`${job.pickup_district} ${job.pickup_state} India`)}/${encodeURIComponent(`${job.destination} India`)}`,
+                      '_blank'
+                    )}
+                  >
+                    Route Map
+                  </button>
                 </div>
               </article>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </section>
 
-      {accepting ? (
-        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setAccepting(null)}>
+      {acceptingBooking ? (
+        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setAcceptingBooking(null)}>
           <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h3 style={{ marginTop: 0 }}>Accept this transport job?</h3>
+            <h3 style={{ marginTop: 0 }}>Accept Transport Job</h3>
             <div style={{ display: 'grid', gap: '0.6rem' }}>
-              <input value={acceptForm.name} onChange={(event) => setAcceptForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Your name" />
-              <input value={acceptForm.phone} onChange={(event) => setAcceptForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="Your phone" />
-              <select value={acceptForm.vehicle} onChange={(event) => setAcceptForm((prev) => ({ ...prev, vehicle: event.target.value }))}>
-                {VEHICLES.map((vehicle) => <option key={vehicle} value={vehicle}>{vehicle}</option>)}
-              </select>
-              <input type="date" value={acceptForm.arrival} onChange={(event) => setAcceptForm((prev) => ({ ...prev, arrival: event.target.value }))} />
-              <textarea rows={3} value={acceptForm.notes} onChange={(event) => setAcceptForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder="Notes (optional)" />
-              <button type="button" className="primary-btn" onClick={confirmAccept}>Confirm Accept</button>
+              <input value={profile.name} onChange={(event) => setProfile((prev) => ({ ...prev, name: event.target.value }))} placeholder="Your Name" />
+              <input value={profile.phone} onChange={(event) => setProfile((prev) => ({ ...prev, phone: event.target.value }))} placeholder="Your Phone" />
+              <input value={profile.vehicle_type} onChange={(event) => setProfile((prev) => ({ ...prev, vehicle_type: event.target.value }))} placeholder="Vehicle Type" />
+              <input type="date" value={arrivalDate} onChange={(event) => setArrivalDate(event.target.value)} />
+              <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Any special notes..." />
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="button" className="primary-btn" onClick={confirmAccept}>Confirm & Accept</button>
+                <button type="button" className="ghost-btn" onClick={() => setAcceptingBooking(null)}>Cancel</button>
+              </div>
             </div>
           </section>
         </div>

@@ -400,8 +400,55 @@ export default function Marketplace() {
       ) : null}
 
       {showListingModal ? (
-        <div className="scheme-modal-backdrop" role="presentation" onClick={() => setShowListingModal(false)}>
-          <section className="scheme-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+        <div
+          role="presentation"
+          onClick={() => setShowListingModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 1000,
+            overflowY: 'auto',
+            padding: '1rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: 16,
+              padding: '2rem',
+              width: '100%',
+              maxWidth: 560,
+              margin: '2rem auto 4rem auto',
+              position: 'relative',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowListingModal(false)}
+              aria-label="Close"
+              style={{
+                position: 'sticky',
+                top: '-2rem',
+                float: 'right',
+                zIndex: 10,
+                width: 34,
+                height: 34,
+                border: '1px solid #e5e7eb',
+                borderRadius: '50%',
+                background: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+
             <h3 style={{ marginTop: 0 }}>Create Listing</h3>
             <form className="soil-form-grid" onSubmit={submitListing}>
               <label>Farmer Name<input value={listingForm.farmer_name} onChange={(event) => setListingForm((prev) => ({ ...prev, farmer_name: event.target.value }))} required /></label>
@@ -413,7 +460,23 @@ export default function Marketplace() {
               <label>State<input value={listingForm.state} onChange={(event) => setListingForm((prev) => ({ ...prev, state: event.target.value }))} required /></label>
               <label>District<input value={listingForm.district} onChange={(event) => setListingForm((prev) => ({ ...prev, district: event.target.value }))} required /></label>
               <label>Description<textarea rows={3} value={listingForm.description} onChange={(event) => setListingForm((prev) => ({ ...prev, description: event.target.value }))} /></label>
-              <button type="submit" className="primary-btn">Post Listing</button>
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  background: '#16a34a',
+                  color: '#fff',
+                  borderRadius: 10,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  marginTop: '1.5rem',
+                  cursor: 'pointer',
+                  border: 'none',
+                }}
+              >
+                Create Listing
+              </button>
             </form>
           </section>
         </div>
