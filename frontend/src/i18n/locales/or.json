@@ -1,0 +1,481 @@
+{
+  "appName": "କୃଷିମିତ୍ର",
+  "tagline": "Smart farming decisions, powered by AI",
+  "nav": {
+    "home": "ମୁଖ୍ୟପୃଷ୍ଠା",
+    "weather": "ପାଣିପାଗ",
+    "market": "ବଜାର ଦର",
+    "marketPrices": "Market Prices",
+    "schemes": "ସରକାରୀ ଯୋଜନା",
+    "cropDisease": "ଫସଲ ରୋଗ",
+    "chatbot": "Chatbot",
+    "marketplace": "Marketplace",
+    "quiz": "Quiz",
+    "soilHealth": "Soil Health",
+    "forum": "Forum",
+    "sos": "SOS",
+    "farmGuide": "Farm Guide"
+  },
+  "common": {
+    "loading": "ଲୋଡ୍ ହେଉଛି...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "changeLanguage": "Change Language",
+    "comingSoon": "Feature UI ready. Data integration in progress.",
+    "selectLanguage": "Choose your language",
+    "selectLanguageSubtitle": "Grow better with trusted guidance in your language",
+    "dashboard": "Krishi Stack",
+    "language": "ଭାଷା",
+    "state": "State",
+    "district": "District",
+    "commodity": "Commodity",
+    "search": "Search",
+    "refresh": "Refresh",
+    "all": "All",
+    "close": "Close",
+    "viewDetails": "View Details",
+    "viewGuide": "View Guide",
+    "results": "Results",
+    "submit": "Submit",
+    "send": "Send",
+    "unknown": "Unknown",
+    "quantity": "Quantity",
+    "farmer": "Farmer",
+    "callNow": "Call Now"
+  },
+  "landing": {
+    "getStarted": "Get Started",
+    "getStartedFree": "ମାଗଣାରେ ଆରମ୍ଭ କରନ୍ତୁ",
+    "seeFeatures": "See Features",
+    "badge": "AI for Indian Agriculture",
+    "heroMain": "Your Smart Farming",
+    "heroAccent": "Companion",
+    "subtitle": "AI-powered tools for weather, crop disease, market prices and more in your language, for free.",
+    "featuresTitle": "Everything you need to farm smarter",
+    "howItWorks": "How it works",
+    "ctaTitle": "Start farming smarter today",
+    "ctaSubtitle": "Trusted tools for weather, disease detection, prices and guidance.",
+    "footerTagline": "Built for Indian Farmers",
+    "stats": {
+      "farmers": "Farmers",
+      "languages": "Languages",
+      "features": "Features"
+    },
+    "quickLinks": {
+      "features": "Features",
+      "how": "How it works",
+      "github": "GitHub"
+    },
+    "stepTitles": {
+      "selectLanguage": "Select Language",
+      "describeProblem": "Describe Problem",
+      "getHelp": "Get Help"
+    },
+    "steps": {
+      "selectLanguage": "Choose from 12 Indian languages for a familiar experience.",
+      "describeProblem": "Type, speak, or upload a crop photo to explain your issue.",
+      "getHelp": "Receive clear AI guidance with practical next steps instantly."
+    },
+    "featureCards": {
+      "0": {
+        "title": "Weather Forecast",
+        "description": "Hyperlocal 5-day predictions for your village."
+      },
+      "1": {
+        "title": "Live Mandi Prices",
+        "description": "Track real-time market prices before you sell."
+      },
+      "2": {
+        "title": "Govt Schemes",
+        "description": "Find subsidies and support programs quickly."
+      },
+      "3": {
+        "title": "Crop Disease AI",
+        "description": "Upload a photo and get instant guidance."
+      },
+      "4": {
+        "title": "AI Chatbot",
+        "description": "Ask farming questions in your own language."
+      },
+      "5": {
+        "title": "Marketplace",
+        "description": "Connect directly with buyers and suppliers."
+      },
+      "6": {
+        "title": "Farming Quiz",
+        "description": "Learn practical tips with simple daily quizzes."
+      },
+      "7": {
+        "title": "Soil Health",
+        "description": "Check soil status and improve yield planning."
+      },
+      "8": {
+        "title": "Community Forum",
+        "description": "Discuss problems and solutions with farmers."
+      },
+      "9": {
+        "title": "SOS Connect",
+        "description": "Reach experts quickly in urgent crop issues."
+      },
+      "10": {
+        "title": "Farm Guide",
+        "description": "Step-by-step guidance for major crop cycles."
+      },
+      "11": {
+        "title": "Multilingual",
+        "description": "Access all features across 12 Indian languages."
+      }
+    }
+  },
+  "home": {
+    "greeting": "ଶୁଭ ସକାଳ, ଚାଷୀ 👋",
+    "subtitle": "Here's what's happening on your farm today",
+    "quickActionsTitle": "Quick Actions",
+    "recentUpdatesTitle": "Recent Updates",
+    "stats": {
+      "weather": {
+        "title": "Weather",
+        "value": "30�C Clear Sky",
+        "subtext": "Bengaluru"
+      },
+      "price": {
+        "title": "Today's Rice Price",
+        "value": "?2,100/q",
+        "subtext": "? 2.3%"
+      },
+      "schemes": {
+        "title": "Active Schemes",
+        "value": "8 Available",
+        "subtext": "2 new"
+      },
+      "expert": {
+        "title": "Expert Status",
+        "value": "3 Online",
+        "subtext": "Ready to help"
+      }
+    },
+    "quickActions": {
+      "0": {
+        "title": "Diagnose Crop",
+        "description": "Upload crop images to detect disease instantly."
+      },
+      "1": {
+        "title": "Ask Chatbot",
+        "description": "Chat in your language for farming advice."
+      },
+      "2": {
+        "title": "Check Prices",
+        "description": "See mandi prices with filters and trends."
+      },
+      "3": {
+        "title": "Weather",
+        "description": "Track live conditions and 5-day forecast."
+      },
+      "4": {
+        "title": "SOS Help",
+        "description": "Connect to experts for urgent assistance."
+      },
+      "5": {
+        "title": "Marketplace",
+        "description": "Buy and sell produce and farm inputs."
+      }
+    },
+    "updates": {
+      "0": {
+        "text": "Rain expected in Bengaluru over the next 24 hours.",
+        "time": "10 min ago"
+      },
+      "1": {
+        "text": "PM-KISAN application window opened for this month.",
+        "time": "1 hour ago"
+      },
+      "2": {
+        "text": "Rice modal price moved up by 2.3% in nearby mandis.",
+        "time": "3 hours ago"
+      }
+    }
+  },
+  "weather": {
+    "title": "Weather",
+    "loading": "Loading weather data...",
+    "forecastTitle": "5-Day Forecast",
+    "dayLabel": "Day {{day}}",
+    "metrics": {
+      "temperature": "Temperature",
+      "feelsLike": "Feels Like",
+      "humidity": "Humidity",
+      "windSpeed": "Wind Speed"
+    },
+    "defaults": {
+      "condition": "Clear sky",
+      "update": "Weather update"
+    },
+    "messages": {
+      "fetchError": "Unable to fetch weather data right now.",
+      "noForecast": "No forecast data available."
+    }
+  },
+  "marketPrices": {
+    "title": "Market Prices",
+    "loading": "Loading market prices...",
+    "searchPlaceholder": "Search commodity",
+    "columns": {
+      "market": "Market",
+      "min": "Min",
+      "max": "Max",
+      "modalPrice": "Modal Price",
+      "date": "Date"
+    },
+    "messages": {
+      "fetchError": "Unable to load market prices right now.",
+      "noResults": "No results found for selected filters."
+    }
+  },
+  "schemes": {
+    "title": "Government Schemes",
+    "loading": "Loading schemes...",
+    "loadingDetails": "Loading details...",
+    "sections": {
+      "eligibility": "Eligibility",
+      "benefits": "Benefits",
+      "applicationProcess": "Application Process"
+    },
+    "defaults": {
+      "government": "Government",
+      "general": "General",
+      "description": "Support scheme for farmers and agri workers.",
+      "applicationProcess": "Visit nearest agri office for assistance."
+    },
+    "messages": {
+      "fetchError": "Unable to load government schemes right now.",
+      "detailsError": "Unable to load scheme details.",
+      "empty": "No schemes found."
+    }
+  },
+  "cropDisease": {
+    "title": "ଫସଲ ରୋଗ ଚିହ୍ନଟ",
+    "uploadHint": "Drag and drop crop image here, or click to upload",
+    "analyze": "ଫସଲ ବିଶ୍ଳେଷଣ କରନ୍ତୁ",
+    "analyzing": "Analyzing your crop...",
+    "sections": {
+      "symptoms": "Symptoms",
+      "treatment": "Treatment Steps",
+      "prevention": "Prevention Tips"
+    },
+    "result": {
+      "cropType": "Crop Type",
+      "disease": "Disease",
+      "notIdentified": "Not identified",
+      "mild": "Mild"
+    },
+    "messages": {
+      "uploadFirst": "Please upload an image first.",
+      "analyzeError": "Unable to analyze this crop image. Please try again."
+    }
+  },
+  "chatbot": {
+    "title": "AI Chatbot",
+    "placeholder": "Ask about crops, soil, or markets",
+    "typing": "Typing...",
+    "listening": "Listening...",
+    "defaults": {
+      "reply": "I am here to help you with farming queries."
+    },
+    "messages": {
+      "sendError": "Unable to send message right now.",
+      "voiceUnsupported": "Voice input is not supported in this browser.",
+      "voiceFailed": "Voice capture failed. Please try again."
+    }
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "loading": "Loading marketplace listings...",
+    "listProduce": "List Your Produce",
+    "commoditySearch": "Commodity Search",
+    "searchPlaceholder": "Rice, maize, cotton...",
+    "contactFarmer": "Contact Farmer",
+    "createListing": "Create Listing",
+    "defaults": {
+      "standardVariety": "Standard Variety"
+    },
+    "form": {
+      "farmerName": "Farmer Name",
+      "phone": "Phone",
+      "variety": "Variety",
+      "quantity": "Quantity (kg)",
+      "price": "Price per kg",
+      "description": "Description",
+      "post": "Post Listing"
+    },
+    "messages": {
+      "loadError": "Unable to load listings. Showing sample data.",
+      "postSuccess": "Listing posted successfully.",
+      "postError": "Unable to post listing."
+    }
+  },
+  "quiz": {
+    "complete": "Quiz Complete",
+    "pass": "Pass",
+    "fail": "Fail",
+    "scoreText": "You answered {{score}} out of {{total}} correctly.",
+    "tryAgain": "Try Again",
+    "backToQuizzes": "Back to Quizzes",
+    "questionsCount": "{{count}} Questions",
+    "startQuiz": "Start Quiz",
+    "correct": "Correct!",
+    "notQuite": "Not quite.",
+    "reviewConcept": "Review this concept before moving to the next question.",
+    "nextQuestion": "Next Question",
+    "failed": "Failed",
+    "loading": "Loading...",
+    "error": "Error: {{message}}"
+  },
+  "soil": {
+    "title": "Soil Health",
+    "tabs": {
+      "soilCard": "Soil Card",
+      "appearance": "By Appearance",
+      "location": "By Location"
+    },
+    "fields": {
+      "ph": "pH (0-14)",
+      "nitrogen": "Nitrogen (kg/ha)",
+      "phosphorus": "Phosphorus (kg/ha)",
+      "potassium": "Potassium (kg/ha)",
+      "organicCarbon": "Organic Carbon (%)",
+      "soilColor": "Soil Color",
+      "waterDrainage": "Water Drainage",
+      "previousCrops": "Previous Crops",
+      "previousCropsPlaceholder": "Rice, Maize"
+    },
+    "actions": {
+      "analyzeSoil": "Analyze Soil",
+      "analyze": "Analyze",
+      "getInfo": "Get Soil Info",
+      "calculateCost": "Calculate Cost"
+    },
+    "recommendedCrops": "Recommended Crops",
+    "fertilizerRecommendations": "Fertilizer Recommendations",
+    "costCalculator": "Cost Calculator",
+    "crop": "Crop",
+    "area": "Area (acres)",
+    "cost": {
+      "seeds": "Seeds",
+      "fertilizer": "Fertilizer",
+      "pesticide": "Pesticide",
+      "irrigation": "Irrigation",
+      "labor": "Labor",
+      "total": "Total"
+    },
+    "messages": {
+      "cardError": "Unable to analyze soil card details.",
+      "appearanceError": "Unable to analyze by appearance right now.",
+      "locationError": "Unable to fetch location-based soil info.",
+      "costError": "Unable to calculate cost for this crop."
+    }
+  },
+  "forum": {
+    "title": "Community Forum",
+    "loading": "Loading forum posts...",
+    "createPost": "Create Post",
+    "viewPost": "View Post",
+    "category": "Category",
+    "categories": {
+      "cropIssues": "Crop Issues",
+      "weather": "Weather",
+      "market": "Market"
+    },
+    "form": {
+      "title": "Title",
+      "content": "Content"
+    },
+    "defaults": {
+      "farmer": "Farmer",
+      "india": "India",
+      "general": "general"
+    },
+    "messages": {
+      "fetchError": "Unable to load forum posts. Showing sample discussions.",
+      "createSuccess": "Post created successfully.",
+      "createError": "Unable to create post right now."
+    }
+  },
+  "sos": {
+    "title": "SOS Expert Connect",
+    "tapEmergency": "Tap for Emergency Help",
+    "problemDescription": "Problem Description",
+    "problemPlaceholder": "Describe your crop issue in detail",
+    "uploadPhoto": "Upload Crop Photo",
+    "submitRequest": "Submit SOS Request",
+    "submitting": "Submitting...",
+    "emergencyResponse": "Emergency Response",
+    "assignedExpert": "Assigned Expert",
+    "phone": "Phone",
+    "specialization": "Specialization",
+    "cropSupport": "Crop Support",
+    "rating": "Rating",
+    "aiAdvice": "AI Emergency Advice",
+    "medicine": "Medicine",
+    "dosage": "Dosage",
+    "helplines": "Helplines",
+    "call": "Call",
+    "urgency": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "defaults": {
+      "medicine": "Consult nearest input center",
+      "dosage": "As per label instruction",
+      "step1": "Start isolation and remove infected leaves.",
+      "step2": "Apply first treatment spray.",
+      "step3": "Reassess spread and repeat spray if needed."
+    },
+    "messages": {
+      "submitSuccess": "SOS request submitted successfully.",
+      "submitError": "Unable to submit SOS request."
+    }
+  },
+  "farmGuide": {
+    "title": "Farm Guide",
+    "loading": "Loading farm guide...",
+    "searchPlaceholder": "Search crops",
+    "season": "Season",
+    "category": "Category",
+    "water": "Water",
+    "profit": "Profit",
+    "cropGuide": "Crop Guide",
+    "tabs": {
+      "overview": "Overview",
+      "planting": "Planting",
+      "irrigation": "Irrigation",
+      "fertilization": "Fertilization",
+      "pest_management": "Pest Control",
+      "harvesting": "Harvesting",
+      "market_info": "Market"
+    },
+    "defaults": {
+      "allSeason": "All Season",
+      "general": "General",
+      "beginner": "beginner",
+      "moderate": "Moderate",
+      "medium": "Medium"
+    },
+    "fallback": {
+      "overview": "Crop: {{crop}}\nSeason: {{season}}\nCategory: {{category}}\nDifficulty: {{difficulty}}",
+      "planting": "Prepare fine seedbed, use quality seeds, and maintain recommended spacing.",
+      "irrigation": "Water requirement: {{water}}. Avoid over-irrigation.",
+      "fertilization": "Apply balanced NPK in split doses and add organic matter where possible.",
+      "pestManagement": "Inspect crop regularly, use integrated pest management, and spray only when required.",
+      "harvesting": "Harvest at physiological maturity and avoid excess moisture during storage.",
+      "marketInfo": "Profit potential: {{profit}}. Track mandi prices before sale."
+    },
+    "messages": {
+      "fetchError": "Unable to fetch farm guide data. Showing sample crops.",
+      "guideError": "Guide details unavailable. Showing basic crop information.",
+      "noSection": "No information available for this section.",
+      "noCrops": "No crops found for selected filters."
+    }
+  }
+}
