@@ -1,6 +1,34 @@
-backend/.venv/
-backend/__pycache__/
+# Environment files
+.env
 backend/.env
+frontend/.env
+*.env.local
+
+# Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.venv/
+backend/venv/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Node
 frontend/node_modules/
 frontend/dist/
-frontend/.env
+frontend/.vite/
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Cache
+backend/app/data/daily_briefing_cache.json
