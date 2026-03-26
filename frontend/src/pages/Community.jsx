@@ -27,6 +27,10 @@ const timeAgo = (isoText) => {
 
 const byNewest = (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
+const categoryLabel = (value) => String(value || 'general')
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (char) => char.toUpperCase());
+
 export default function Community() {
   const { user } = useAuth();
   const { language } = useLanguage();
@@ -198,27 +202,33 @@ export default function Community() {
   };
 
   return (
-    <div className="page-wrap">
-      <h2>Community</h2>
-      <p className="page-muted">Connect with farmers across India</p>
+    <div className="page-wrap community-page">
+      <section className="panel community-hero">
+        <div className="community-hero-content">
+          <h2>Community</h2>
+          <p>Connect with farmers across India, share updates, and discover practical field insights.</p>
+        </div>
+      </section>
 
-      <section className="panel">
-        <h3>Find Farmers</h3>
-        <input
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search by name, location or User ID (e.g. 05E9383C)"
-          style={{ width: '100%', maxWidth: '560px' }}
-        />
+      <section className="panel community-panel">
+        <div className="community-panel-head">
+          <h3>Find Farmers</h3>
+          <p className="page-muted">Search by name, location, or user ID</p>
+        </div>
+        <div className="community-search-wrap">
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by name, location or User ID (e.g. 05E9383C)"
+            className="community-search-input"
+          />
+        </div>
 
-        <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.7rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+        <div className="community-farmer-grid">
           {searchResults.map((farmer) => (
-            <article
-              key={farmer.id}
-              style={{ minWidth: '250px', border: '1px solid #dcfce7', borderRadius: '12px', background: '#fff', padding: '0.7rem', display: 'grid', gap: '0.45rem' }}
-            >
-              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700 }}>
+            <article key={farmer.id} className="community-farmer-card">
+              <div className="community-farmer-head">
+                <div className="community-farmer-avatar">
                   {(farmer.name || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -234,19 +244,22 @@ export default function Community() {
         </div>
       </section>
 
-      <section className="panel">
-        <h3>Create Post</h3>
-        <div className="soil-form-grid">
+      <section className="panel community-panel">
+        <div className="community-panel-head">
+          <h3>Create Post</h3>
+          <p className="page-muted">Share your update with the farming community.</p>
+        </div>
+        <div className="community-compose-grid">
           <label>Title
             <input value={createTitle} onChange={(event) => setCreateTitle(event.target.value)} placeholder="Write post title" />
           </label>
           <label>Content
-            <textarea value={createContent} onChange={(event) => setCreateContent(event.target.value)} placeholder="Share your question or update" />
+            <textarea className="community-compose-textarea" value={createContent} onChange={(event) => setCreateContent(event.target.value)} placeholder="Share your question or update" />
           </label>
           <label>Category
             <select value={createCategory} onChange={(event) => setCreateCategory(event.target.value)}>
               {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category} value={category}>{categoryLabel(category)}</option>
               ))}
             </select>
           </label>
@@ -259,19 +272,30 @@ export default function Community() {
               <option value="te">Telugu</option>
             </select>
           </label>
-          <button type="button" className="primary-btn" onClick={createPost}>Post</button>
+          <div className="community-compose-actions">
+            <button type="button" className="primary-btn" onClick={createPost}>Post</button>
+          </div>
         </div>
       </section>
 
-      <section className="panel">
-        <h3>Forum Posts Feed</h3>
-        <div className="inline-form" style={{ marginTop: 0 }}>
+      <section className="panel community-panel">
+        <div className="community-panel-head">
+          <h3>Forum Posts Feed</h3>
+          <p className="page-muted">Latest posts from across regions and categories.</p>
+        </div>
+
+        <div className="forum-filters-row" style={{ marginTop: 0 }}>
+          <label>
+            Category
           <select value={filterCategory} onChange={(event) => setFilterCategory(event.target.value)}>
             <option value="all">All Posts</option>
             {categories.map((category) => (
-              <option key={category} value={category}>{category}</option>
+              <option key={category} value={category}>{categoryLabel(category)}</option>
             ))}
           </select>
+          </label>
+          <label>
+            Language
           <select value={filterLanguage} onChange={(event) => setFilterLanguage(event.target.value)}>
             <option value="all">All Languages</option>
             <option value="en">English</option>
@@ -280,17 +304,18 @@ export default function Community() {
             <option value="ta">Tamil</option>
             <option value="te">Telugu</option>
           </select>
+          </label>
         </div>
 
         {loading ? <p className="page-muted">Loading posts...</p> : null}
         {!loading && visiblePosts.length === 0 ? <p className="page-muted">No posts found.</p> : null}
 
-        <div className="social-search-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="forum-feed" style={{ marginTop: '0.7rem' }}>
           {visiblePosts.map((post) => {
             const expanded = expandedPostId === post.id;
             return (
-              <article key={post.id} className="social-user-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.8rem' }}>
+              <article key={post.id} className="forum-card community-forum-card">
+                <div className="forum-card-top" style={{ alignItems: 'flex-start' }}>
                   <button
                     type="button"
                     onClick={() => openAuthor(post)}
@@ -304,18 +329,24 @@ export default function Community() {
                       <span className="forum-category-badge">{post.category}</span>
                     </div>
                   </button>
+                  <span className="forum-category-badge">{categoryLabel(post.category)}</span>
                 </div>
 
-                <h4 style={{ marginTop: '0.7rem' }}>{post.title}</h4>
-                <p style={{ marginBottom: '0.55rem', display: '-webkit-box', WebkitLineClamp: expanded ? 'unset' : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <h3>{post.title}</h3>
+                <p className="forum-preview" style={{ WebkitLineClamp: expanded ? 'unset' : 2 }}>
                   {post.content}
                 </p>
 
-                <p className="page-muted">👍 {post.likes || 0} · 💬 {post.replies?.length || 0}</p>
-                <button type="button" className="ghost-btn" onClick={() => setExpandedPostId(expanded ? '' : post.id)}>View & Reply</button>
+                <div className="forum-card-bottom">
+                  <div>
+                    <span>👍 {post.likes || 0}</span>
+                    <span>💬 {post.replies?.length || 0}</span>
+                  </div>
+                  <button type="button" className="ghost-btn" onClick={() => setExpandedPostId(expanded ? '' : post.id)}>View & Reply</button>
+                </div>
 
                 {expanded ? (
-                  <div style={{ marginTop: '0.7rem' }}>
+                  <div className="community-reply-box">
                     <div className="social-chat-log" style={{ maxHeight: '220px', marginBottom: '0.7rem' }}>
                       {(post.replies || []).map((reply) => (
                         <div key={reply.id} className="social-row" style={{ marginBottom: 0 }}>
@@ -330,6 +361,7 @@ export default function Community() {
                       value={replyTextByPost[post.id] || ''}
                       onChange={(event) => setReplyTextByPost((prev) => ({ ...prev, [post.id]: event.target.value }))}
                       placeholder="Add reply"
+                      className="community-reply-textarea"
                     />
                     <button type="button" className="primary-btn" style={{ marginTop: '0.5rem' }} onClick={() => submitReply(post.id)}>Submit Reply</button>
                   </div>
@@ -340,15 +372,19 @@ export default function Community() {
         </div>
       </section>
 
-      <section className="panel">
-        <h3>Trending Posts</h3>
-        <div className="social-search-grid">
+      <section className="panel community-panel">
+        <div className="community-panel-head">
+          <h3>Trending Posts</h3>
+          <p className="page-muted">Most engaged conversations right now.</p>
+        </div>
+        <div className="community-trending-grid">
           {trending.slice(0, 3).map((post) => (
-            <article key={post.id} className="social-user-card">
-              <p><strong>{post.title}</strong></p>
-              <p className="page-muted">{post.author_name} · 👍 {post.likes || 0}</p>
+            <article key={post.id} className="social-user-card community-trending-card">
+              <p style={{ margin: 0, fontWeight: 700 }}>{post.title}</p>
+              <p className="page-muted" style={{ margin: '0.35rem 0 0' }}>{post.author_name} · 👍 {post.likes || 0}</p>
             </article>
           ))}
+          {trending.length === 0 ? <p className="page-muted">No trending posts yet.</p> : null}
         </div>
       </section>
 

@@ -1,0 +1,26 @@
+{
+  "quote": "Sow seeds of hope",
+  "news": [
+    {
+      "title": "Drought Tolerant",
+      "summary": "New crop tech",
+      "why_it_matters": "Increases yield",
+      "details": "Drought-tolerant crops help farmers grow food in water-scarce areas. This technology increases crop yields and helps farmers save water. With less water, farmers can still grow crops, reducing losses and increasing profits. This helps small-scale farmers who have limited water resources."
+    },
+    {
+      "title": "Organic Farm",
+      "summary": "Chemical free",
+      "why_it_matters": "Better health",
+      "details": "Organic farming is a method of growing crops without using chemicals. This approach helps keep the soil healthy and increases crop quality. Farmers who adopt organic farming can sell their produce at higher prices, earning more income. Organic farming also helps protect the environment and public health."
+    },
+    {
+      "title": "Precision Ag",
+      "summary": "Smart farming",
+      "why_it_matters": "Boosts efficiency",
+      "details": "Precision agriculture uses technology to optimize crop growth and reduce waste. Farmers can use drones, sensors, and satellites to monitor their crops and make data-driven decisions. This approach helps farmers use resources more efficiently, reducing costs and increasing yields. Precision agriculture also helps farmers respond to changes in weather and soil conditions."
+    }
+  ],
+  "source": "groq",
+  "date": "2026-03-26",
+  "generated_at": "2026-03-26T01:04:07.982985+05:30"
+}

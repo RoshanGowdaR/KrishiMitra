@@ -23,6 +23,8 @@ class SchemeResponse(BaseModel):
     deadline: str
     ministry: str
     scheme_type: Literal["subsidy", "insurance", "loan", "equipment", "training"]
+    youtube_url: str | None = None
+    created_at: str | None = None
 
 
 class SchemeListResponse(BaseModel):
@@ -39,7 +41,7 @@ def _load_custom_schemes(language: str) -> list[dict]:
         response = (
             supabase
             .table("custom_schemes")
-            .select("id, name, description, language, deadline, ministry")
+            .select("id, name, description, language, deadline, ministry, youtube_url, created_at")
             .eq("language", language.lower())
             .execute()
         )
@@ -59,6 +61,8 @@ def _load_custom_schemes(language: str) -> list[dict]:
             "deadline": row.get("deadline") or "Open",
             "ministry": row.get("ministry") or "State / Local Authority",
             "scheme_type": "training",
+            "youtube_url": row.get("youtube_url"),
+            "created_at": row.get("created_at"),
         })
 
     return transformed

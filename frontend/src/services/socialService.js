@@ -1,11 +1,37 @@
 import { supabase } from '../lib/supabase';
 
+const CHAT_PREFS_KEY = 'krishimitra_chat_prefs_v1';
+const CHAT_REPORTS_KEY = 'krishimitra_chat_reports_v1';
+
+const getConversationKey = (userId, friendId) => {
+  const pair = [String(userId || ''), String(friendId || '')].sort();
+  return `${pair[0]}__${pair[1]}`;
+};
+
+const readChatPrefsStore = () => {
+  try {
+    return JSON.parse(localStorage.getItem(CHAT_PREFS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const writeChatPrefsStore = (payload) => {
+  localStorage.setItem(CHAT_PREFS_KEY, JSON.stringify(payload));
+};
+
+const buildDerivedUid = (id) => {
+  const normalized = String(id || '').replace(/-/g, '').toUpperCase();
+  if (!normalized) return '';
+  return `KM${normalized.slice(0, 10)}`;
+};
+
 const normalizeUser = (row = {}) => {
   const displayName = row.name || row.full_name || row.username || (row.email ? String(row.email).split('@')[0] : '') || 'Farmer';
   return {
     ...row,
     name: displayName,
-    user_uid: row.user_uid || row.user_id || row.uid || row.id?.toString()?.slice(0, 8)?.toUpperCase() || '',
+    user_uid: row.user_uid || row.user_id || row.uid || buildDerivedUid(row.id) || '',
   };
 };
 
@@ -44,10 +70,13 @@ export const searchUsers = async (query) => {
   }
 
   const needle = cleaned.toLowerCase();
+  const needleNoKm = needle.startsWith('km') ? needle.slice(2) : needle;
   const filtered = (data || []).filter((row) => {
     const idText = (row.id || '').toString();
-    const idShort = idText.replace(/-/g, '').slice(0, 8).toLowerCase();
+    const idRaw = idText.replace(/-/g, '').toLowerCase();
+    const idShort = idRaw.slice(0, 10);
     const uid = (row.user_uid || row.user_id || row.uid || '').toString().toLowerCase();
+    const derivedUid = buildDerivedUid(row.id).toLowerCase();
     const name = (row.name || '').toString().toLowerCase();
     const district = (row.district || '').toString().toLowerCase();
     const state = (row.state || '').toString().toLowerCase();
@@ -55,8 +84,12 @@ export const searchUsers = async (query) => {
 
     return (
       uid.includes(needle) ||
+      uid.includes(needleNoKm) ||
+      derivedUid.includes(needle) ||
+      derivedUid.includes(needleNoKm) ||
       idText.toLowerCase().includes(needle) ||
-      idShort.includes(needle) ||
+      idRaw.includes(needleNoKm) ||
+      idShort.includes(needleNoKm) ||
       name.includes(needle) ||
       district.includes(needle) ||
       state.includes(needle) ||
@@ -263,7 +296,8 @@ export const markMessagesRead = async (userId, senderId) => {
 };
 
 // Get unread message count per friend.
-export const getUnreadCounts = async (userId) => {
+export const getUnreadCounts = async (userId, options = {}) => {
+  const { respectMute = false } = options;
   const { data } = await supabase
     .from('messages')
     .select('sender_id')
@@ -272,6 +306,10 @@ export const getUnreadCounts = async (userId) => {
 
   const counts = {};
   data?.forEach((message) => {
+    if (respectMute) {
+      const pref = getChatPreference(userId, message.sender_id);
+      if (pref?.isMuted) return;
+    }
     counts[message.sender_id] = (counts[message.sender_id] || 0) + 1;
   });
   return counts;
@@ -379,4 +417,89 @@ export const uploadChatMedia = async (file, userId) => {
     .getPublicUrl(fileName);
 
   return { url: urlData.publicUrl, error: null };
+};
+
+export const clearConversationMessages = async (userId, friendId) => {
+  const { error } = await supabase
+    .from('messages')
+    .delete()
+    .or(
+      `and(sender_id.eq.${userId},receiver_id.eq.${friendId}),` +
+      `and(sender_id.eq.${friendId},receiver_id.eq.${userId})`
+    );
+
+  return { error };
+};
+
+export const getChatPreference = (userId, friendId) => {
+  const store = readChatPrefsStore();
+  const key = getConversationKey(userId, friendId);
+  return store[key] || {
+    isBlocked: false,
+    isMuted: false,
+    isFavorite: false,
+    disappearingMode: 'off',
+  };
+};
+
+export const setChatPreference = (userId, friendId, patch) => {
+  const store = readChatPrefsStore();
+  const key = getConversationKey(userId, friendId);
+  const next = {
+    isBlocked: false,
+    isMuted: false,
+    isFavorite: false,
+    disappearingMode: 'off',
+    ...(store[key] || {}),
+    ...(patch || {}),
+  };
+  store[key] = next;
+  writeChatPrefsStore(store);
+  return next;
+};
+
+export const getAllChatPreferencesForUser = (userId, friendIds = []) => {
+  const store = readChatPrefsStore();
+  const result = {};
+
+  friendIds.forEach((friendId) => {
+    const key = getConversationKey(userId, friendId);
+    result[friendId] = store[key] || {
+      isBlocked: false,
+      isMuted: false,
+      isFavorite: false,
+      disappearingMode: 'off',
+    };
+  });
+
+  return result;
+};
+
+export const submitUserReport = async ({ reporterId, targetId, reason, details }) => {
+  const payload = {
+    reporter_uid: reporterId,
+    target_uid: targetId,
+    reason,
+    details,
+    status: 'open',
+  };
+
+  const { data, error } = await supabase.from('user_reports').insert(payload).select().maybeSingle();
+  if (!error) {
+    return { data, error: null };
+  }
+
+  try {
+    const current = JSON.parse(localStorage.getItem(CHAT_REPORTS_KEY) || '[]');
+    current.push({
+      id: `${Date.now()}-${Math.random()}`,
+      ...payload,
+      created_at: new Date().toISOString(),
+      source: 'local-fallback',
+    });
+    localStorage.setItem(CHAT_REPORTS_KEY, JSON.stringify(current));
+    return { data: null, error: null };
+  } catch {
+    return { data: null, error };
+  }
 };

@@ -1,13 +1,26 @@
-import { useEffect } from 'react';
+import { createRef, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const floatingEmojis = ['🌱', '🍃', '🌾'];
 
 export default function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, signInWithGoogle } = useAuth();
+  const [authBlock, setAuthBlock] = useState(null);
+  const [phone, setPhone] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [otpTimer, setOtpTimer] = useState(0);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const otpRefs = useRef([...Array(6)].map(() => createRef()));
 
   const particles = Array.from({ length: 15 }, (_, index) => ({
     id: `login-particle-${index + 1}`,
@@ -26,8 +39,137 @@ export default function Login() {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('krishimitra_auth_block');
+      const parsed = raw ? JSON.parse(raw) : null;
+      setAuthBlock(parsed);
+    } catch {
+      setAuthBlock(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpTimer]);
+
   const startLogin = async () => {
     await signInWithGoogle();
+  };
+
+  const formatTimer = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleSendOtp = async () => {
+    if (phone.length !== 10) {
+      setPhoneError('Please enter a valid 10-digit number');
+      return;
+    }
+
+    setSendingOtp(true);
+    setPhoneError('');
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: `+91${phone}`,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        setPhoneError(error.message || 'Failed to send OTP. Please try again.');
+        return;
+      }
+
+      setOtpSent(true);
+      setOtpTimer(300);
+    } catch {
+      setPhoneError('Something went wrong. Please try again.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleOtpDigit = (index, value) => {
+    const newDigits = [...otpDigits];
+    newDigits[index] = value.replace(/\D/g, '').slice(-1);
+    setOtpDigits(newDigits);
+    setOtp(newDigits.join(''));
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1].current?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, event) => {
+    if (event.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1].current?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+
+    setVerifyingOtp(true);
+    setPhoneError('');
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: `+91${phone}`,
+        token: otp,
+        type: 'sms',
+      });
+
+      if (error) {
+        setPhoneError(error.message || 'Invalid OTP. Please try again.');
+        setOtpSent(false);
+        setOtpDigits(['', '', '', '', '', '']);
+        setOtp('');
+        return;
+      }
+
+      if (data.session) {
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('id, name, state')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
+
+        if (!existingUser || !existingUser.name) {
+          await supabase.from('users').upsert({
+            id: data.session.user.id,
+            phone: `+91${phone}`,
+          });
+
+          const savedLanguage = localStorage.getItem('krishimitra_language');
+          if (!savedLanguage) {
+            navigate('/select-language', { replace: true });
+          } else {
+            navigate('/profile-setup', { replace: true });
+          }
+        } else {
+          navigate('/app', { replace: true });
+        }
+      }
+    } catch {
+      setPhoneError('Verification failed. Please try again.');
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   return (
@@ -50,6 +192,11 @@ export default function Login() {
             0% { transform: translate3d(0, 22px, 0); opacity: 0; }
             30% { opacity: 1; }
             100% { transform: translate3d(0, -62px, 0); opacity: 0; }
+          }
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
         `}
       </style>
@@ -130,7 +277,7 @@ export default function Login() {
             letterSpacing: '0.01em',
           }}
         >
-          Welcome Back
+          {t('login.welcomeBack', { defaultValue: 'Welcome Back' })}
         </motion.h1>
 
         <motion.p
@@ -139,7 +286,7 @@ export default function Login() {
           transition={{ delay: 0.2, duration: 0.45 }}
           style={{ margin: 0, marginBottom: '0.5rem', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}
         >
-          Sign in to your farming workspace
+          {t('login.subtitle', { defaultValue: 'Sign in to your farming workspace' })}
         </motion.p>
 
         <motion.p
@@ -148,8 +295,37 @@ export default function Login() {
           transition={{ delay: 0.24, duration: 0.45 }}
           style={{ margin: 0, marginBottom: '2rem', color: 'rgba(22,163,74,0.7)', fontSize: '0.85rem', fontWeight: 500 }}
         >
-          ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ
+          {t('login.localWelcome', { defaultValue: 'ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ' })}
         </motion.p>
+
+        {authBlock ? (
+          <div
+            style={{
+              background: authBlock.type === 'temporary' ? '#fef9c3' : '#fee2e2',
+              border: `1px solid ${authBlock.type === 'temporary' ? '#eab308' : '#ef4444'}`,
+              color: authBlock.type === 'temporary' ? '#991b1b' : '#7f1d1d',
+              borderRadius: 12,
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              textAlign: 'left',
+              fontSize: '0.82rem',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 700 }}>
+              {authBlock.type === 'temporary'
+                ? 'Your account has been suspended temporarily for 7 days.'
+                : 'Your account has been banned permanently.'}
+            </p>
+            {authBlock.until && authBlock.type === 'temporary' ? (
+              <p style={{ margin: '0.35rem 0 0', fontWeight: 600 }}>
+                Suspension until: {new Date(authBlock.until).toLocaleString('en-IN')}
+              </p>
+            ) : null}
+            <p style={{ margin: '0.35rem 0 0' }}>
+              Reason: {authBlock.reason || 'Policy violation'}
+            </p>
+          </div>
+        ) : null}
 
         <motion.div
           initial={{ opacity: 0, scaleX: 0.85 }}
@@ -189,8 +365,242 @@ export default function Login() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          Continue with Google
+          {t('login.continueWithGoogle', { defaultValue: 'Continue with Google' })}
         </motion.button>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            margin: '1.5rem 0',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+        </div>
+
+        {!otpSent ? (
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ margin: 0, marginBottom: '0.35rem', color: 'white', fontWeight: 600 }}>Login with Phone</p>
+            <p style={{ margin: 0, marginBottom: '0.8rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem' }}>
+              Enter your mobile number to receive a one-time password.
+            </p>
+
+            <div
+              style={{
+                display: 'flex',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                marginBottom: '0.8rem',
+              }}
+            >
+              <span
+                style={{
+                  padding: '0.9rem 1rem',
+                  background: 'rgba(22,163,74,0.15)',
+                  color: '#4ade80',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  borderRight: '1px solid rgba(255,255,255,0.1)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                🇮🇳 +91
+              </span>
+              <input
+                type="tel"
+                placeholder="Enter 10-digit mobile number"
+                value={phone}
+                onChange={(event) => {
+                  const val = event.target.value.replace(/\D/g, '').slice(0, 10);
+                  setPhone(val);
+                  setPhoneError('');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.9rem 1rem',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: 'white',
+                  fontSize: '1rem',
+                }}
+                maxLength={10}
+              />
+            </div>
+
+            {phoneError ? (
+              <p style={{ color: '#f87171', fontSize: '0.8rem', margin: 0, marginBottom: '0.5rem' }}>
+                {phoneError}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={sendingOtp || phone.length !== 10}
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                background: phone.length === 10
+                  ? 'linear-gradient(135deg, #16a34a, #15803d)'
+                  : 'rgba(255,255,255,0.05)',
+                color: phone.length === 10 ? 'white' : 'rgba(255,255,255,0.3)',
+                border: '1px solid rgba(22,163,74,0.3)',
+                borderRadius: '12px',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                cursor: phone.length === 10 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {sendingOtp ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      width: 16,
+                      height: 16,
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      display: 'inline-block',
+                    }}
+                  />
+                  Sending OTP...
+                </span>
+              ) : '📱 Send OTP'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'left' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setOtpSent(false);
+                setOtp('');
+                setOtpDigits(['', '', '', '', '', '']);
+                setPhoneError('');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#86efac',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                padding: 0,
+                marginBottom: '0.7rem',
+              }}
+            >
+              ← Change number
+            </button>
+
+            <p style={{ margin: 0, marginBottom: '0.35rem', color: 'white', fontWeight: 600 }}>Enter OTP</p>
+            <p style={{ margin: 0, marginBottom: '0.8rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem' }}>
+              Sent to +91 {phone.slice(0, 3)}XXXXXXX{phone.slice(-2)}
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', margin: '1rem 0' }}>
+              {otpDigits.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={otpRefs.current[index]}
+                  type="tel"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(event) => handleOtpDigit(index, event.target.value)}
+                  onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                  style={{
+                    width: '44px',
+                    height: '52px',
+                    textAlign: 'center',
+                    fontSize: '1.3rem',
+                    fontWeight: 700,
+                    background: digit
+                      ? 'rgba(22,163,74,0.15)'
+                      : 'rgba(255,255,255,0.05)',
+                    border: digit
+                      ? '2px solid rgba(22,163,74,0.5)'
+                      : '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                  }}
+                />
+              ))}
+            </div>
+
+            {phoneError ? (
+              <p style={{ color: '#f87171', fontSize: '0.8rem', margin: 0, marginBottom: '0.5rem', textAlign: 'center' }}>
+                {phoneError}
+              </p>
+            ) : null}
+
+            {otpTimer > 0 ? (
+              <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', margin: 0 }}>
+                OTP expires in <span style={{ color: '#4ade80', fontWeight: 700 }}>{formatTimer(otpTimer)}</span>
+              </p>
+            ) : (
+              <p style={{ textAlign: 'center', fontSize: '0.82rem', margin: 0 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)' }}>OTP expired. </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtpDigits(['', '', '', '', '', '']);
+                    setOtp('');
+                    setPhoneError('');
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Resend OTP
+                </button>
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              disabled={verifyingOtp || otp.length !== 6}
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                background: otp.length === 6
+                  ? 'linear-gradient(135deg, #16a34a, #15803d)'
+                  : 'rgba(255,255,255,0.05)',
+                color: otp.length === 6 ? 'white' : 'rgba(255,255,255,0.3)',
+                border: '1px solid rgba(22,163,74,0.3)',
+                borderRadius: '12px',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                cursor: otp.length === 6 ? 'pointer' : 'not-allowed',
+                marginTop: '0.8rem',
+              }}
+            >
+              {verifyingOtp ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      width: 16,
+                      height: 16,
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      display: 'inline-block',
+                    }}
+                  />
+                  Verifying...
+                </span>
+              ) : '✅ Verify OTP & Login'}
+            </button>
+          </div>
+        )}
 
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -198,7 +608,7 @@ export default function Login() {
           transition={{ delay: 0.4, duration: 0.45 }}
           style={{ margin: 0, marginTop: '1.5rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}
         >
-          By continuing you agree to our terms of service
+          {t('login.terms', { defaultValue: 'By continuing you agree to our terms of service' })}
         </motion.p>
 
         <motion.p
@@ -207,7 +617,7 @@ export default function Login() {
           transition={{ delay: 0.46, duration: 0.45 }}
           style={{ margin: 0, marginTop: '1rem', fontSize: '0.8rem', color: 'rgba(22,163,74,0.6)', textAlign: 'center' }}
         >
-          🌾 Empowering 600M Indian Farmers with AI
+          🌾 {t('login.footer', { defaultValue: 'Empowering 600M Indian Farmers with AI' })}
         </motion.p>
       </motion.div>
     </div>

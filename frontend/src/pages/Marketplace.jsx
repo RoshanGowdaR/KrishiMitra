@@ -505,45 +505,53 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="page-wrap marketplace-page" style={{ gap: '0.9rem' }}>
-      <div className="section-header-row">
-        <h2 style={{ margin: 0 }}>Marketplace</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button type="button" className="primary-btn" onClick={() => setShowListingModal(true)}>List Produce</button>
-          <button type="button" className="primary-btn" style={{ background: '#ea580c' }} onClick={() => setShowTransportModal(true)}>Book Transport</button>
+    <div className="page-wrap marketplace-page">
+      <section className="marketplace-hero panel">
+        <div className="marketplace-hero-content">
+          <h2>Marketplace</h2>
+          <p>List produce, connect with buyers, and book transport in one clean workflow.</p>
+          <div className="marketplace-hero-stats">
+            <span>{visibleListings.length} listings visible</span>
+            <span>{bookings.length} tracked bookings</span>
+            <span>Pan-state market reach</span>
+          </div>
         </div>
-      </div>
+        <div className="marketplace-hero-actions">
+          <button type="button" className="primary-btn" onClick={() => setShowListingModal(true)}>List Produce</button>
+          <button type="button" className="primary-btn marketplace-transport-btn" onClick={() => setShowTransportModal(true)}>Book Transport</button>
+        </div>
+      </section>
 
-      <section className="panel" style={{ marginBottom: 0 }}>
-        <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-          <button type="button" className={activeTab === 'listings' ? 'primary-btn' : 'ghost-btn'} onClick={() => setActiveTab('listings')}>Listings</button>
-          <button type="button" className={activeTab === 'transport' ? 'primary-btn' : 'ghost-btn'} onClick={() => setActiveTab('transport')}>Transport Requests</button>
-          <button type="button" className={activeTab === 'bookings' ? 'primary-btn' : 'ghost-btn'} onClick={() => setActiveTab('bookings')}>My Bookings</button>
+      <section className="panel marketplace-tabs-panel">
+        <div className="marketplace-tabs-row">
+          <button type="button" className={`marketplace-tab-btn ${activeTab === 'listings' ? 'active' : ''}`} onClick={() => setActiveTab('listings')}>Listings</button>
+          <button type="button" className={`marketplace-tab-btn ${activeTab === 'transport' ? 'active' : ''}`} onClick={() => setActiveTab('transport')}>Transport Requests</button>
+          <button type="button" className={`marketplace-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>My Bookings</button>
         </div>
       </section>
 
       {activeTab === 'listings' ? (
         <>
-          <section className="panel">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.6rem' }}>
-              <input value={searchCommodity} onChange={(event) => setSearchCommodity(event.target.value)} placeholder="Search commodity" />
-              <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)}>
+          <section className="panel marketplace-filter-panel">
+            <div className="marketplace-filter-grid">
+              <input className="marketplace-filter-input" value={searchCommodity} onChange={(event) => setSearchCommodity(event.target.value)} placeholder="Search commodity" />
+              <select className="marketplace-filter-input" value={stateFilter} onChange={(event) => setStateFilter(event.target.value)}>
                 <option value="all">All states</option>
                 {states.map((state) => <option key={state} value={state}>{state}</option>)}
               </select>
             </div>
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0.7rem' }}>
+          <section className="marketplace-listings-grid">
             {loadingListings ? <p className="page-muted">Loading listings...</p> : visibleListings.map((item) => (
-              <article key={item.id} className="panel">
-                <h3 style={{ margin: 0 }}>{item.commodity}</h3>
-                <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>{item.variety || 'Standard variety'}</p>
-                <p style={{ margin: '0.35rem 0 0', fontWeight: 700, color: '#15803d' }}>₹{item.price_per_kg}/kg</p>
-                <p style={{ margin: '0.3rem 0 0' }}>Quantity: {item.quantity_kg} kg</p>
-                <p style={{ margin: '0.25rem 0 0' }}>📍 {item.district}, {item.state}</p>
-                <p style={{ margin: '0.25rem 0 0' }}>👨‍🌾 {item.farmer_name}</p>
-                <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`} style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+              <article key={item.id} className="marketplace-listing-card">
+                <h3>{item.commodity}</h3>
+                <p className="marketplace-variety">{item.variety || 'Standard variety'}</p>
+                <p className="marketplace-price">₹{item.price_per_kg}/kg</p>
+                <p>Quantity: {item.quantity_kg} kg</p>
+                <p>📍 {item.district}, {item.state}</p>
+                <p>👨‍🌾 {item.farmer_name}</p>
+                <a className="marketplace-contact" href={`tel:${item.phone || '18001801551'}`}>
                   Contact Farmer
                 </a>
               </article>
@@ -553,34 +561,34 @@ export default function Marketplace() {
       ) : null}
 
       {activeTab === 'transport' ? (
-        <section className="panel">
-          <h3 style={{ marginTop: 0 }}>Transport Requests</h3>
+        <section className="panel marketplace-surface-panel">
+          <h3 className="marketplace-section-title">Transport Requests</h3>
           <p className="page-muted">Book pickup for your produce and track progress from My Bookings tab.</p>
-          <button type="button" className="primary-btn" style={{ background: '#ea580c' }} onClick={() => setShowTransportModal(true)}>
+          <button type="button" className="primary-btn marketplace-transport-btn" onClick={() => setShowTransportModal(true)}>
             Book Transport
           </button>
         </section>
       ) : null}
 
       {activeTab === 'bookings' ? (
-        <section className="panel">
-          <h3 style={{ marginTop: 0 }}>My Bookings</h3>
+        <section className="panel marketplace-surface-panel">
+          <h3 className="marketplace-section-title">My Bookings</h3>
           {loadingBookings ? <p className="page-muted">Loading bookings...</p> : null}
           {!loadingBookings && bookings.length === 0 ? <p className="page-muted">No bookings yet. Create one from Transport Requests.</p> : null}
-          <div style={{ display: 'grid', gap: '0.8rem' }}>
+          <div className="marketplace-bookings-grid">
             {bookings.map((booking) => {
               const badge = statusBadge[booking.status] || statusBadge.pending;
               const shortId = String(booking.id || '').slice(0, 8).toUpperCase();
               return (
-                <article key={booking.id} style={{ border: '1px solid #e5e7eb', borderRadius: 14, padding: '0.9rem', background: '#fff' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem', flexWrap: 'wrap' }}>
+                <article key={booking.id} className="marketplace-booking-card">
+                  <div className="marketplace-booking-head">
                     <div>
                       <p style={{ margin: 0, fontWeight: 800 }}>{booking.commodity || 'Commodity'} - {booking.pickup_date || '-'}</p>
                       <p style={{ margin: '0.2rem 0 0' }}>📍 {booking.pickup_district}, {booking.pickup_state} → {booking.destination}</p>
                       <p style={{ margin: '0.2rem 0 0' }}>Quantity: {booking.quantity_kg} kg</p>
                       <p style={{ margin: '0.2rem 0 0' }}>Estimated Cost: ₹{Number(booking.estimated_cost || 0).toLocaleString('en-IN')}</p>
                     </div>
-                    <span style={{ alignSelf: 'flex-start', borderRadius: '999px', padding: '0.25rem 0.7rem', background: badge.bg, color: badge.color, fontWeight: 700, fontSize: '0.78rem' }}>
+                    <span className="marketplace-booking-status" style={{ background: badge.bg, color: badge.color }}>
                       {badge.text}
                     </span>
                   </div>
@@ -588,7 +596,7 @@ export default function Marketplace() {
                   <BookingProgress status={booking.status} />
 
                   {booking.status !== 'cancelled' && bookingStepMap[booking.status] >= 2 ? (
-                    <section style={{ marginTop: '0.7rem', background: '#f8fafc', borderRadius: 10, padding: '0.65rem', border: '1px solid #e2e8f0' }}>
+                    <section className="marketplace-transporter-box">
                       <p style={{ margin: 0 }}>🚛 Transporter: {booking.transporter_name || '-'}</p>
                       <p style={{ margin: '0.2rem 0 0' }}>
                         📱 <a href={`tel:${booking.transporter_phone || ''}`}>{booking.transporter_phone || '-'}</a>
@@ -598,7 +606,7 @@ export default function Marketplace() {
                   ) : null}
 
                   {booking.notes ? (
-                    <section style={{ marginTop: '0.6rem', background: '#fff7ed', borderRadius: 10, padding: '0.65rem', border: '1px solid #fed7aa' }}>
+                    <section className="marketplace-booking-notes">
                       <p style={{ margin: 0 }}>💬 Notes: {booking.notes}</p>
                     </section>
                   ) : null}
@@ -620,7 +628,7 @@ export default function Marketplace() {
                     ) : null}
                   </div>
 
-                  <div style={{ marginTop: '0.7rem', borderTop: '1px dashed #cbd5e1', paddingTop: '0.55rem' }}>
+                  <div className="marketplace-booking-meta">
                     <p className="page-muted" style={{ margin: 0, fontSize: '0.78rem' }}>Booking ID: #{shortId}</p>
                     <p className="page-muted" style={{ margin: '0.2rem 0 0', fontSize: '0.78rem' }}>Created: {formatDateTime(booking.created_at)}</p>
                   </div>

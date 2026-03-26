@@ -5,11 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import api_router
 from app.scheduler import start_scheduler
+from app.services.daily_briefing_service import get_daily_briefing
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     start_scheduler()
+    await get_daily_briefing()
     yield
 
 app = FastAPI(title="KrishiMitra API", version="1.0.0", lifespan=lifespan)

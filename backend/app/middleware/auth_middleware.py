@@ -83,7 +83,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         user['profile_photo_url'] = user.get('profile_photo_url')
         user['account_status'] = user.get('account_status') or 'active'
 
-        if user['account_status'] in {'suspended', 'blocked'}:
+        if user['account_status'] in {'suspended', 'blocked', 'suspended_temporary', 'suspended_permanent', 'banned'}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Account is {user['account_status']}. Contact admin.",

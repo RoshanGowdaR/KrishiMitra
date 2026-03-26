@@ -33,10 +33,14 @@ import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
 import BuyerDashboard from './pages/BuyerDashboard';
 import TransporterDashboard from './pages/TransporterDashboard';
-import BuyerOrders from './pages/BuyerOrders';
 import TransporterAcceptedJobs from './pages/TransporterAcceptedJobs';
 import TransporterRouteMap from './pages/TransporterRouteMap';
 import FarmerBookingTracker from './pages/FarmerBookingTracker';
+import MachineryBookingTracker from './pages/MachineryBookingTracker';
+import WhatToGrow from './pages/WhatToGrow';
+import LabourHub from './pages/LabourHub';
+import Machineries from './pages/Machineries';
+import Authority from './pages/Authority';
 import { RoleProvider } from './context/RoleContext';
 
 const STORAGE_KEY = 'krishimitra_language';
@@ -159,11 +163,18 @@ function DashboardLayout({ isLanguageModalOpen, onLanguageSelect, onOpenLanguage
               <Route path="chat" element={<Chat />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="farmer/bookings" element={<FarmerBookingTracker />} />
+              <Route path="farmer/machinery-bookings" element={<MachineryBookingTracker />} />
+              <Route path="farmer/what-to-grow" element={<WhatToGrow />} />
               <Route path="community" element={<Community />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="authority" element={<Authority />} />
+              <Route path="labour" element={<LabourHub />} />
+              <Route path="labour-requests" element={<LabourHub />} />
+              <Route path="machinery" element={<Machineries />} />
+              <Route path="machineries" element={<Navigate to="/app/machinery" replace />} />
               <Route path="settings" element={<Settings />} />
               <Route path="buyer" element={<BuyerDashboard />} />
-              <Route path="buyer/orders" element={<BuyerOrders />} />
+              <Route path="buyer/orders" element={<Navigate to="/app/buyer" replace />} />
               <Route path="transporter" element={<TransporterDashboard />} />
               <Route path="transporter/accepted-jobs" element={<TransporterAcceptedJobs />} />
               <Route path="transporter/route-map" element={<TransporterRouteMap />} />

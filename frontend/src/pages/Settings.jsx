@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
@@ -50,6 +51,7 @@ const fallbackProfile = {
 };
 
 export default function Settings() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -60,13 +62,13 @@ export default function Settings() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const accountCreatedAt = useMemo(() => {
-    if (!user?.created_at) return 'Unknown';
+    if (!user?.created_at) return t('settings.unknown', { defaultValue: 'Unknown' });
     return formatDateIST(user.created_at, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
-  }, [user]);
+  }, [t, user]);
 
   useEffect(() => {
     const savedNotifications = localStorage.getItem(STORAGE_NOTIFICATIONS);
@@ -129,11 +131,11 @@ export default function Settings() {
       });
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.detail || 'Unable to save profile');
+        throw new Error(data?.detail || t('settings.messages.saveProfileError', { defaultValue: 'Unable to save profile' }));
       }
-      toast.success('Profile saved');
+      toast.success(t('settings.messages.profileSaved', { defaultValue: 'Profile saved' }));
     } catch (error) {
-      toast.error(error?.message || 'Failed to save profile');
+      toast.error(error?.message || t('settings.messages.saveProfileFailed', { defaultValue: 'Failed to save profile' }));
     } finally {
       setIsSavingProfile(false);
     }
@@ -159,11 +161,11 @@ export default function Settings() {
       });
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.detail || 'Unable to update language');
+        throw new Error(data?.detail || t('settings.messages.languageUpdateError', { defaultValue: 'Unable to update language' }));
       }
-      toast.success('Language updated successfully');
+      toast.success(t('settings.messages.languageUpdated', { defaultValue: 'Language updated successfully' }));
     } catch (error) {
-      toast.error(error?.message || 'Failed to update language');
+      toast.error(error?.message || t('settings.messages.languageUpdateFailed', { defaultValue: 'Failed to update language' }));
     }
   };
 
@@ -190,35 +192,35 @@ export default function Settings() {
 
   return (
     <div className="page-wrap" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <h2>Settings</h2>
+      <h2>{t('settings.title', { defaultValue: 'Settings' })}</h2>
 
       <section className="panel" style={{ marginBottom: '1rem' }}>
-        <h3>Profile Settings</h3>
+        <h3>{t('settings.profileSettings', { defaultValue: 'Profile Settings' })}</h3>
         <div className="soil-form-grid">
-          <label>Full Name
+          <label>{t('settings.fields.fullName', { defaultValue: 'Full Name' })}
             <input value={profile.name} onChange={(event) => updateProfileField('name', event.target.value)} />
           </label>
-          <label>State
+          <label>{t('settings.fields.state', { defaultValue: 'State' })}
             <input value={profile.state} onChange={(event) => updateProfileField('state', event.target.value)} />
           </label>
-          <label>District
+          <label>{t('settings.fields.district', { defaultValue: 'District' })}
             <input value={profile.district} onChange={(event) => updateProfileField('district', event.target.value)} />
           </label>
-          <label>Taluk/Tehsil
+          <label>{t('settings.fields.taluk', { defaultValue: 'Taluk/Tehsil' })}
             <input value={profile.taluk} onChange={(event) => updateProfileField('taluk', event.target.value)} />
           </label>
-          <label>Village/Town
+          <label>{t('settings.fields.village', { defaultValue: 'Village/Town' })}
             <input value={profile.village} onChange={(event) => updateProfileField('village', event.target.value)} />
           </label>
           <button type="button" className="primary-btn" onClick={saveProfile} disabled={isSavingProfile}>
-            {isSavingProfile ? 'Saving...' : 'Save changes'}
+            {isSavingProfile ? t('settings.saving', { defaultValue: 'Saving...' }) : t('settings.saveChanges', { defaultValue: 'Save changes' })}
           </button>
         </div>
       </section>
 
       <section className="panel" style={{ marginBottom: '1rem' }}>
-        <h3>Language and Region</h3>
-        <label>Preferred Language
+        <h3>{t('settings.languageRegion', { defaultValue: 'Language and Region' })}</h3>
+        <label>{t('settings.preferredLanguage', { defaultValue: 'Preferred Language' })}
           <select value={profile.preferred_language} onChange={(event) => handleLanguageChange(event.target.value)}>
             {languageOptions.map((item) => (
               <option key={item.code} value={item.code}>{item.label}</option>
@@ -228,32 +230,32 @@ export default function Settings() {
       </section>
 
       <section className="panel" style={{ marginBottom: '1rem' }}>
-        <h3>Notifications</h3>
+        <h3>{t('settings.notifications.title', { defaultValue: 'Notifications' })}</h3>
         <div className="simple-list">
-          <label><input type="checkbox" checked={notifications.weatherAlerts} onChange={() => toggleNotification('weatherAlerts')} /> Weather alerts</label>
-          <label><input type="checkbox" checked={notifications.marketUpdates} onChange={() => toggleNotification('marketUpdates')} /> Market price updates</label>
-          <label><input type="checkbox" checked={notifications.schemeDeadlines} onChange={() => toggleNotification('schemeDeadlines')} /> Scheme deadlines</label>
-          <label><input type="checkbox" checked={notifications.sosExpertAvailable} onChange={() => toggleNotification('sosExpertAvailable')} /> SOS expert available</label>
+          <label><input type="checkbox" checked={notifications.weatherAlerts} onChange={() => toggleNotification('weatherAlerts')} /> {t('settings.notifications.weatherAlerts', { defaultValue: 'Weather alerts' })}</label>
+          <label><input type="checkbox" checked={notifications.marketUpdates} onChange={() => toggleNotification('marketUpdates')} /> {t('settings.notifications.marketUpdates', { defaultValue: 'Market price updates' })}</label>
+          <label><input type="checkbox" checked={notifications.schemeDeadlines} onChange={() => toggleNotification('schemeDeadlines')} /> {t('settings.notifications.schemeDeadlines', { defaultValue: 'Scheme deadlines' })}</label>
+          <label><input type="checkbox" checked={notifications.sosExpertAvailable} onChange={() => toggleNotification('sosExpertAvailable')} /> {t('settings.notifications.sosExpertAvailable', { defaultValue: 'SOS expert available' })}</label>
         </div>
       </section>
 
       <section className="panel" style={{ marginBottom: '1rem' }}>
-        <h3>App Preferences</h3>
+        <h3>{t('settings.appPreferences', { defaultValue: 'App Preferences' })}</h3>
         <div className="soil-form-grid">
-          <label>Temperature unit
+          <label>{t('settings.fields.temperatureUnit', { defaultValue: 'Temperature unit' })}
             <select value={preferences.temperatureUnit} onChange={(event) => updatePreference('temperatureUnit', event.target.value)}>
               <option value="Celsius">Celsius</option>
               <option value="Fahrenheit">Fahrenheit</option>
             </select>
           </label>
-          <label>Currency display
+          <label>{t('settings.fields.currencyDisplay', { defaultValue: 'Currency display' })}
             <select value={preferences.currencyDisplay} onChange={(event) => updatePreference('currencyDisplay', event.target.value)}>
               <option value="INR">INR</option>
               <option value="per kg">per kg</option>
               <option value="per quintal">per quintal</option>
             </select>
           </label>
-          <label>Default market state
+          <label>{t('settings.fields.defaultMarketState', { defaultValue: 'Default market state' })}
             <input value={preferences.defaultMarketState} onChange={(event) => updatePreference('defaultMarketState', event.target.value)} />
           </label>
         </div>

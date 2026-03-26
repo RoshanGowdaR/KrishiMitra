@@ -1,33 +1,31 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
-const tickerItems = [
-  '🌤️ Weather AI',
-  '📈 Mandi Prices',
-  '🔬 Crop Disease',
-  '🤖 AI Chatbot',
-  '🛒 Marketplace',
-  '📚 Farm Guide',
-  '🌱 Soil Health',
-  '🆘 SOS Connect',
-  '📝 Quiz',
-];
-
-const featureCards = [
-  { icon: '🌤️', title: 'Weather AI' },
-  { icon: '📈', title: 'Mandi Prices' },
-  { icon: '🏛️', title: 'Govt Schemes' },
-  { icon: '🔬', title: 'Crop Disease Scan' },
-  { icon: '🤖', title: 'AI Chatbot' },
-  { icon: '🛒', title: 'Marketplace' },
-  { icon: '📝', title: 'Farming Quiz' },
-  { icon: '🌱', title: 'Soil Health' },
-  { icon: '💬', title: 'Forum' },
-  { icon: '🆘', title: 'SOS Connect' },
-  { icon: '📚', title: 'Farm Guide' },
-  { icon: '🌍', title: '22 Languages' },
+const featureCardMeta = [
+  { icon: '🌤️', key: 'weatherAI', fallback: 'Weather AI' },
+  { icon: '📈', key: 'mandiPrices', fallback: 'Mandi Prices' },
+  { icon: '🏛️', key: 'govtSchemes', fallback: 'Govt Schemes' },
+  { icon: '🔬', key: 'cropDiseaseScan', fallback: 'Crop Disease Scan' },
+  { icon: '🤖', key: 'aiChatbot', fallback: 'AI Chatbot' },
+  { icon: '🛒', key: 'marketplace', fallback: 'Marketplace' },
+  { icon: '📝', key: 'farmingQuiz', fallback: 'Farming Quiz' },
+  { icon: '🌱', key: 'soilHealth', fallback: 'Soil Health' },
+  { icon: '💬', key: 'forum', fallback: 'Forum' },
+  { icon: '🆘', key: 'sosConnect', fallback: 'SOS Connect' },
+  { icon: '📚', key: 'farmGuide', fallback: 'Farm Guide' },
+  { icon: '🎙️', key: 'voiceAssistant', fallback: 'Voice Assistant' },
+  { icon: '👥', key: 'community', fallback: 'Community' },
+  { icon: '🔔', key: 'notifications', fallback: 'Notifications' },
+  { icon: '📊', key: 'reports', fallback: 'Reports' },
+  { icon: '🚚', key: 'trackTransport', fallback: 'Track Transport' },
+  { icon: '🌾', key: 'whatToGrow', fallback: 'What To Grow' },
+  { icon: '🛍️', key: 'buyerDashboard', fallback: 'Buyer Dashboard' },
+  { icon: '📦', key: 'buyerOrders', fallback: 'Buyer Orders' },
+  { icon: '🧭', key: 'routeMap', fallback: 'Route Map' },
+  { icon: '🌍', key: 'languages', fallback: '22 Languages' },
 ];
 
 const cards = [
@@ -110,6 +108,7 @@ function TiltCard({ card }) {
 }
 
 export default function Landing() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const handleGetStarted = () => {
@@ -155,6 +154,20 @@ export default function Landing() {
   );
 
   const brandLetters = 'KRISHIMITRA'.split('');
+  const featureCards = featureCardMeta.map((item) => ({
+    icon: item.icon,
+    title: t(`landing.stackFeatures.${item.key}`, { defaultValue: item.fallback }),
+  }));
+  const tickerItems = featureCardMeta.slice(0, 12).map((item) => `${item.icon} ${t(`landing.stackFeatures.${item.key}`, { defaultValue: item.fallback })}`);
+  const cardsPerRow = 4;
+  const parallaxRows = featureCards.reduce((rows, card, index) => {
+    if (index % cardsPerRow === 0) {
+      rows.push([]);
+    }
+    rows[rows.length - 1].push(card);
+    return rows;
+  }, []);
+  const rowTransforms = [rowOneX, rowTwoX, rowThreeX];
 
   return (
     <div className="km-landing">
@@ -179,7 +192,7 @@ export default function Landing() {
 
         <motion.header className="km-hero-head" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <div className="km-brand">🌿 KrishiMitra</div>
-          <button type="button" className="km-nav-btn" onClick={handleGetStarted}>Login</button>
+          <button type="button" className="km-nav-btn" onClick={handleGetStarted}>{t('landing.login', { defaultValue: 'Login' })}</button>
         </motion.header>
 
         <div className="km-hero-center">
@@ -190,11 +203,11 @@ export default function Landing() {
             transition={{ type: 'spring', stiffness: 260, damping: 14 }}
             onClick={handleGetStarted}
           >
-            🌾 Start For Free Today
+            🌾 {t('landing.heroStartToday', { defaultValue: 'Start For Free Today' })}
           </motion.button>
 
           <motion.h1 className="km-title" initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}>
-            Empower Your Farm With AI
+            {t('landing.heroTitleMain', { defaultValue: 'Empower Your Farm With AI' })}
           </motion.h1>
 
           <motion.div
@@ -236,34 +249,34 @@ export default function Landing() {
           </motion.div>
 
           <motion.p className="km-subtitle" initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.24 }}>
-            Hyperlocal crop intelligence, market timing, disease detection, and multilingual guidance in one powerful farming cockpit.
+            {t('landing.heroSubtitleLong', { defaultValue: 'Hyperlocal crop intelligence, market timing, disease detection, and multilingual guidance in one powerful farming cockpit.' })}
           </motion.p>
 
           <div className="km-scroll-indicator">
-            <span>Scroll</span>
+            <span>{t('landing.scroll', { defaultValue: 'Scroll' })}</span>
             <i />
           </div>
 
           <motion.div className="km-mockup" style={{ y: mockupY, rotateX: mockupRotate }}>
             <div className="km-mockup-top">
-              <span>KrishiMitra Dashboard</span>
-              <span className="km-ai-badge">AI LIVE</span>
+              <span>{t('landing.mockup.dashboard', { defaultValue: 'KrishiMitra Dashboard' })}</span>
+              <span className="km-ai-badge">{t('landing.mockup.aiLive', { defaultValue: 'AI LIVE' })}</span>
             </div>
             <div className="km-mockup-grid">
               <article>
-                <h4>Weather</h4>
-                <p>31°C Clear sky</p>
-                <small>Rain probability: 14%</small>
+                <h4>{t('landing.mockup.weather', { defaultValue: 'Weather' })}</h4>
+                <p>{t('landing.mockup.weatherValue', { defaultValue: '31°C Clear sky' })}</p>
+                <small>{t('landing.mockup.weatherMeta', { defaultValue: 'Rain probability: 14%' })}</small>
               </article>
               <article>
-                <h4>Crop Disease</h4>
-                <p>Leaf Spot Risk: Medium</p>
-                <small>Action in 24h</small>
+                <h4>{t('landing.mockup.cropDisease', { defaultValue: 'Crop Disease' })}</h4>
+                <p>{t('landing.mockup.cropDiseaseValue', { defaultValue: 'Leaf Spot Risk: Medium' })}</p>
+                <small>{t('landing.mockup.cropDiseaseMeta', { defaultValue: 'Action in 24h' })}</small>
               </article>
               <article>
-                <h4>Mandi Prices</h4>
-                <p>Tomato ₹24/kg</p>
-                <small>+3.2% from yesterday</small>
+                <h4>{t('landing.mockup.mandiPrices', { defaultValue: 'Mandi Prices' })}</h4>
+                <p>{t('landing.mockup.mandiPricesValue', { defaultValue: 'Tomato ₹24/kg' })}</p>
+                <small>{t('landing.mockup.mandiPricesMeta', { defaultValue: '+3.2% from yesterday' })}</small>
               </article>
             </div>
           </motion.div>
@@ -285,35 +298,23 @@ export default function Landing() {
       <section className="km-parallax" ref={parallaxRef}>
         <div className="km-wheat-pattern" />
         <Reveal>
-          <h2>Smart Stack For Every Acre</h2>
+          <h2>{t('landing.stackTitle', { defaultValue: 'Smart Stack For Every Acre' })}</h2>
         </Reveal>
 
-        <motion.div className="km-parallax-row" style={{ x: rowOneX }}>
-          {featureCards.slice(0, 4).map((item) => (
-            <article className="km-product-card" key={item.title}>
-              <p>{item.icon}</p>
-              <h3>{item.title}</h3>
-            </article>
-          ))}
-        </motion.div>
-
-        <motion.div className="km-parallax-row mid" style={{ x: rowTwoX }}>
-          {featureCards.slice(4, 8).map((item) => (
-            <article className="km-product-card" key={item.title}>
-              <p>{item.icon}</p>
-              <h3>{item.title}</h3>
-            </article>
-          ))}
-        </motion.div>
-
-        <motion.div className="km-parallax-row" style={{ x: rowThreeX }}>
-          {featureCards.slice(8, 12).map((item) => (
-            <article className="km-product-card" key={item.title}>
-              <p>{item.icon}</p>
-              <h3>{item.title}</h3>
-            </article>
-          ))}
-        </motion.div>
+        {parallaxRows.map((row, index) => (
+          <motion.div
+            key={`feature-row-${index + 1}`}
+            className={index % 2 === 1 ? 'km-parallax-row mid' : 'km-parallax-row'}
+            style={{ x: rowTransforms[index % rowTransforms.length] }}
+          >
+            {row.map((item) => (
+              <article className="km-product-card" key={item.title}>
+                <p>{item.icon}</p>
+                <h3>{item.title}</h3>
+              </article>
+            ))}
+          </motion.div>
+        ))}
       </section>
 
       <section className="km-lamp-section">
@@ -323,7 +324,7 @@ export default function Landing() {
         </div>
 
         <Reveal>
-          <h2 className="km-lamp-title">Everything a Farmer Needs</h2>
+          <h2 className="km-lamp-title">{t('landing.everythingTitle', { defaultValue: 'Everything a Farmer Needs' })}</h2>
         </Reveal>
 
         <div className="km-pricing-grid">
@@ -347,9 +348,9 @@ export default function Landing() {
             </span>
           ))}
         </div>
-        <h2>Ready to transform your farm?</h2>
+        <h2>{t('landing.ctaTransform', { defaultValue: 'Ready to transform your farm?' })}</h2>
         <motion.button type="button" className="km-cta-btn" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} onClick={handleGetStarted}>
-          Get Started Free
+          {t('landing.getStartedFree', { defaultValue: 'Get Started Free' })}
         </motion.button>
       </section>
     </div>

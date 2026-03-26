@@ -21,6 +21,8 @@ const statusBadge = {
 };
 
 const LOCAL_TRANSPORT_BOOKINGS_KEY = 'krishimitra_farmer_transport_bookings';
+const TRANSPORTER_ACCEPTED_JOBS_STORAGE_KEY = 'transporter_accepted_jobs';
+const CANCEL_REQUEST_PREFIX = '[CANCEL_REQUEST_PENDING]';
 
 const readLocalBookings = (farmerId) => {
   try {
@@ -38,6 +40,39 @@ const writeLocalBookings = (bookings) => {
 
 const formatDateTime = (dateText) => {
   return formatDateTimeIST(dateText);
+};
+
+function extractCancelRequest(notes) {
+  const lines = String(notes || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const requestLine = lines.find((line) => line.startsWith(CANCEL_REQUEST_PREFIX));
+  if (!requestLine) return null;
+
+  try {
+    return JSON.parse(requestLine.slice(CANCEL_REQUEST_PREFIX.length));
+  } catch {
+    return null;
+  }
+}
+
+function stripCancelRequest(notes) {
+  return String(notes || '')
+    .split('\n')
+    .filter((line) => !line.trim().startsWith(CANCEL_REQUEST_PREFIX))
+    .join('\n')
+    .trim();
+}
+
+const syncTransporterLocalJob = (bookingId, updater) => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TRANSPORTER_ACCEPTED_JOBS_STORAGE_KEY) || '[]');
+    const rows = Array.isArray(parsed) ? parsed : [];
+    const next = rows
+      .map((row) => (row.id === bookingId ? updater(row) : row))
+      .filter(Boolean);
+    localStorage.setItem(TRANSPORTER_ACCEPTED_JOBS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // no-op
+  }
 };
 
 function BookingProgress({ status }) {
@@ -198,6 +233,88 @@ export default function FarmerBookingTracker() {
     await loadBookings();
   };
 
+  const findTransporterUserId = async (booking) => {
+    const transporterPhone = String(booking?.transporter_phone || '').trim();
+    if (!transporterPhone) return null;
+
+    const { data } = await supabase
+      .from('users')
+      .select('id')
+      .eq('phone', transporterPhone)
+      .limit(1)
+      .maybeSingle();
+
+    return data?.id || null;
+  };
+
+  const approveCancelRequest = async (booking) => {
+    const cleanedNotes = stripCancelRequest(booking.notes);
+
+    const { error } = await supabase
+      .from('transport_bookings')
+      .update({ status: 'cancelled', notes: cleanedNotes, updated_at: new Date().toISOString() })
+      .eq('id', booking.id);
+
+    if (error) {
+      toast.error('Unable to approve cancellation right now.');
+      return;
+    }
+
+    const transporterUserId = await findTransporterUserId(booking);
+    if (transporterUserId) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: transporterUserId,
+          title: 'Cancel Request Approved',
+          message: `Farmer approved cancellation for ${booking.commodity || 'booking'}.`,
+          type: 'success',
+          link: '/app/transporter/accepted-jobs',
+        });
+    }
+
+    syncTransporterLocalJob(booking.id, () => null);
+
+    toast.success('Cancel request approved and booking cancelled.');
+    await loadBookings();
+  };
+
+  const rejectCancelRequest = async (booking) => {
+    const cleanedNotes = stripCancelRequest(booking.notes);
+
+    const { error } = await supabase
+      .from('transport_bookings')
+      .update({ notes: cleanedNotes, updated_at: new Date().toISOString() })
+      .eq('id', booking.id);
+
+    if (error) {
+      toast.error('Unable to reject cancellation right now.');
+      return;
+    }
+
+    const transporterUserId = await findTransporterUserId(booking);
+    if (transporterUserId) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: transporterUserId,
+          title: 'Cancel Request Rejected',
+          message: `Farmer rejected cancellation for ${booking.commodity || 'booking'}. Continue delivery.`,
+          type: 'warning',
+          link: '/app/transporter/accepted-jobs',
+        });
+    }
+
+    syncTransporterLocalJob(booking.id, (row) => ({
+      ...row,
+      notes: cleanedNotes,
+      updated_at: new Date().toISOString(),
+    }));
+
+    toast.success('Cancel request rejected. Booking remains active.');
+    await loadBookings();
+  };
+
   const openRoute = (booking) => {
     const from = `${booking.pickup_district || ''} ${booking.pickup_state || ''} India`.trim();
     const to = `${booking.destination || ''} India`.trim();
@@ -245,6 +362,8 @@ export default function FarmerBookingTracker() {
           {filteredBookings.map((booking) => {
             const badge = statusBadge[booking.status] || statusBadge.pending;
             const shortId = String(booking.id || '').slice(0, 8).toUpperCase();
+            const cancelRequest = extractCancelRequest(booking.notes);
+            const visibleNotes = stripCancelRequest(booking.notes);
 
             return (
               <article key={booking.id} style={{ border: '1px solid #e5e7eb', borderRadius: 14, padding: '0.95rem', background: '#fff' }}>
@@ -270,9 +389,38 @@ export default function FarmerBookingTracker() {
                   </section>
                 ) : null}
 
-                {booking.notes ? (
+                {visibleNotes ? (
                   <section style={{ marginTop: '0.6rem', background: '#fff7ed', borderRadius: 10, padding: '0.65rem', border: '1px solid #fed7aa' }}>
-                    <p style={{ margin: 0 }}>💬 Notes: {booking.notes}</p>
+                    <p style={{ margin: 0 }}>💬 Notes: {visibleNotes}</p>
+                  </section>
+                ) : null}
+
+                {cancelRequest && booking.status !== 'cancelled' ? (
+                  <section style={{ marginTop: '0.6rem', background: '#fffbeb', borderRadius: 10, padding: '0.7rem', border: '1px solid #fcd34d' }}>
+                    <p style={{ margin: 0, fontWeight: 700 }}>⚠️ Transporter requested cancellation</p>
+                    <p style={{ margin: '0.2rem 0 0' }}><strong>Reason:</strong> {cancelRequest.reason || 'No reason provided'}</p>
+                    <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>
+                      Requested at: {cancelRequest.requested_at ? formatDateTime(cancelRequest.requested_at) : '-'}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="primary-btn"
+                        style={{ background: '#dc2626' }}
+                        onClick={() => approveCancelRequest(booking)}
+                      >
+                        Approve Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-btn"
+                        style={{ borderColor: '#f59e0b', color: '#92400e' }}
+                        onClick={() => rejectCancelRequest(booking)}
+                      >
+                        Reject Request
+                      </button>
+                    </div>
                   </section>
                 ) : null}
 

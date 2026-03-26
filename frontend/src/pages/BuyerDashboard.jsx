@@ -141,15 +141,6 @@ export default function BuyerDashboard() {
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedListing, setSelectedListing] = useState(null);
 
-  const orders = useMemo(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('buyer_orders') || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, []);
-
   const fetchListings = async () => {
     setLoading(true);
     try {
@@ -206,20 +197,7 @@ export default function BuyerDashboard() {
     <div className="page-wrap" style={{ gap: '1rem' }}>
       <section className="panel" style={{ background: 'linear-gradient(135deg, #166534, #22c55e)', color: '#fff', border: 'none' }}>
         <h2 style={{ margin: 0 }}>Welcome, Buyer!</h2>
-        <p style={{ margin: '0.35rem 0 0.8rem', opacity: 0.95 }}>Find fresh produce directly from farmers</p>
-        <input
-          value={commoditySearch}
-          onChange={(event) => setCommoditySearch(event.target.value)}
-          placeholder="Search crops, vegetables, fruits..."
-          style={{
-            width: '100%',
-            borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.4)',
-            background: 'rgba(255,255,255,0.16)',
-            color: '#fff',
-            padding: '0.75rem 0.9rem',
-          }}
-        />
+        <p style={{ margin: '0.35rem 0 0', opacity: 0.95 }}>Find fresh produce directly from farmers</p>
       </section>
 
       <section className="panel">
@@ -287,24 +265,6 @@ export default function BuyerDashboard() {
             );
           })}
         </div>
-      </section>
-
-      <section className="panel">
-        <h3 style={{ marginTop: 0 }}>My Orders</h3>
-        {orders.length === 0 ? (
-          <p className="page-muted">No orders yet. Orders are stored in localStorage for now.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '0.55rem' }}>
-            {orders.map((order, index) => (
-              <article key={`${order.commodity}-${index}`} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '0.7rem' }}>
-                <p style={{ margin: 0, fontWeight: 700 }}>{order.commodity} · {order.quantity} kg</p>
-                <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>Farmer: {order.farmer}</p>
-                <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>Date: {order.date}</p>
-                <p style={{ margin: '0.2rem 0 0' }}>Status: <strong>{order.status || 'Enquired'}</strong></p>
-              </article>
-            ))}
-          </div>
-        )}
       </section>
 
       {selectedContact ? (

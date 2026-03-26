@@ -31,6 +31,7 @@ export default function Notifications() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [messageAlerts, setMessageAlerts] = useState([]);
   const [requestUpdates, setRequestUpdates] = useState([]);
+  const [generalNotifications, setGeneralNotifications] = useState([]);
 
   const loadNotifications = useCallback(async () => {
     if (!user?.id) return;
@@ -44,8 +45,16 @@ export default function Notifications() {
         getFriends(user.id),
       ]);
 
+      const { data: notifs } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
       setPendingRequests(incomingRequests || []);
       setRequestUpdates(sentUpdates || []);
+      setGeneralNotifications(notifs || []);
 
       const senderIds = Object.entries(unreadCounts || {})
         .filter(([, count]) => Number(count || 0) > 0)
@@ -165,6 +174,28 @@ export default function Notifications() {
           </p>
         </div>
         <button type="button" className="ghost-btn" onClick={loadNotifications}>Refresh</button>
+      </section>
+
+      <section className="panel">
+        <h3 style={{ marginTop: 0 }}>General Notifications</h3>
+        {generalNotifications.length === 0 ? (
+          <p className="page-muted">No notifications available.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: '0.65rem' }}>
+            {generalNotifications.map((item) => (
+              <article key={item.id} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '0.75rem', background: item.is_read ? '#fff' : '#f0fdf4' }}>
+                <p style={{ margin: 0, fontWeight: 700 }}>{item.title || 'Notification'}</p>
+                <p className="page-muted" style={{ margin: '0.2rem 0 0' }}>{item.message || '-'}</p>
+                <div style={{ marginTop: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <span className="page-muted" style={{ fontSize: '0.78rem' }}>{formatDateTime(item.created_at)}</span>
+                  {item.link ? (
+                    <button type="button" className="ghost-btn" onClick={() => navigate(item.link)}>Open</button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="panel">

@@ -14,7 +14,20 @@
     "soilHealth": "Soil Health",
     "forum": "Forum",
     "sos": "SOS",
-    "farmGuide": "Farm Guide"
+    "farmGuide": "Farm Guide",
+    "settings": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "community": "Community",
+    "reports": "Reports",
+    "trackTransport": "Track Transport",
+    "whatToGrow": "What To Grow",
+    "browseProduce": "Browse Produce",
+    "myOrders": "My Orders",
+    "messages": "Messages",
+    "availableBookings": "Available Bookings",
+    "myAcceptedJobs": "My Accepted Jobs",
+    "routeMap": "Route Map"
   },
   "common": {
     "loading": "Loading...",
@@ -34,6 +47,7 @@
     "all": "All",
     "close": "Close",
     "viewDetails": "View Details",
+    "howToApply": "How to Apply",
     "viewGuide": "View Guide",
     "results": "Results",
     "submit": "Submit",
@@ -42,6 +56,122 @@
     "quantity": "Quantity",
     "farmer": "Farmer",
     "callNow": "Call Now"
+  },
+  "navbar": {
+    "roles": {
+      "farmer": "Farmer",
+      "buyer": "Buyer",
+      "transporter": "Transporter"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    },
+    "notifications": {
+      "newNotification": "New notification",
+      "open": "Open notifications",
+      "title": "Notifications",
+      "markAllRead": "Mark all read",
+      "none": "No new notifications",
+      "itemTitle": "Notification",
+      "openLink": "-> Open"
+    },
+    "chat": {
+      "open": "Open chat"
+    },
+    "profile": {
+      "open": "Open profile",
+      "user": "User"
+    },
+    "logout": {
+      "title": "Logout"
+    }
+  },
+  "login": {
+    "welcomeBack": "Welcome Back",
+    "subtitle": "Sign in to your farming workspace",
+    "localWelcome": "Welcome to KrishiMitra",
+    "continueWithGoogle": "Continue with Google",
+    "terms": "By continuing you agree to our terms of service",
+    "footer": "Empowering 600M Indian Farmers with AI"
+  },
+  "profileSetup": {
+    "title": "Complete Your Profile",
+    "subtitle": "Tell us your farm location for smarter local recommendations.",
+    "stepPrefix": "Step",
+    "steps": {
+      "googleLogin": "Google Login",
+      "profileSetup": "Profile Setup",
+      "dashboard": "Dashboard"
+    },
+    "stepLabels": {
+      "language": "Language",
+      "profile": "Profile",
+      "done": "Done"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "state": "State",
+      "district": "District",
+      "taluk": "Taluk/Tehsil",
+      "village": "Village/Town",
+      "language": "Language"
+    },
+    "validation": {
+      "fullName": "Full Name is required",
+      "state": "State is required",
+      "district": "District is required",
+      "taluk": "Taluk/Tehsil is required",
+      "village": "Village/Town is required"
+    },
+    "messages": {
+      "sessionExpired": "Your login session expired. Please sign in again.",
+      "requiredFields": "Please fill all required fields",
+      "saveError": "Unable to save profile",
+      "saveSuccess": "Profile saved successfully",
+      "saveFailed": "Failed to save profile"
+    },
+    "changeLanguagePrompt": "Need to change language?",
+    "changeLanguageAction": "Select again",
+    "saving": "Saving Profile...",
+    "submit": "Start Farming Smarter"
+  },
+  "settings": {
+    "title": "Settings",
+    "unknown": "Unknown",
+    "profileSettings": "Profile Settings",
+    "languageRegion": "Language and Region",
+    "preferredLanguage": "Preferred Language",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "appPreferences": "App Preferences",
+    "fields": {
+      "fullName": "Full Name",
+      "state": "State",
+      "district": "District",
+      "taluk": "Taluk/Tehsil",
+      "village": "Village/Town",
+      "temperatureUnit": "Temperature unit",
+      "currencyDisplay": "Currency display",
+      "defaultMarketState": "Default market state"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "weatherAlerts": "Weather alerts",
+      "marketUpdates": "Market price updates",
+      "schemeDeadlines": "Scheme deadlines",
+      "sosExpertAvailable": "SOS expert available"
+    },
+    "messages": {
+      "saveProfileError": "Unable to save profile",
+      "profileSaved": "Profile saved",
+      "saveProfileFailed": "Failed to save profile",
+      "languageUpdateError": "Unable to update language",
+      "languageUpdated": "Language updated successfully",
+      "languageUpdateFailed": "Failed to update language"
+    }
   },
   "landing": {
     "getStarted": "Get Started",
@@ -125,6 +255,50 @@
         "title": "Multilingual",
         "description": "Access all features across 12 Indian languages."
       }
+    },
+    "login": "Login",
+    "heroStartToday": "Start For Free Today",
+    "heroTitleMain": "Empower Your Farm With AI",
+    "heroSubtitleLong": "Hyperlocal crop intelligence, market timing, disease detection, and multilingual guidance in one powerful farming cockpit.",
+    "scroll": "Scroll",
+    "mockup": {
+      "dashboard": "KrishiMitra Dashboard",
+      "aiLive": "AI LIVE",
+      "weather": "Weather",
+      "weatherValue": "31°C Clear sky",
+      "weatherMeta": "Rain probability: 14%",
+      "cropDisease": "Crop Disease",
+      "cropDiseaseValue": "Leaf Spot Risk: Medium",
+      "cropDiseaseMeta": "Action in 24h",
+      "mandiPrices": "Mandi Prices",
+      "mandiPricesValue": "Tomato ₹24/kg",
+      "mandiPricesMeta": "+3.2% from yesterday"
+    },
+    "stackTitle": "Smart Stack For Every Acre",
+    "everythingTitle": "Everything a Farmer Needs",
+    "ctaTransform": "Ready to transform your farm?",
+    "stackFeatures": {
+      "weatherAI": "Weather AI",
+      "mandiPrices": "Mandi Prices",
+      "govtSchemes": "Govt Schemes",
+      "cropDiseaseScan": "Crop Disease Scan",
+      "aiChatbot": "AI Chatbot",
+      "marketplace": "Marketplace",
+      "farmingQuiz": "Farming Quiz",
+      "soilHealth": "Soil Health",
+      "forum": "Forum",
+      "sosConnect": "SOS Connect",
+      "farmGuide": "Farm Guide",
+      "voiceAssistant": "Voice Assistant",
+      "community": "Community",
+      "notifications": "Notifications",
+      "reports": "Reports",
+      "trackTransport": "Track Transport",
+      "whatToGrow": "What To Grow",
+      "buyerDashboard": "Buyer Dashboard",
+      "buyerOrders": "Buyer Orders",
+      "routeMap": "Route Map",
+      "languages": "22 Languages"
     }
   },
   "home": {

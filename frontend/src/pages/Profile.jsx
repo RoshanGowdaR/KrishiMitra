@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,13 @@ import {
 import { formatDateIST } from '../utils/istTime';
 
 const API = 'http://127.0.0.1:8000/api/v1';
+const PROFILE_AVATAR_BUCKETS = ['profile-images', 'chat-media'];
+
+const buildUserUid = (id) => {
+  const normalized = String(id || '').replace(/-/g, '').toUpperCase();
+  if (!normalized) return '';
+  return `KM${normalized.slice(0, 10)}`;
+};
 
 const languageLabel = (code) => {
   const normalized = (code || 'en').toLowerCase();
@@ -33,9 +40,61 @@ const formatJoinDate = (dateText) => {
   });
 };
 
+const resolveAvatarUploadError = (error) => {
+  const raw = String(error?.message || '').toLowerCase();
+  if (raw.includes('avatar_url') && (raw.includes('schema cache') || raw.includes('column'))) {
+    return 'Avatar uploaded to storage, but users table schema differs. Avatar is stored via auth metadata instead.';
+  }
+  if (raw.includes('bucket') && (raw.includes('not found') || raw.includes('does not exist'))) {
+    return 'Storage bucket is missing. Create bucket profile-images or chat-media in Supabase Storage.';
+  }
+  if (raw.includes('row-level security') || raw.includes('not allowed') || raw.includes('permission')) {
+    return 'Storage policy blocked the upload. Enable authenticated INSERT and SELECT for avatar bucket.';
+  }
+  if (raw.includes('payload too large')) {
+    return 'Image is too large for storage limits. Try a smaller image.';
+  }
+  return error?.message || 'Unable to upload profile image right now.';
+};
+
+const uploadAvatarToAvailableBucket = async ({ userId, file }) => {
+  const fileExt = file.name.split('.').pop() || 'jpg';
+  const filePath = `avatars/${userId}/${Date.now()}.${fileExt}`;
+  let lastError = null;
+
+  for (const bucket of PROFILE_AVATAR_BUCKETS) {
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type || 'image/jpeg',
+      });
+
+    if (uploadError) {
+      lastError = uploadError;
+      continue;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    if (urlData?.publicUrl) {
+      return {
+        avatarUrl: `${urlData.publicUrl}?v=${Date.now()}`,
+        bucket,
+      };
+    }
+
+    lastError = new Error(`Upload succeeded in ${bucket}, but public URL generation failed.`);
+  }
+
+  throw lastError || new Error('Avatar upload failed.');
+};
+
 const fallbackProfile = (user) => ({
   id: user?.id,
-  user_uid: user?.id?.slice(0, 8)?.toUpperCase(),
+  user_uid: buildUserUid(user?.id),
   name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Farmer',
   email: user?.email || '-',
   phone: '',
@@ -70,9 +129,11 @@ export default function Profile() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [friendship, setFriendship] = useState({ status: 'none' });
+  const avatarInputRef = useRef(null);
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -138,6 +199,7 @@ export default function Profile() {
               merged = {
                 ...merged,
                 ...data,
+                user_uid: data.user_uid || merged.user_uid || buildUserUid(user.id),
                 email: data.email || base.email,
                 avatar_url: user?.user_metadata?.avatar_url || data.avatar_url || '',
               };
@@ -188,6 +250,7 @@ export default function Profile() {
 
         setProfile({
           ...target,
+          user_uid: target.user_uid || buildUserUid(target.id),
           avatar_url: target.avatar_url || '',
         });
         setPosts(publicPosts.slice(0, 3));
@@ -209,7 +272,6 @@ export default function Profile() {
     try {
       const payload = {
         id: user.id,
-        email: user.email,
         name: draft.name,
         phone: draft.phone,
         state: draft.state,
@@ -227,6 +289,31 @@ export default function Profile() {
         ...data,
         avatar_url: user?.user_metadata?.avatar_url || data?.avatar_url || prev?.avatar_url || '',
       }));
+
+      const localProfile = {
+        name: draft.name,
+        state: draft.state,
+        district: draft.district,
+        taluk: draft.taluk,
+        village: draft.village,
+        preferred_language: draft.preferred_language,
+        avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
+      };
+      localStorage.setItem('krishimitra_profile', JSON.stringify(localProfile));
+
+      await supabase.auth.updateUser({
+        data: {
+          full_name: draft.name,
+        },
+      });
+
+      window.dispatchEvent(new CustomEvent('krishimitra-profile-updated', {
+        detail: {
+          name: draft.name,
+          avatar_url: localProfile.avatar_url,
+        },
+      }));
+
       setShowEdit(false);
       toast.success('Profile updated successfully');
     } catch {
@@ -245,6 +332,60 @@ export default function Profile() {
     }
     toast.success('Friend request sent');
     setFriendship({ status: 'request_sent' });
+  };
+
+  const onPickAvatar = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file || !user?.id || !isOwnProfile) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image should be less than 5MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const { avatarUrl } = await uploadAvatarToAvailableBucket({ userId: user.id, file });
+
+      await supabase.auth.updateUser({
+        data: {
+          avatar_url: avatarUrl,
+        },
+      });
+
+      setImageFailed(false);
+      setProfile((prev) => ({ ...prev, avatar_url: avatarUrl }));
+
+      try {
+        const raw = localStorage.getItem('krishimitra_profile');
+        const parsed = raw ? JSON.parse(raw) : {};
+        localStorage.setItem('krishimitra_profile', JSON.stringify({
+          ...(parsed || {}),
+          name: profile?.name || user?.user_metadata?.full_name || parsed?.name || '',
+          avatar_url: avatarUrl,
+        }));
+      } catch {
+        localStorage.setItem('krishimitra_profile', JSON.stringify({ avatar_url: avatarUrl }));
+      }
+
+      window.dispatchEvent(new CustomEvent('krishimitra-profile-updated', {
+        detail: {
+          name: profile?.name || user?.user_metadata?.full_name || '',
+          avatar_url: avatarUrl,
+        },
+      }));
+
+      toast.success('Profile image updated');
+    } catch (error) {
+      toast.error(resolveAvatarUploadError(error));
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   const onAcceptFriend = async () => {
@@ -279,6 +420,7 @@ export default function Profile() {
   const avatarText = (profile?.name || user?.email || 'F').trim().charAt(0).toUpperCase();
   const languageCode = profile?.preferred_language || 'en';
   const locationText = `${profile?.state || 'Karnataka'}, ${profile?.district || 'Hassan'}`;
+  const displayUid = profile?.user_uid || buildUserUid(profile?.id || user?.id);
 
   const joinedLabel = useMemo(() => formatJoinDate(profile?.created_at || user?.created_at), [profile?.created_at, user?.created_at]);
 
@@ -297,39 +439,69 @@ export default function Profile() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'grid', gap: '0.65rem' }}>
               <div>
-                {avatarUrl && !imageFailed ? (
-                  <img
-                    src={avatarUrl}
-                    alt={profile?.name || 'Profile'}
-                    onError={() => setImageFailed(true)}
-                    style={{
-                      width: '100px',
-                      height: '100px',
-                      borderRadius: '50%',
-                      border: '3px solid #16a34a',
-                      objectFit: 'cover',
-                      background: '#fff',
-                      display: 'block',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '100px',
-                      height: '100px',
-                      borderRadius: '50%',
-                      border: '3px solid #16a34a',
-                      background: '#16a34a',
-                      color: '#fff',
-                      display: 'grid',
-                      placeItems: 'center',
-                      fontSize: '2.5rem',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {avatarText}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isOwnProfile && !avatarUploading) {
+                      avatarInputRef.current?.click();
+                    }
+                  }}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    cursor: isOwnProfile ? 'pointer' : 'default',
+                  }}
+                  title={isOwnProfile ? 'Click to change profile image' : 'Profile image'}
+                >
+                  {avatarUrl && !imageFailed ? (
+                    <img
+                      src={avatarUrl}
+                      alt={profile?.name || 'Profile'}
+                      onError={() => setImageFailed(true)}
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                        border: '3px solid #16a34a',
+                        objectFit: 'cover',
+                        background: '#fff',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                        border: '3px solid #16a34a',
+                        background: '#16a34a',
+                        color: '#fff',
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: '2.5rem',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {avatarText}
+                    </div>
+                  )}
+                </button>
+                {isOwnProfile ? (
+                  <>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={onPickAvatar}
+                    />
+                    <p className="page-muted" style={{ margin: '0.4rem 0 0', fontSize: '0.75rem' }}>
+                      {avatarUploading ? 'Uploading image...' : 'Click image to upload'}
+                    </p>
+                  </>
+                ) : null}
               </div>
 
               <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#111827' }}>{profile?.name || 'Farmer'}</h2>
@@ -405,7 +577,7 @@ export default function Profile() {
           <InfoRow label="Email" value={profile?.email} />
           <InfoRow label="Phone" value={profile?.phone || 'Not added'} />
           <InfoRow label="Preferred Language" value={languageLabel(languageCode)} />
-          {profile?.user_uid ? <InfoRow label="User ID" value={profile?.user_uid} /> : null}
+          <InfoRow label="User ID" value={displayUid || 'Not available'} />
         </article>
 
         <article style={{ border: '1px solid #d1fae5', borderRadius: '12px', padding: '1rem', background: '#fff' }}>

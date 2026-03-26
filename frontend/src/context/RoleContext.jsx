@@ -1,4 +1,7 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './AuthContext';
+
+const ADMIN_EMAIL = 'gowdaroshan49@gmail.com';
 
 const RoleContext = createContext({
   role: 'farmer',
@@ -6,9 +9,22 @@ const RoleContext = createContext({
 });
 
 export function RoleProvider({ children }) {
+  const { user } = useAuth();
   const [role, setRole] = useState(localStorage.getItem('krishimitra_role') || 'farmer');
 
+  useEffect(() => {
+    const email = String(user?.email || '').toLowerCase();
+    if (email === ADMIN_EMAIL && role !== 'admin') {
+      setRole('admin');
+      localStorage.setItem('krishimitra_role', 'admin');
+    }
+  }, [role, user?.email]);
+
   const changeRole = (newRole) => {
+    const email = String(user?.email || '').toLowerCase();
+    if (newRole === 'admin' && email !== ADMIN_EMAIL) {
+      return;
+    }
     setRole(newRole);
     localStorage.setItem('krishimitra_role', newRole);
   };

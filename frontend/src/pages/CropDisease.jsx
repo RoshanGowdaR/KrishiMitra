@@ -55,7 +55,12 @@ export default function CropDisease() {
 
   return (
     <div className="page-wrap crop-disease-page">
-      <h2>{t('cropDisease.title')}</h2>
+      <section className="panel crop-disease-hero">
+        <div className="crop-disease-hero-content">
+          <h2>{t('cropDisease.title')}</h2>
+          <p>{t('cropDisease.subtitle', { defaultValue: 'Upload a crop photo to detect possible disease, severity, and practical treatment steps.' })}</p>
+        </div>
+      </section>
 
       <div className="panel crop-disease-panel">
         <div
@@ -66,7 +71,11 @@ export default function CropDisease() {
             handleFile(event.dataTransfer.files?.[0]);
           }}
         >
-          <p>{t('cropDisease.uploadHint')}</p>
+          <div className="upload-dropzone-content">
+            <h3>{t('cropDisease.uploadTitle', { defaultValue: 'Upload Crop Image' })}</h3>
+            <p>{t('cropDisease.uploadHint')}</p>
+            <small>{t('cropDisease.uploadSubhint', { defaultValue: 'Best results with clear, bright, close-up leaf or stem image.' })}</small>
+          </div>
           <input
             type="file"
             accept="image/*"
@@ -131,6 +140,25 @@ export default function CropDisease() {
           </div>
         ) : null}
       </div>
+
+      <section className="panel crop-disease-info-panel">
+        <h3>About Crop Disease Detection</h3>
+        <p className="page-muted">This section helps you quickly identify likely crop issues and take timely action before damage spreads.</p>
+        <div className="crop-disease-info-grid">
+          <article className="crop-disease-info-card">
+            <h4>How This Helps</h4>
+            <p>The tool analyzes visible symptoms from your image and provides disease name, severity level, treatment direction, and prevention tips.</p>
+          </article>
+          <article className="crop-disease-info-card">
+            <h4>Upload Best Practices</h4>
+            <p>Capture one clear leaf or affected part in daylight, avoid blur, and fill most of the frame with the diseased area for better accuracy.</p>
+          </article>
+          <article className="crop-disease-info-card">
+            <h4>What To Do Next</h4>
+            <p>Use the result as a quick advisory and confirm with local agriculture experts for high-risk or severe cases before major input decisions.</p>
+          </article>
+        </div>
+      </section>
     </div>
   );
 }

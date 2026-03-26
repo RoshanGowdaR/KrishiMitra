@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -59,6 +60,7 @@ const languageNameByCode = {
 };
 
 export default function ProfileSetup() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, completeProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
@@ -89,11 +91,41 @@ export default function ProfileSetup() {
     preferred_language: selectedLanguageCode,
   }));
 
+  const saveProfileDirectlyToSupabase = async () => {
+    const payload = {
+      id: user?.id,
+      name: form.name,
+      state: form.state,
+      district: form.district,
+      taluk: form.taluk,
+      village: form.village,
+      preferred_language: form.preferred_language,
+    };
+
+    const { error } = await supabase.from('users').upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+  };
+
+  const saveAndContinue = () => {
+    localStorage.setItem('krishimitra_profile', JSON.stringify(form));
+    completeProfile();
+    toast.success(t('profileSetup.messages.saveSuccess', { defaultValue: 'Profile saved successfully' }));
+    navigate('/app', { replace: true });
+  };
+
+  const getProfileUpdateUrl = () => {
+    const rawBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const base = rawBase.replace(/\/+$/, '');
+    return base.endsWith('/api/v1')
+      ? `${base}/auth/update-profile`
+      : `${base}/api/v1/auth/update-profile`;
+  };
+
   const steps = useMemo(() => [
-    { id: 1, label: 'Google Login', status: 'done' },
-    { id: 2, label: 'Profile Setup', status: 'current' },
-    { id: 3, label: 'Dashboard', status: 'upcoming' },
-  ], []);
+    { id: 1, label: t('profileSetup.steps.googleLogin', { defaultValue: 'Google Login' }), status: 'done' },
+    { id: 2, label: t('profileSetup.steps.profileSetup', { defaultValue: 'Profile Setup' }), status: 'current' },
+    { id: 3, label: t('profileSetup.steps.dashboard', { defaultValue: 'Dashboard' }), status: 'upcoming' },
+  ], [t]);
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -110,12 +142,12 @@ export default function ProfileSetup() {
 
     const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
-      throw new Error('Your login session expired. Please sign in again.');
+      throw new Error(t('profileSetup.messages.sessionExpired', { defaultValue: 'Your login session expired. Please sign in again.' }));
     }
 
     const refreshedToken = refreshedData?.session?.access_token;
     if (!refreshedToken) {
-      throw new Error('Your login session expired. Please sign in again.');
+      throw new Error(t('profileSetup.messages.sessionExpired', { defaultValue: 'Your login session expired. Please sign in again.' }));
     }
 
     return refreshedToken;
@@ -126,15 +158,16 @@ export default function ProfileSetup() {
     setShowValidation(true);
 
     if (!form.name.trim() || !form.state.trim() || !form.district.trim() || !form.taluk.trim() || !form.village.trim()) {
-      toast.error('Please fill all required fields');
+      toast.error(t('profileSetup.messages.requiredFields', { defaultValue: 'Please fill all required fields' }));
       return;
     }
 
     setIsSaving(true);
     try {
       const token = await getAccessToken();
+      const profileUpdateUrl = getProfileUpdateUrl();
 
-      const response = await fetch('http://127.0.0.1:8000/api/v1/auth/update-profile', {
+      const response = await fetch(profileUpdateUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,19 +176,50 @@ export default function ProfileSetup() {
         body: JSON.stringify(form),
       });
 
-      const payload = await response.json();
-      if (!response.ok || !payload?.success) {
-        throw new Error(payload?.detail || 'Unable to save profile');
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
       }
 
-      localStorage.setItem('krishimitra_profile', JSON.stringify(form));
-      completeProfile();
-      toast.success('Profile saved successfully');
-      navigate('/app', { replace: true });
+      if (!response.ok) {
+        try {
+          await saveProfileDirectlyToSupabase();
+          saveAndContinue();
+          return;
+        } catch {
+          throw new Error(payload?.detail || t('profileSetup.messages.saveError', { defaultValue: 'Unable to save profile' }));
+        }
+      }
+
+      if (!payload?.success) {
+        throw new Error(payload?.detail || t('profileSetup.messages.saveError', { defaultValue: 'Unable to save profile' }));
+      }
+
+      saveAndContinue();
     } catch (error) {
-      const message = error?.message || 'Failed to save profile';
-      toast.error(message);
-      if (message.includes('session expired')) {
+      const message = String(error?.message || '');
+      const isNetworkOrCorsIssue =
+        message.toLowerCase().includes('failed to fetch')
+        || message.toLowerCase().includes('cors')
+        || message.toLowerCase().includes('networkerror');
+
+      if (isNetworkOrCorsIssue) {
+        try {
+          await saveProfileDirectlyToSupabase();
+          saveAndContinue();
+          return;
+        } catch (fallbackError) {
+          const fallbackMessage = fallbackError?.message || t('profileSetup.messages.saveFailed', { defaultValue: 'Failed to save profile' });
+          toast.error(fallbackMessage);
+          return;
+        }
+      }
+
+      const safeMessage = message || t('profileSetup.messages.saveFailed', { defaultValue: 'Failed to save profile' });
+      toast.error(safeMessage);
+      if (safeMessage.toLowerCase().includes('session expired')) {
         navigate('/login', { replace: true });
       }
     } finally {
@@ -268,7 +332,7 @@ export default function ProfileSetup() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {step.status === 'done' ? '✓ ' : ''}Step {step.id}: {step.id === 1 ? 'Language' : step.id === 2 ? 'Profile' : 'Done'}
+                  {step.status === 'done' ? '✓ ' : ''}{t('profileSetup.stepPrefix', { defaultValue: 'Step' })} {step.id}: {step.id === 1 ? t('profileSetup.stepLabels.language', { defaultValue: 'Language' }) : step.id === 2 ? t('profileSetup.stepLabels.profile', { defaultValue: 'Profile' }) : t('profileSetup.stepLabels.done', { defaultValue: 'Done' })}
                 </span>
                 {index < steps.length - 1 ? (
                   <span
@@ -287,15 +351,15 @@ export default function ProfileSetup() {
         </div>
 
         <h1 style={{ margin: 0, marginBottom: '0.5rem', fontFamily: 'Playfair Display, serif', fontSize: '1.8rem', fontWeight: 700, color: '#fff' }}>
-          Complete Your Profile
+          {t('profileSetup.title', { defaultValue: 'Complete Your Profile' })}
         </h1>
         <p style={{ margin: 0, marginBottom: '2rem', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
-          Tell us your farm location for smarter local recommendations.
+          {t('profileSetup.subtitle', { defaultValue: 'Tell us your farm location for smarter local recommendations.' })}
         </p>
 
         <div>
           <label htmlFor="profile-name">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Full Name</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.fullName', { defaultValue: 'Full Name' })}</span>
             <input
               id="profile-name"
               className={hasFieldError('name') ? 'profile-input error' : 'profile-input'}
@@ -303,11 +367,11 @@ export default function ProfileSetup() {
               onChange={(event) => updateField('name', event.target.value)}
               required
             />
-            {hasFieldError('name') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>Full Name is required</small> : <div style={{ marginBottom: '1rem' }} />}
+            {hasFieldError('name') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>{t('profileSetup.validation.fullName', { defaultValue: 'Full Name is required' })}</small> : <div style={{ marginBottom: '1rem' }} />}
           </label>
 
           <label htmlFor="profile-state">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>State</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.state', { defaultValue: 'State' })}</span>
             <select
               id="profile-state"
               className={hasFieldError('state') ? 'profile-input error' : 'profile-input'}
@@ -319,11 +383,11 @@ export default function ProfileSetup() {
                 <option key={stateName} value={stateName}>{stateName}</option>
               ))}
             </select>
-            {hasFieldError('state') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>State is required</small> : <div style={{ marginBottom: '1rem' }} />}
+            {hasFieldError('state') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>{t('profileSetup.validation.state', { defaultValue: 'State is required' })}</small> : <div style={{ marginBottom: '1rem' }} />}
           </label>
 
           <label htmlFor="profile-district">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>District</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.district', { defaultValue: 'District' })}</span>
             <input
               id="profile-district"
               className={hasFieldError('district') ? 'profile-input error' : 'profile-input'}
@@ -331,11 +395,11 @@ export default function ProfileSetup() {
               onChange={(event) => updateField('district', event.target.value)}
               required
             />
-            {hasFieldError('district') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>District is required</small> : <div style={{ marginBottom: '1rem' }} />}
+            {hasFieldError('district') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>{t('profileSetup.validation.district', { defaultValue: 'District is required' })}</small> : <div style={{ marginBottom: '1rem' }} />}
           </label>
 
           <label htmlFor="profile-taluk">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Taluk/Tehsil</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.taluk', { defaultValue: 'Taluk/Tehsil' })}</span>
             <input
               id="profile-taluk"
               className={hasFieldError('taluk') ? 'profile-input error' : 'profile-input'}
@@ -343,11 +407,11 @@ export default function ProfileSetup() {
               onChange={(event) => updateField('taluk', event.target.value)}
               required
             />
-            {hasFieldError('taluk') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>Taluk/Tehsil is required</small> : <div style={{ marginBottom: '1rem' }} />}
+            {hasFieldError('taluk') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>{t('profileSetup.validation.taluk', { defaultValue: 'Taluk/Tehsil is required' })}</small> : <div style={{ marginBottom: '1rem' }} />}
           </label>
 
           <label htmlFor="profile-village">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Village/Town</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.village', { defaultValue: 'Village/Town' })}</span>
             <input
               id="profile-village"
               className={hasFieldError('village') ? 'profile-input error' : 'profile-input'}
@@ -355,11 +419,11 @@ export default function ProfileSetup() {
               onChange={(event) => updateField('village', event.target.value)}
               required
             />
-            {hasFieldError('village') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>Village/Town is required</small> : <div style={{ marginBottom: '1rem' }} />}
+            {hasFieldError('village') ? <small style={{ color: '#ef4444', display: 'block', marginBottom: '1rem' }}>{t('profileSetup.validation.village', { defaultValue: 'Village/Town is required' })}</small> : <div style={{ marginBottom: '1rem' }} />}
           </label>
 
           <label htmlFor="profile-language-readonly">
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Language</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('profileSetup.fields.language', { defaultValue: 'Language' })}</span>
             <input
               id="profile-language-readonly"
               className="profile-input"
@@ -370,7 +434,7 @@ export default function ProfileSetup() {
         </div>
 
         <p style={{ margin: '0.7rem 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)' }}>
-          Need to change language?{' '}
+          {t('profileSetup.changeLanguagePrompt', { defaultValue: 'Need to change language?' })}{' '}
           <button
             type="button"
             onClick={() => navigate('/select-language')}
@@ -384,7 +448,7 @@ export default function ProfileSetup() {
               fontSize: '0.82rem',
             }}
           >
-            Select again
+            {t('profileSetup.changeLanguageAction', { defaultValue: 'Select again' })}
           </button>
         </p>
 
@@ -416,7 +480,7 @@ export default function ProfileSetup() {
             event.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          {isSaving ? 'Saving Profile...' : 'Start Farming Smarter 🌾'}
+          {isSaving ? t('profileSetup.saving', { defaultValue: 'Saving Profile...' }) : `${t('profileSetup.submit', { defaultValue: 'Start Farming Smarter' })} 🌾`}
         </button>
       </form>
     </div>

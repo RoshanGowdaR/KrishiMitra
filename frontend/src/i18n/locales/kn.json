@@ -14,7 +14,20 @@
     "soilHealth": "ಮಣ್ಣಿನ ಆರೋಗ್ಯ",
     "forum": "ಸಮುದಾಯ ವೇದಿಕೆ",
     "sos": "SOS ಸಹಾಯ",
-    "farmGuide": "ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ"
+    "farmGuide": "ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ",
+    "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "profile": "ಪ್ರೊಫೈಲ್",
+    "notifications": "ಸೂಚನೆಗಳು",
+    "community": "ಸಮುದಾಯ",
+    "reports": "ವರದಿಗಳು",
+    "trackTransport": "ಸಾರಿಗೆ ಟ್ರ್ಯಾಕ್",
+    "whatToGrow": "ಏನು ಬೆಳೆಸಬೇಕು",
+    "browseProduce": "ಉತ್ಪನ್ನ ವೀಕ್ಷಣೆ",
+    "myOrders": "ನನ್ನ ಆರ್ಡರ್‌ಗಳು",
+    "messages": "ಸಂದೇಶಗಳು",
+    "availableBookings": "ಲಭ್ಯ ಬುಕ್ಕಿಂಗ್‌ಗಳು",
+    "myAcceptedJobs": "ನನ್ನ ಸ್ವೀಕೃತ ಕೆಲಸಗಳು",
+    "routeMap": "ಮಾರ್ಗ ನಕ್ಷೆ"
   },
   "common": {
     "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
@@ -34,6 +47,7 @@
     "all": "ಎಲ್ಲಾ",
     "close": "ಮುಚ್ಚಿ",
     "viewDetails": "ವಿವರ ನೋಡಿ",
+    "howToApply": "ಹೇಗೆ ಅರ್ಜಿ ಹಾಕುವುದು",
     "viewGuide": "ಮಾರ್ಗದರ್ಶಿ ನೋಡಿ",
     "results": "ಫಲಿತಾಂಶಗಳು",
     "submit": "ಸಲ್ಲಿಸಿ",
@@ -42,6 +56,122 @@
     "quantity": "ಪ್ರಮಾಣ",
     "farmer": "ರೈತ",
     "callNow": "ಈಗ ಕರೆ ಮಾಡಿ"
+  },
+  "navbar": {
+    "roles": {
+      "farmer": "ರೈತ",
+      "buyer": "ಖರೀದಿದಾರ",
+      "transporter": "ಸಾರಿಗೆದಾರ"
+    },
+    "time": {
+      "justNow": "ಈಗ ತಾನೇ",
+      "minutesAgo": "{{count}}ನಿಮಿಷಗಳ ಹಿಂದೆ",
+      "hoursAgo": "{{count}}ಗಂಟೆಗಳ ಹಿಂದೆ",
+      "daysAgo": "{{count}}ದಿನಗಳ ಹಿಂದೆ"
+    },
+    "notifications": {
+      "newNotification": "ಹೊಸ ಸೂಚನೆ",
+      "open": "ಸೂಚನೆಗಳನ್ನು ತೆರೆಯಿರಿ",
+      "title": "ಸೂಚನೆಗಳು",
+      "markAllRead": "ಎಲ್ಲವನ್ನೂ ಓದಿದಂತೆ ಗುರುತುಮಾಡಿ",
+      "none": "ಹೊಸ ಸೂಚನೆಗಳಿಲ್ಲ",
+      "itemTitle": "ಸೂಚನೆ",
+      "openLink": "-> ತೆರೆಯಿರಿ"
+    },
+    "chat": {
+      "open": "ಚಾಟ್ ತೆರೆಯಿರಿ"
+    },
+    "profile": {
+      "open": "ಪ್ರೊಫೈಲ್ ತೆರೆಯಿರಿ",
+      "user": "ಬಳಕೆದಾರ"
+    },
+    "logout": {
+      "title": "ಲಾಗ್‌ಔಟ್"
+    }
+  },
+  "login": {
+    "welcomeBack": "ಮತ್ತೆ ಸ್ವಾಗತ",
+    "subtitle": "ನಿಮ್ಮ ಕೃಷಿ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+    "localWelcome": "ಕೃಷಿಮಿತ್ರಕ್ಕೆ ಸ್ವಾಗತ",
+    "continueWithGoogle": "Google ಮೂಲಕ ಮುಂದುವರಿಸಿ",
+    "terms": "ಮುಂದುವರಿಸುವ ಮೂಲಕ ನೀವು ನಮ್ಮ ಸೇವಾ ನಿಯಮಗಳನ್ನು ಒಪ್ಪುತ್ತೀರಿ",
+    "footer": "AI ಮೂಲಕ 600M ಭಾರತೀಯ ರೈತರಿಗೆ ಶಕ್ತಿ ನೀಡುತ್ತಿರುವುದು"
+  },
+  "profileSetup": {
+    "title": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಪೂರ್ಣಗೊಳಿಸಿ",
+    "subtitle": "ಹೆಚ್ಚು ಸ್ಮಾರ್ಟ್ ಸ್ಥಳೀಯ ಸಲಹೆಗಳಿಗಾಗಿ ನಿಮ್ಮ ಕೃಷಿ ಸ್ಥಳ ಮಾಹಿತಿ ನೀಡಿ.",
+    "stepPrefix": "ಹಂತ",
+    "steps": {
+      "googleLogin": "Google ಲಾಗಿನ್",
+      "profileSetup": "ಪ್ರೊಫೈಲ್ ಸೆಟಪ್",
+      "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್"
+    },
+    "stepLabels": {
+      "language": "ಭಾಷೆ",
+      "profile": "ಪ್ರೊಫೈಲ್",
+      "done": "ಪೂರ್ಣ"
+    },
+    "fields": {
+      "fullName": "ಪೂರ್ಣ ಹೆಸರು",
+      "state": "ರಾಜ್ಯ",
+      "district": "ಜಿಲ್ಲೆ",
+      "taluk": "ತಾಲೂಕು/ತಹಶೀಲ",
+      "village": "ಗ್ರಾಮ/ಪಟ್ಟಣ",
+      "language": "ಭಾಷೆ"
+    },
+    "validation": {
+      "fullName": "ಪೂರ್ಣ ಹೆಸರು ಅಗತ್ಯ",
+      "state": "ರಾಜ್ಯ ಅಗತ್ಯ",
+      "district": "ಜಿಲ್ಲೆ ಅಗತ್ಯ",
+      "taluk": "ತಾಲೂಕು/ತಹಶೀಲ ಅಗತ್ಯ",
+      "village": "ಗ್ರಾಮ/ಪಟ್ಟಣ ಅಗತ್ಯ"
+    },
+    "messages": {
+      "sessionExpired": "ನಿಮ್ಮ ಲಾಗಿನ್ ಅವಧಿ ಮುಕ್ತಾಯಗೊಂಡಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.",
+      "requiredFields": "ದಯವಿಟ್ಟು ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ",
+      "saveError": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಲಿಲ್ಲ",
+      "saveSuccess": "ಪ್ರೊಫೈಲ್ ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ",
+      "saveFailed": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲು ವಿಫಲವಾಯಿತು"
+    },
+    "changeLanguagePrompt": "ಭಾಷೆ ಬದಲಾಯಿಸಬೇಕೇ?",
+    "changeLanguageAction": "ಮತ್ತೆ ಆಯ್ಕೆಮಾಡಿ",
+    "saving": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
+    "submit": "ಸ್ಮಾರ್ಟ್ ಕೃಷಿ ಪ್ರಾರಂಭಿಸಿ"
+  },
+  "settings": {
+    "title": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "unknown": "ಅಪರಿಚಿತ",
+    "profileSettings": "ಪ್ರೊಫೈಲ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "languageRegion": "ಭಾಷೆ ಮತ್ತು ಪ್ರದೇಶ",
+    "preferredLanguage": "ಆದ್ಯತಾ ಭಾಷೆ",
+    "saveChanges": "ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ",
+    "saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
+    "appPreferences": "ಅಪ್ ಆದ್ಯತೆಗಳು",
+    "fields": {
+      "fullName": "ಪೂರ್ಣ ಹೆಸರು",
+      "state": "ರಾಜ್ಯ",
+      "district": "ಜಿಲ್ಲೆ",
+      "taluk": "ತಾಲೂಕು/ತಹಶೀಲ",
+      "village": "ಗ್ರಾಮ/ಪಟ್ಟಣ",
+      "temperatureUnit": "ತಾಪಮಾನ ಘಟಕ",
+      "currencyDisplay": "ಕರೆನ್ಸಿ ಪ್ರದರ್ಶನ",
+      "defaultMarketState": "ಡೀಫಾಲ್ಟ್ ಮಾರುಕಟ್ಟೆ ರಾಜ್ಯ"
+    },
+    "notifications": {
+      "title": "ಸೂಚನೆಗಳು",
+      "weatherAlerts": "ಹವಾಮಾನ ಎಚ್ಚರಿಕೆಗಳು",
+      "marketUpdates": "ಮಾರುಕಟ್ಟೆ ಬೆಲೆ ಅಪ್‌ಡೇಟ್‌ಗಳು",
+      "schemeDeadlines": "ಯೋಜನೆ ಅವಧಿ ಗಡುವು",
+      "sosExpertAvailable": "SOS ತಜ್ಞ ಲಭ್ಯ"
+    },
+    "messages": {
+      "saveProfileError": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಲಿಲ್ಲ",
+      "profileSaved": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಿದೆ",
+      "saveProfileFailed": "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲು ವಿಫಲವಾಯಿತು",
+      "languageUpdateError": "ಭಾಷೆಯನ್ನು ನವೀಕರಿಸಲಾಗಲಿಲ್ಲ",
+      "languageUpdated": "ಭಾಷೆ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ",
+      "languageUpdateFailed": "ಭಾಷೆ ನವೀಕರಣ ವಿಫಲವಾಗಿದೆ"
+    }
   },
   "landing": {
     "getStarted": "ಪ್ರಾರಂಭಿಸಿ",
@@ -125,6 +255,50 @@
         "title": "ಬಹುಭಾಷಾ",
         "description": "ಎಲ್ಲ ವೈಶಿಷ್ಟ್ಯಗಳು 12 ಭಾರತೀಯ ಭಾಷೆಗಳಲ್ಲಿ."
       }
+    },
+    "login": "ಲಾಗಿನ್",
+    "heroStartToday": "ಇಂದೇ ಉಚಿತವಾಗಿ ಪ್ರಾರಂಭಿಸಿ",
+    "heroTitleMain": "AI ಜೊತೆ ನಿಮ್ಮ ಕೃಷಿಗೆ ಶಕ್ತಿ ನೀಡಿ",
+    "heroSubtitleLong": "ಒಂದು ಶಕ್ತಿಶಾಲಿ ಕೃಷಿ ವೇದಿಕೆಯಲ್ಲಿ ಹೈಪರ್‌ಲೋಕಲ್ ಬೆಳೆ ಬುದ್ಧಿವಂತಿಕೆ, ಮಾರುಕಟ್ಟೆ ಸಮಯ ನಿರ್ಧಾರ, ರೋಗ ಪತ್ತೆ, ಮತ್ತು ಬಹುಭಾಷಾ ಮಾರ್ಗದರ್ಶನ.",
+    "scroll": "ಸ್ಕ್ರೋಲ್",
+    "mockup": {
+      "dashboard": "ಕೃಷಿಮಿತ್ರ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+      "aiLive": "AI ಸಕ್ರಿಯ",
+      "weather": "ಹವಾಮಾನ",
+      "weatherValue": "31°C ಸ್ವಚ್ಛ ಆಕಾಶ",
+      "weatherMeta": "ಮಳೆಯ ಸಾಧ್ಯತೆ: 14%",
+      "cropDisease": "ಬೆಳೆ ರೋಗ",
+      "cropDiseaseValue": "ಎಲೆ ಮಚ್ಚೆ ಅಪಾಯ: ಮಧ್ಯಮ",
+      "cropDiseaseMeta": "24 ಗಂಟೆಯಲ್ಲಿ ಕ್ರಮ",
+      "mandiPrices": "ಮಂಡಿ ಬೆಲೆಗಳು",
+      "mandiPricesValue": "ಟೊಮೇಟೊ ₹24/ಕೆಜಿ",
+      "mandiPricesMeta": "ನಿನ್ನೆಗಿಂತ +3.2%"
+    },
+    "stackTitle": "ಪ್ರತಿ ಎಕರೆಗೆ ಸ್ಮಾರ್ಟ್ ಸ್ಟ್ಯಾಕ್",
+    "everythingTitle": "ರೈತನಿಗೆ ಬೇಕಾದ ಎಲ್ಲವೂ",
+    "ctaTransform": "ನಿಮ್ಮ ಕೃಷಿಯನ್ನು ಪರಿವರ್ತಿಸಲು ಸಿದ್ಧವೇ?",
+    "stackFeatures": {
+      "weatherAI": "ಹವಾಮಾನ AI",
+      "mandiPrices": "ಮಂಡಿ ಬೆಲೆಗಳು",
+      "govtSchemes": "ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು",
+      "cropDiseaseScan": "ಬೆಳೆ ರೋಗ ಸ್ಕ್ಯಾನ್",
+      "aiChatbot": "AI ಚಾಟ್‌ಬಾಟ್",
+      "marketplace": "ಮಾರುಕಟ್ಟೆ",
+      "farmingQuiz": "ಕೃಷಿ ರಸಪ್ರಶ್ನೆ",
+      "soilHealth": "ಮಣ್ಣಿನ ಆರೋಗ್ಯ",
+      "forum": "ಫೋರಂ",
+      "sosConnect": "SOS ಸಂಪರ್ಕ",
+      "farmGuide": "ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ",
+      "voiceAssistant": "ಧ್ವನಿ ಸಹಾಯಕ",
+      "community": "ಸಮುದಾಯ",
+      "notifications": "ಸೂಚನೆಗಳು",
+      "reports": "ವರದಿಗಳು",
+      "trackTransport": "ಸಾರಿಗೆ ಟ್ರ್ಯಾಕ್",
+      "whatToGrow": "ಏನು ಬೆಳೆಸಬೇಕು",
+      "buyerDashboard": "ಖರೀದಿದಾರ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+      "buyerOrders": "ಖರೀದಿದಾರ ಆದೇಶಗಳು",
+      "routeMap": "ಮಾರ್ಗ ನಕ್ಷೆ",
+      "languages": "22 ಭಾಷೆಗಳು"
     }
   },
   "home": {

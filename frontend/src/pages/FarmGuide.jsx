@@ -96,67 +96,69 @@ const CROP_IMAGES = {
   Tomato: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=150&h=150&fit=crop',
   Onion: 'https://images.unsplash.com/photo-1508747703725-719777637510?w=150&h=150&fit=crop',
   Potato: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=150&h=150&fit=crop',
-  Brinjal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Aubergine.jpg/320px-Aubergine.jpg',
+  Brinjal: 'https://images.unsplash.com/photo-1604321272882-07c73743be32?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZWdncGxhbnR8ZW58MHx8MHx8fDA%3D',
   Cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=150&h=150&fit=crop',
   Cucumber: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=150&h=150&fit=crop',
   Cauliflower: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=150&h=150&fit=crop',
   Carrot: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=150&h=150&fit=crop',
   Spinach: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=150&h=150&fit=crop',
   Pumpkin: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=150&h=150&fit=crop',
-  Garlic: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Garlic_bulb_white_background.jpg/320px-Garlic_bulb_white_background.jpg',
-  Ginger: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Fresh_ginger.jpg/320px-Fresh_ginger.jpg',
+  Garlic: 'https://plus.unsplash.com/premium_photo-1675731118551-79b3da05a5d4?q=80&w=1227&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  Ginger: 'https://images.unsplash.com/photo-1599940859674-a7fef05b94ae?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z2luZ2VyfGVufDB8fDB8fHww',
   Mango: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=150&h=150&fit=crop',
   Banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=150&h=150&fit=crop',
   Coconut: 'https://images.unsplash.com/photo-1580984969071-a8da5656c2fb?w=150&h=150&fit=crop',
   Papaya: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=150&h=150&fit=crop',
-  Mandarin: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Clementine_-_whole_and_split.jpg/320px-Clementine_-_whole_and_split.jpg',
-  'Dragon Fruit': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Pitaya_cross_section_ed2.jpg/320px-Pitaya_cross_section_ed2.jpg',
+  Mandarin: 'https://images.unsplash.com/photo-1607116692929-ece4c84a5992?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFuZGFyaW4lMjBvcmFuZ2V8ZW58MHx8MHx8fDA%3D',
+  'Mandarin Orange': 'https://images.unsplash.com/photo-1607116692929-ece4c84a5992?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFuZGFyaW4lMjBvcmFuZ2V8ZW58MHx8MHx8fDA%3D',
+  'Dragon Fruit': 'https://plus.unsplash.com/premium_photo-1667051230160-5906f5683a59?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZHJhZ29uJTIwZnJ1aXR8ZW58MHx8MHx8fDA%3D',
   Guava: 'https://images.unsplash.com/photo-1536511132770-e5058c7e8c46?w=150&h=150&fit=crop',
   Grapes: 'https://images.unsplash.com/photo-1596363505729-4190a9506133?w=150&h=150&fit=crop',
   Watermelon: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&h=150&fit=crop',
   Pomegranate: 'https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=150&h=150&fit=crop',
-  Lemon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Lemon_-_whole_%26_split.jpg/320px-Lemon_-_whole_%26_split.jpg',
+  Lemon: 'https://images.unsplash.com/photo-1741770958537-adf1361c2e25?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bGVtb24lMjBmcnVpdHxlbnwwfHwwfHx8MA%3D%3D',
   Pineapple: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=150&h=150&fit=crop',
   Strawberry: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=150&h=150&fit=crop',
   Apple: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=150&h=150&fit=crop',
-  Cotton: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=150&h=150&fit=crop',
-  Sugarcane: 'https://images.unsplash.com/photo-1596638787647-904d822d751e?w=150&h=150&fit=crop',
-  Tobacco: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/tobacco_flowers.jpg/320px-tobacco_flowers.jpg',
-  Jute: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Jute_field_Bangladesh.jpg/320px-Jute_field_Bangladesh.jpg',
-  Turmeric: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=150&h=150&fit=crop',
+  Cotton: 'https://images.unsplash.com/photo-1634337781106-4c6a12b820a1?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y290dG9uJTIwcGxhbnR8ZW58MHx8MHx8fDA%3D',
+  Sugarcane: 'https://images.unsplash.com/photo-1637335556827-bf5923d77f33?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c3VnYXJjYW5lfGVufDB8fDB8fHww',
+  'Sugar Cane': 'https://images.unsplash.com/photo-1637335556827-bf5923d77f33?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c3VnYXJjYW5lfGVufDB8fDB8fHww',
+  Tobacco: 'https://images.unsplash.com/photo-1528446558593-05d60f8d4ae9?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dG9iYWNjbyUyMGxlYWZ8ZW58MHx8MHx8fDA%3D',
+  Jute: 'https://images.unsplash.com/photo-1763219732147-36c54e2f4ecd?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8anV0ZSUyMHBsYW50fGVufDB8fDB8fHww',
+  Turmeric: 'https://images.unsplash.com/photo-1606951444141-e5533feb55be?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dHVybWVyaWN8ZW58MHx8MHx8fDA%3D',
   Chilli: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=150&h=150&fit=crop',
-  Coriander: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Coriander_seeds_spice.jpg/320px-Coriander_seeds_spice.jpg',
-  Cumin: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=150&h=150&fit=crop',
-  Cardamom: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Elaichi_%28Cardamom%29.jpg/320px-Elaichi_%28Cardamom%29.jpg',
-  Pepper: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Black_pepper.jpg/320px-Black_pepper.jpg',
-  Fenugreek: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Fenugreek_leaves.jpg/320px-Fenugreek_leaves.jpg',
-  Groundnut: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Peanuts_USDA.jpg/320px-Peanuts_USDA.jpg',
-  Soybean: 'https://images.unsplash.com/photo-1599360889420-da1afaba9edc?w=150&h=150&fit=crop',
+  Coriander: 'https://images.unsplash.com/photo-1588879460618-9249e7d947d1?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y29yaWFuZGVyJTIwbGVhdmVzfGVufDB8fDB8fHww',
+  Cumin: 'https://plus.unsplash.com/premium_photo-1723874683717-006f24c93975?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y3VtaW4lMjBzZWVkc3xlbnwwfHwwfHx8MA%3D%3D',
+  Cardamom: 'https://images.unsplash.com/photo-1642255521852-7e7c742ac58f?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FyZGFtb218ZW58MHx8MHx8fDA%3D',
+  Pepper: 'https://images.unsplash.com/photo-1649951806971-ad0e00408773?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmxhY2slMjBwZXBwZXIlMjBzcGljZXxlbnwwfHwwfHx8MA%3D%3D',
+  Fenugreek: 'https://images.unsplash.com/photo-1640671511581-0cc93ea3ebf2?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVudWdyZWVrfGVufDB8fDB8fHww',
+  Groundnut: 'https://t3.ftcdn.net/jpg/08/57/41/76/360_F_857417663_qcBcPTvQu7744lb6ARy6fYpCLf63FQrE.jpg',
+  Soybean: 'https://media.istockphoto.com/id/184612048/photo/soybean-pods-and-leaves.jpg?s=612x612&w=0&k=20&c=TntfAa3QJdJgW8GlFWTEQLxGsuA1bddaKypF0bGI-YI=',
   Sunflower: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=150&h=150&fit=crop',
-  Mustard: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=150&h=150&fit=crop',
-  Sesame: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Sesame_seeds_white.jpg/320px-Sesame_seeds_white.jpg',
-  Lentil: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Red_Lentils.jpg/320px-Red_Lentils.jpg',
-  'Green Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mung_beans.jpg/320px-Mung_beans.jpg',
-  'Black Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Black_gram_seeds.jpg/320px-Black_gram_seeds.jpg',
-  'Pigeon Pea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cajanus_cajan_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-168.jpg/320px-Cajanus_cajan_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-168.jpg',
-  'Kidney Bean': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Kidney_beans.jpg/320px-Kidney_beans.jpg',
-  Coffee: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=150&h=150&fit=crop',
-  Tea: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&h=150&fit=crop',
-  Rubber: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Rubber_tree_tapping.jpg/320px-Rubber_tree_tapping.jpg',
-  Arecanut: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Areca_Nut.jpg/320px-Areca_Nut.jpg',
-  Cashew: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Cashew_nut_with_fruit.jpg/320px-Cashew_nut_with_fruit.jpg',
-  Chickpea: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=150&h=150&fit=crop',
-  Ragi: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Eleusine_coracana.jpg/320px-Eleusine_coracana.jpg',
-  Jowar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Sorghum_vulgare.jpg/320px-Sorghum_vulgare.jpg',
-  Bajra: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Pennisetum_glaucum_USDA.jpg/320px-Pennisetum_glaucum_USDA.jpg',
-  Barley: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Barley_in_field.jpg/320px-Barley_in_field.jpg',
-  Jackfruit: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=150&h=150&fit=crop',
-  Muskmelon: 'https://images.unsplash.com/photo-1571575173700-afb9492e6a50?w=150&h=150&fit=crop',
-  Sapota: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Manilkara_zapota_-_Sapota_-_Fruits.jpg/320px-Manilkara_zapota_-_Sapota_-_Fruits.jpg',
-  'Lady Finger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Okra_2008.jpg/320px-Okra_2008.jpg',
-  'Green Chilli': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Green_chili_pepper.jpg/320px-Green_chili_pepper.jpg',
-  'Bitter Gourd': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Bitter_melon_%28Momordica_charantia%29.jpg/320px-Bitter_melon_%28Momordica_charantia%29.jpg',
-  'Bottle Gourd': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Lagenaria_siceraria_%28bottle_gourd%29.jpg/320px-Lagenaria_siceraria_%28bottle_gourd%29.jpg',
+  Mustard: 'https://www.thespruce.com/thmb/zOF8li_lnDRkxC7l04ARmYt_JPg=/4000x0/filters:no_upscale():max_bytes(150000):strip_icc()/mustard-plant-growing-guide-7377609_01-7dd11987305340b7a79f41d359514096.jpg',
+  Sesame: 'https://images.squarespace-cdn.com/content/v1/5e0b6ab6317b09689f16d5c8/c52006c2-d177-40e8-8709-97e00fdc80a4/IMG_1227.JPG',
+  Lentil: 'https://media.istockphoto.com/id/186745672/photo/green-snow-pea.jpg?s=612x612&w=0&k=20&c=IVtzJ7AfhjpkG32HICKRTfzDzp22Az18vogoOiFPG0U=',
+  'Green Gram': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhpnh2nRnUBaXU0fN5X7plAyHY76hU5LHzuw&s',
+  'Black Gram': 'https://hideoutfarmindia.com/wp-content/uploads/2024/05/Black-Gram.jpg',
+  'Pigeon Pea': 'https://t4.ftcdn.net/jpg/02/19/55/77/360_F_219557753_rafHm8DNtWXCPaLfSqhrPhTpbUONlU8S.jpg',
+  'Kidney Bean': 'https://cdn.mos.cms.futurecdn.net/ih5e9EvKPDq623DjrCpuVS.jpg',
+  Coffee: 'https://weaverscoffee.com/cdn/shop/articles/Coffee_beans_and_red_ripe_coffee_cherries_on_coffee_tree_1000x.jpg?v=1695928346',
+  Tea: 'https://cdn.shopify.com/s/files/1/0524/7405/2764/files/growing1.jpg?v=1612241194',
+  Rubber: 'https://rukminim2.flixcart.com/image/480/640/ktd9mkw0/plant-sapling/t/n/c/yes-perennial-yes-live-rubber-plant-for-indoor-home-decoration-original-imag6qg7fbzbksq8.jpeg?q=90',
+  Arecanut: 'https://www.pepperhub.in/wp-content/uploads/2023/07/mohitnagar-arecanut.webp',
+  Cashew: 'https://plantsguru.com/cdn/shop/files/Cashew-Nut_Tree.webp?v=1744791304',
+  Chickpea: 'https://t4.ftcdn.net/jpg/02/77/58/17/360_F_277581792_trTRdyvnE9H5rPLt1WDLUyHK7ZJ8FAny.jpg',
+  Ragi: 'https://wisemama.in/cdn/shop/articles/15_Different_Types_of_Millet_And_Their_Benefits_-_AMERICAN_GARDENER_f2136580-e08d-47b8-9934-ad43a678f84e.jpg?v=1746582754&width=600',
+  Jowar: 'https://www.shutterstock.com/image-photo/closeup-jowar-grain-sorghum-crop-600w-2598734053.jpg',
+  Bajra: 'https://m.media-amazon.com/images/I/61R18J9V4FL._AC_UF1000,1000_QL80_.jpg',
+  Barley: 'https://cdn.britannica.com/31/75931-050-FED41F1F/Barley.jpg',
+  Jackfruit: 'https://images.unsplash.com/photo-1651565919334-bf81165cd0a3?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8amFja2ZydWl0fGVufDB8fDB8fHww',
+  Muskmelon: 'https://media.istockphoto.com/id/2224818771/photo/japanese-melons-stacked-into-crates-ready-to-sell.webp?a=1&b=1&s=612x612&w=0&k=20&c=RaB6ve62y6-KWYfzineryrn4dS_jBOy46awhzMKYET8=',
+  Sapota: 'https://images.unsplash.com/photo-1699863164935-633665c05731?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c2Fwb3RhJTIwZnJ1aXR8ZW58MHx8MHx8fDA%3D',
+  'Lady Finger': 'https://images.unsplash.com/photo-1425543103986-22abb7d7e8d2?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8b2tyYXxlbnwwfHwwfHx8MA%3D%3D',
+  'Green Chilli': 'https://images.unsplash.com/photo-1576763595295-c0371a32af78?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3JlZW4lMjBjaGlsbGl8ZW58MHx8MHx8fDA%3D',
+  'Bitter Gourd': 'https://images.unsplash.com/photo-1739903760973-4731a8e79a03?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Yml0dGVyJTIwZ291cmR8ZW58MHx8MHx8fDA%3D',
+  'Bottle Gourd': 'https://images.unsplash.com/photo-1730127487636-b7fe550af030?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
 };
 
 export const getCropImage = (cropName) => CROP_IMAGES[cropName]
@@ -584,25 +586,34 @@ export default function FarmGuide() {
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
-          .jk-wrap { background: #ffffff; color: #1a1a1a; min-height: 100vh; font-family: 'DM Sans', sans-serif; padding-bottom: 2rem; }
-          .jk-header { background: #16a34a; color: white; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+          .jk-wrap { background: #f7faf8; color: #1a1a1a; min-height: 100vh; font-family: 'DM Sans', sans-serif; padding-bottom: 2rem; }
+          .jk-header { border: 1px solid #bfd8c6; border-radius: 16px; background: linear-gradient(140deg, #166534 0%, #22c55e 52%, #86efac 100%); color: white; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 14px 34px rgba(22, 101, 52, 0.2); }
           .jk-header h2 { margin: 0; font-size: 1.02rem; font-weight: 700; text-align: center; flex: 1; font-family: 'Playfair Display', serif; }
           .jk-back-btn { border: none; background: transparent; color: white; font-size: 1.2rem; cursor: pointer; width: 28px; }
-          .jk-body { padding: 1rem; max-width: 1080px; margin: 0 auto; }
-          .jk-title { font-family: 'Playfair Display', serif; font-size: 1.45rem; margin: 0; }
-          .jk-subtitle { margin: 0.3rem 0 1rem; color: #4b5563; font-size: 0.9rem; }
+          .jk-body { padding: 1rem; max-width: 1080px; margin: 0 auto; display: grid; gap: 1rem; }
+          .jk-title { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 0; color: #fff; }
+          .jk-subtitle { margin: 0.32rem 0 0; color: rgba(240, 253, 244, 0.94); font-size: 0.95rem; }
+          .jk-hero { position: relative; overflow: hidden; border: 1px solid #bfd8c6; border-radius: 16px; background: radial-gradient(circle at 82% 12%, rgba(255,255,255,0.32) 0, rgba(255,255,255,0) 44%), linear-gradient(140deg, #166534 0%, #22c55e 52%, #86efac 100%); box-shadow: 0 14px 34px rgba(22, 101, 52, 0.2); padding: 1.2rem; }
+          .jk-hero::after { content: ''; position: absolute; right: -34px; bottom: -64px; width: 185px; height: 185px; border-radius: 50%; background: rgba(255,255,255,0.14); }
+          .jk-hero-content { position: relative; z-index: 1; }
+          .jk-hero-stats { margin-top: 0.95rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.62rem; }
+          .jk-hero-stat { border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; background: rgba(255,255,255,0.18); padding: 0.62rem 0.7rem; }
+          .jk-hero-stat strong { display: block; font-size: 1.05rem; color: #fff; }
+          .jk-hero-stat span { display: block; margin-top: 0.15rem; color: rgba(240, 253, 244, 0.92); font-size: 0.8rem; }
           .section { margin: 1.5rem 0; }
+          .section.panel-surface { margin: 0; border: 1px solid #dce9df; border-radius: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%); box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05); padding: 1rem; }
           .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
           .section-title { font-weight: 700; font-size: 1.3rem; color: #1a1a1a; margin: 0; }
           .view-all { color: #16a34a; font-size: 0.85rem; font-weight: 600; background: transparent; border: none; cursor: pointer; }
           .horizontal-scroll { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.3rem; -ms-overflow-style: none; scrollbar-width: none; }
           .horizontal-scroll::-webkit-scrollbar { display: none; }
-          .crop-chip { min-width: 96px; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 0.45rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); position: relative; cursor: pointer; }
+          .crop-chip { min-width: 96px; background: #fff; border-radius: 12px; border: 1px solid #d8e8dd; padding: 0.45rem; text-align: center; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06); position: relative; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+          .crop-chip:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(15, 23, 42, 0.1); }
           .crop-chip.active { border: 2px solid #16a34a; background: #f0fdf4; }
           .crop-image-box { width: 60px; height: 60px; margin: 0 auto 0.35rem; border-radius: 12px; overflow: hidden; background: #ecfdf5; display: flex; align-items: center; justify-content: center; }
           .crop-chip p { margin: 0; color: #166534; font-size: 0.75rem; font-weight: 600; }
           .remove-btn { position: absolute; top: 3px; right: 3px; border: none; border-radius: 999px; width: 18px; height: 18px; cursor: pointer; font-size: 0.7rem; background: #fee2e2; color: #dc2626; }
-          .add-crop-btn { min-width: 96px; border: 1px dashed #16a34a; border-radius: 12px; background: #f0fdf4; color: #166534; font-weight: 600; cursor: pointer; padding: 0.45rem; }
+          .add-crop-btn { min-width: 96px; border: 1px dashed #16a34a; border-radius: 12px; background: #f0fdf4; color: #166534; font-weight: 700; cursor: pointer; padding: 0.45rem; }
           .stage-card { min-width: 170px; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 0.7rem; cursor: pointer; }
           .stage-card.active { background: #dcfce7; border: 1px solid #16a34a; }
           .stage-name { font-size: 0.88rem; font-weight: 700; margin: 0; }
@@ -630,7 +641,7 @@ export default function FarmGuide() {
           .expert-row { display: flex; gap: 0.45rem; align-items: center; font-size: 0.72rem; color: #4b5563; margin-bottom: 0.45rem; }
           .expert-logo { width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; }
           .expert-preview { margin: 0; font-size: 0.82rem; color: #6b7280; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-          .ask-btn { width: 100%; margin-top: 0.9rem; border: 1px solid #16a34a; background: #fff; color: #16a34a; border-radius: 25px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
+          .ask-btn { width: 100%; margin-top: 0.9rem; border: 0; background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; border-radius: 999px; padding: 0.8rem; font-weight: 700; cursor: pointer; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22); }
           .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
           .modal-card { width: min(680px, 100%); max-height: 85vh; overflow-y: auto; background: #fff; border-radius: 16px; padding: 1rem; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
           .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
@@ -641,19 +652,22 @@ export default function FarmGuide() {
           .submit-btn { margin-top: 0.75rem; width: 100%; border: none; background: #16a34a; color: #fff; border-radius: 12px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
           .spinner { width: 22px; height: 22px; border: 3px solid #bbf7d0; border-top-color: #16a34a; border-radius: 999px; animation: spin 0.8s linear infinite; margin: 0.8rem auto; }
           .bottom-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; }
-          .bottom-sheet { background: white; border-radius: 20px 20px 0 0; padding: 1.5rem; max-height: 80vh; overflow-y: auto; width: 100%; }
+          .bottom-sheet { background: white; border-radius: 20px 20px 0 0; padding: 1.65rem; max-height: 88vh; overflow-y: auto; width: 100%; }
           .sheet-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; margin: 0; }
           .sheet-subtitle { margin: 0.25rem 0 0.9rem; color: #6b7280; font-size: 0.9rem; }
           .sheet-search { width: 100%; border: 1px solid #d1d5db; border-radius: 12px; padding: 0.75rem; margin-bottom: 0.8rem; }
           .tab-pill { border-radius: 999px; padding: 0.5rem 0.9rem; font-size: 0.82rem; font-weight: 600; white-space: nowrap; border: 1px solid #e5e7eb; background: white; color: #666; cursor: pointer; }
           .tab-pill.active { background: #16a34a; color: white; border-color: #16a34a; }
           .crop-pick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; margin-top: 1rem; }
-          .crop-pick-card { border: 1px solid #e5e7eb; border-radius: 12px; text-align: center; padding: 0.6rem 0.4rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); background: #fff; position: relative; }
+          .crop-pick-card { border: 1px solid #e5e7eb; border-radius: 12px; text-align: center; padding: 0.8rem 0.45rem; min-height: 138px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); background: #fff; position: relative; }
           .crop-pick-card.selected { border: 2px solid #16a34a; background: #f0fdf4; }
-          .crop-pick-card .name { font-size: 0.72rem; margin-top: 0.25rem; color: #374151; font-weight: 600; }
+          .crop-pick-card .name { font-size: 0.78rem; margin-top: 0.35rem; color: #374151; font-weight: 600; }
           .crop-check { position: absolute; top: 6px; right: 6px; color: #16a34a; font-size: 0.8rem; font-weight: 700; }
           .save-btn { margin-top: 1rem; width: 100%; border: none; background: #16a34a; color: #fff; border-radius: 12px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
           @keyframes spin { to { transform: rotate(360deg); } }
+          @media (max-width: 900px) {
+            .jk-hero-stats { grid-template-columns: 1fr; }
+          }
           @media (min-width: 768px) { .jk-body { padding: 1.25rem; } }
         `}
       </style>
@@ -669,10 +683,28 @@ export default function FarmGuide() {
       <main className="jk-body">
         {view === 'selection' ? (
           <>
-            <h1 className="jk-title">Farm Guide</h1>
-            <p className="jk-subtitle">Select crops and explore practical stage-wise guidance.</p>
+            <section className="jk-hero">
+              <div className="jk-hero-content">
+                <h1 className="jk-title">Farm Guide</h1>
+                <p className="jk-subtitle">Select crops and explore practical stage-wise guidance.</p>
+                <div className="jk-hero-stats">
+                  <article className="jk-hero-stat">
+                    <strong>{myCrops.length}</strong>
+                    <span>Selected crops</span>
+                  </article>
+                  <article className="jk-hero-stat">
+                    <strong>{categories.length}</strong>
+                    <span>Crop categories</span>
+                  </article>
+                  <article className="jk-hero-stat">
+                    <strong>{Object.keys(ALL_CROPS).reduce((count, key) => count + ALL_CROPS[key].length, 0)}</strong>
+                    <span>Available options</span>
+                  </article>
+                </div>
+              </div>
+            </section>
 
-            <section className="section">
+            <section className="section panel-surface">
               <div className="section-head">
                 <h3 className="section-title">My Crops</h3>
               </div>
@@ -893,16 +925,16 @@ export default function FarmGuide() {
                     onClick={() => toggleCropSelection(crop)}
                   >
                     {selected ? <span className="crop-check">✓</span> : null}
-                    <div className="crop-image-box" style={{ marginBottom: '0.2rem' }}>
+                    <div className="crop-image-box" style={{ marginBottom: '0.2rem', width: '96px', height: '96px' }}>
                       <img
                         src={getCropImage(crop.name)}
                         alt={crop.name}
-                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '12px' }}
+                        style={{ width: '96px', height: '96px', objectFit: 'cover', borderRadius: '12px' }}
                         onError={(e) => {
                           e.target.style.display = 'none';
                           const parent = e.target.parentNode;
                           const fallback = document.createElement('div');
-                          fallback.style.cssText = 'width:60px;height:60px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#16a34a;';
+                          fallback.style.cssText = 'width:96px;height:96px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#16a34a;';
                           fallback.textContent = crop.name.charAt(0);
                           parent.appendChild(fallback);
                         }}

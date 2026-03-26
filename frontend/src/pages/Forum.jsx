@@ -159,14 +159,21 @@ export default function Forum() {
 
   return (
     <div className="page-wrap forum-page">
-      <div className="section-header-row">
-        <h2>{t('forum.title')}</h2>
+      <div className="forum-hero panel">
+        <div className="forum-hero-content">
+          <h2>{t('forum.title')}</h2>
+          <p>Ask farmers, share local knowledge, and find practical answers faster.</p>
+          <div className="forum-hero-stats">
+            <span>{visiblePosts.length} active discussions</span>
+            <span>{supportedLanguages.length} languages supported</span>
+          </div>
+        </div>
         <button type="button" className="primary-btn" onClick={() => setIsCreateModalOpen(true)}>
           {t('forum.createPost')}
         </button>
       </div>
 
-      <div className="panel forum-filters-row">
+      <div className="panel forum-panel forum-filters-row">
         <label>
           {t('forum.category')}
           <select value={category} onChange={(event) => setCategory(event.target.value)}>
@@ -187,14 +194,21 @@ export default function Forum() {
         </label>
       </div>
 
-      <div className="forum-feed">
+      <div className="forum-feed forum-panel">
         {visiblePosts.map((post) => (
           <article key={post.id} className="forum-card">
             <div className="forum-card-top">
               <div className="forum-author-block">
                 <span className="forum-avatar">{initials(post.author_name || 'Farmer')}</span>
                 <div>
-                  <strong>{post.author_name || t('forum.defaults.farmer')}</strong>
+                  <strong>
+                    {post.author_name || t('forum.defaults.farmer')}
+                    {String(post.author_name || '').toLowerCase().includes('admin') ? (
+                      <span style={{ marginLeft: 8, fontSize: '0.72rem', color: '#b91c1c', fontWeight: 700 }}>
+                        ADMIN
+                      </span>
+                    ) : null}
+                  </strong>
                   <div className="forum-author-sub">
                     <span className="forum-state-badge">{post.state || t('forum.defaults.india')}</span>
                     <span>{timeAgo(post.created_at || new Date().toISOString())}</span>

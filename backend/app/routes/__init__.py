@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.routes.auth import router as auth_router
 from app.routes.chatbot import router as chatbot_router
 from app.routes.crop_disease import router as crop_disease_router
+from app.routes.daily_briefing import router as daily_briefing_router
 from app.routes.farm_guide import router as farm_guide_router
 from app.routes.forum import router as forum_router
 from app.routes.market import router as market_router
@@ -19,6 +20,7 @@ api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 api_router.include_router(chatbot_router)
 api_router.include_router(crop_disease_router)
+api_router.include_router(daily_briefing_router)
 api_router.include_router(farm_guide_router)
 api_router.include_router(forum_router)
 api_router.include_router(market_router)

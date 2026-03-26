@@ -5,13 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
   acceptFriendRequest,
+  clearConversationMessages,
   declineFriendRequest,
+  getAllChatPreferencesForUser,
+  getChatPreference,
   getConversation,
   getFriendRequests,
   getFriends,
   getUnreadCounts,
   markMessagesRead,
   sendMessage,
+  setChatPreference,
+  submitUserReport,
   subscribeToMessages,
   uploadChatMedia,
 } from '../services/socialService';
@@ -42,6 +47,17 @@ const groupDateLabel = (dateText) => {
 const isImage = (type) => String(type || '').toLowerCase().includes('image');
 const isVideo = (type) => String(type || '').toLowerCase().includes('video');
 
+const applyDisappearingMode = (items, mode) => {
+  if (mode !== '24h') return items;
+  const limitMs = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  return (items || []).filter((msg) => {
+    const at = new Date(msg.created_at).getTime();
+    if (!Number.isFinite(at)) return true;
+    return now - at <= limitMs;
+  });
+};
+
 export default function Chat() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -59,18 +75,48 @@ export default function Chat() {
   const [showRequests, setShowRequests] = useState(false);
   const [lastByFriend, setLastByFriend] = useState({});
   const [imageViewer, setImageViewer] = useState('');
+  const [chatPrefs, setChatPrefs] = useState({});
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Spam');
+  const [reportDetails, setReportDetails] = useState('');
   const messagesEndRef = useRef(null);
+  const menuRef = useRef(null);
 
   const filteredFriends = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return friends;
-    return friends.filter((item) => (item.friend?.name || '').toLowerCase().includes(q));
-  }, [friends, searchQuery]);
+    const base = q
+      ? friends.filter((item) => (item.friend?.name || '').toLowerCase().includes(q))
+      : friends;
+
+    return [...base].sort((a, b) => {
+      const aId = a.friend?.id;
+      const bId = b.friend?.id;
+      const aFav = aId ? Boolean(chatPrefs[aId]?.isFavorite) : false;
+      const bFav = bId ? Boolean(chatPrefs[bId]?.isFavorite) : false;
+      if (aFav !== bFav) return aFav ? -1 : 1;
+      return 0;
+    });
+  }, [friends, searchQuery, chatPrefs]);
+
+  const selectedPrefs = useMemo(() => {
+    if (!selectedFriend?.id || !user?.id) {
+      return { isBlocked: false, isMuted: false, isFavorite: false, disappearingMode: 'off' };
+    }
+    return getChatPreference(user.id, selectedFriend.id);
+  }, [selectedFriend?.id, user?.id, chatPrefs]);
+
+  const hydratePreferences = (friendRows) => {
+    if (!user?.id) return;
+    const friendIds = (friendRows || []).map((row) => row.friend?.id).filter(Boolean);
+    setChatPrefs(getAllChatPreferencesForUser(user.id, friendIds));
+  };
 
   const loadFriends = async () => {
     if (!user?.id) return;
     const rows = await getFriends(user.id);
     setFriends(rows || []);
+    hydratePreferences(rows || []);
   };
 
   const loadFriendRequests = async () => {
@@ -81,7 +127,7 @@ export default function Chat() {
 
   const loadUnread = async () => {
     if (!user?.id) return;
-    const counts = await getUnreadCounts(user.id);
+    const counts = await getUnreadCounts(user.id, { respectMute: true });
     setUnreadCounts(counts || {});
   };
 
@@ -97,6 +143,8 @@ export default function Chat() {
     const map = {};
     (data || []).forEach((message) => {
       const friendId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+      const pref = getChatPreference(user.id, friendId);
+      if (pref?.isBlocked) return;
       if (!map[friendId]) {
         map[friendId] = message;
       }
@@ -124,26 +172,29 @@ export default function Chat() {
     const loadConversation = async () => {
       if (!user?.id || !selectedFriend?.id) return;
       const conversation = await getConversation(user.id, selectedFriend.id);
-      setMessages(conversation || []);
+      const scoped = applyDisappearingMode(conversation || [], selectedPrefs.disappearingMode);
+      setMessages(scoped);
       await markMessagesRead(user.id, selectedFriend.id);
       setUnreadCounts((prev) => ({ ...prev, [selectedFriend.id]: 0 }));
       loadLastMessages();
     };
 
     loadConversation();
-  }, [selectedFriend?.id, user?.id]);
+  }, [selectedFriend?.id, user?.id, selectedPrefs.disappearingMode]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
 
     const sub = subscribeToMessages(user.id, async (payload) => {
       const newMsg = payload.new;
+      const pref = getChatPreference(user.id, newMsg.sender_id);
+      if (pref?.isBlocked) return;
 
       if (newMsg.sender_id === selectedFriend?.id) {
-        setMessages((prev) => [...prev, newMsg]);
+        setMessages((prev) => applyDisappearingMode([...prev, newMsg], selectedPrefs.disappearingMode));
         await markMessagesRead(user.id, newMsg.sender_id);
         setUnreadCounts((prev) => ({ ...prev, [newMsg.sender_id]: 0 }));
-      } else {
+      } else if (!pref?.isMuted) {
         setUnreadCounts((prev) => ({
           ...prev,
           [newMsg.sender_id]: (prev[newMsg.sender_id] || 0) + 1,
@@ -156,11 +207,30 @@ export default function Chat() {
     return () => {
       if (sub?.unsubscribe) sub.unsubscribe();
     };
-  }, [selectedFriend?.id, user?.id]);
+  }, [selectedFriend?.id, user?.id, selectedPrefs.disappearingMode]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onClickOutside = (event) => {
+      if (!menuRef.current?.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [menuOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const onAcceptRequest = async (request) => {
     await acceptFriendRequest(request.id, request.sender_id, request.receiver_id);
@@ -184,6 +254,10 @@ export default function Chat() {
 
   const onSendMessage = async () => {
     if (!user?.id || !selectedFriend?.id) return;
+    if (selectedPrefs.isBlocked) {
+      toast.error('This user is blocked. Unblock to send messages.');
+      return;
+    }
     const text = newMessage.trim();
     if (!text && !mediaFile) return;
 
@@ -211,6 +285,83 @@ export default function Chat() {
     setMediaFile(null);
     setMediaPreview(null);
     loadLastMessages();
+  };
+
+  const updatePreference = (patch, successText) => {
+    if (!user?.id || !selectedFriend?.id) return;
+    const next = setChatPreference(user.id, selectedFriend.id, patch);
+    setChatPrefs((prev) => ({ ...prev, [selectedFriend.id]: next }));
+    if (successText) toast.success(successText);
+  };
+
+  const onToggleFavorite = () => {
+    updatePreference({ isFavorite: !selectedPrefs.isFavorite }, selectedPrefs.isFavorite ? 'Removed from favorites' : 'Added to favorites');
+    setMenuOpen(false);
+  };
+
+  const onToggleMute = () => {
+    const nextMuted = !selectedPrefs.isMuted;
+    updatePreference({ isMuted: nextMuted }, nextMuted ? 'Notifications muted' : 'Notifications unmuted');
+    if (selectedFriend?.id) {
+      if (nextMuted) {
+        setUnreadCounts((prev) => ({ ...prev, [selectedFriend.id]: 0 }));
+      } else {
+        loadUnread();
+      }
+    }
+    setMenuOpen(false);
+  };
+
+  const onToggleDisappearing = () => {
+    const mode = selectedPrefs.disappearingMode === '24h' ? 'off' : '24h';
+    updatePreference({ disappearingMode: mode }, mode === '24h' ? 'Disappearing messages enabled (24h)' : 'Disappearing messages disabled');
+    setMenuOpen(false);
+  };
+
+  const onToggleBlock = () => {
+    const willBlock = !selectedPrefs.isBlocked;
+    updatePreference({ isBlocked: willBlock }, willBlock ? 'User blocked' : 'User unblocked');
+    if (willBlock) {
+      setMessages([]);
+    }
+    setMenuOpen(false);
+  };
+
+  const onClearChat = async () => {
+    if (!user?.id || !selectedFriend?.id) return;
+    const { error } = await clearConversationMessages(user.id, selectedFriend.id);
+    if (error) {
+      toast.error('Failed to clear chat');
+      return;
+    }
+    setMessages([]);
+    setLastByFriend((prev) => ({ ...prev, [selectedFriend.id]: null }));
+    toast.success('Chat cleared');
+    setMenuOpen(false);
+  };
+
+  const onOpenReport = () => {
+    setReportReason('Spam');
+    setReportDetails('');
+    setReportOpen(true);
+    setMenuOpen(false);
+  };
+
+  const onSubmitReport = async () => {
+    if (!user?.id || !selectedFriend?.id) return;
+    const { error } = await submitUserReport({
+      reporterId: user.id,
+      targetId: selectedFriend.id,
+      reason: reportReason,
+      details: reportDetails.trim(),
+    });
+
+    if (error) {
+      toast.error('Unable to submit report right now');
+      return;
+    }
+    toast.success('User reported successfully');
+    setReportOpen(false);
   };
 
   const onKeyDownMessage = (event) => {
@@ -277,10 +428,10 @@ export default function Chat() {
   };
 
   return (
-    <div className="page-wrap" style={{ height: 'calc(100vh - 120px)' }}>
+    <div className="page-wrap" style={{ height: 'calc(100vh - 120px)', overflow: 'hidden' }}>
       <div className="panel" style={{ height: '100%', padding: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', height: '100%' }}>
-          <aside style={{ borderRight: '1px solid #e5e7eb', display: 'grid', gridTemplateRows: 'auto auto 1fr' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', height: '100%', overflow: 'hidden' }}>
+          <aside style={{ borderRight: '1px solid #e5e7eb', display: 'grid', gridTemplateRows: 'auto auto 1fr', minHeight: 0, overflow: 'hidden' }}>
             <div style={{ padding: '0.9rem 0.9rem 0.5rem' }}>
               <h3 style={{ margin: 0 }}>💬 Messages</h3>
               <input
@@ -320,7 +471,7 @@ export default function Chat() {
               ) : null}
             </div>
 
-            <div style={{ overflowY: 'auto', padding: '0 0.45rem 0.6rem' }}>
+            <div style={{ overflowY: 'auto', overscrollBehavior: 'contain', minHeight: 0, padding: '0 0.45rem 0.6rem' }}>
               {filteredFriends.length === 0 ? (
                 <div style={{ padding: '0.7rem' }}>
                   <p className="page-muted">No friends yet. Find farmers to connect with!</p>
@@ -355,7 +506,9 @@ export default function Chat() {
                       {friend?.avatar_url ? <img src={friend.avatar_url} alt={friend.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (friend?.name || 'F').charAt(0).toUpperCase()}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{friend?.name || 'Farmer'}</p>
+                      <p style={{ margin: 0, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {chatPrefs[friend?.id]?.isFavorite ? '★ ' : ''}{friend?.name || 'Farmer'}
+                      </p>
                       <p className="page-muted" style={{ margin: 0, fontSize: '0.76rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {last?.content || (last?.media_url ? 'Media message' : 'No messages yet')}
                       </p>
@@ -374,7 +527,7 @@ export default function Chat() {
             </div>
           </aside>
 
-          <section style={{ display: 'grid', gridTemplateRows: selectedFriend ? 'auto 1fr auto' : '1fr', height: '100%' }}>
+          <section style={{ display: 'grid', gridTemplateRows: selectedFriend ? 'auto 1fr auto' : '1fr', height: '100%', minHeight: 0, overflow: 'hidden' }}>
             {!selectedFriend ? (
               <div style={{ display: 'grid', placeItems: 'center', textAlign: 'center' }}>
                 <div>
@@ -395,10 +548,32 @@ export default function Chat() {
                       <p className="page-muted" style={{ margin: 0, fontSize: '0.76rem' }}>📍 {selectedFriend.state || 'Unknown'}</p>
                     </div>
                   </div>
-                  <button type="button" className="ghost-btn" onClick={() => navigate(`/app/profile/${selectedFriend.id}`)}>View Profile</button>
+                  <div ref={menuRef} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', position: 'relative' }}>
+                    <button type="button" className="ghost-btn" onClick={() => navigate(`/app/profile/${selectedFriend.id}`)}>View Profile</button>
+                    <button
+                      type="button"
+                      className="ghost-btn"
+                      aria-label="Open chat options"
+                      onClick={() => setMenuOpen((prev) => !prev)}
+                      style={{ width: '40px', padding: 0, fontSize: '1.15rem' }}
+                    >
+                      ⋮
+                    </button>
+
+                    {menuOpen ? (
+                      <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: '250px', border: '1px solid #d1d5db', borderRadius: '12px', background: '#fff', boxShadow: '0 18px 36px rgba(15,23,42,0.16)', zIndex: 60, padding: '0.45rem' }}>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onClearChat}>🧹 Clear chat</button>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onToggleBlock}>{selectedPrefs.isBlocked ? '✅ Unblock user' : '⛔ Block user'}</button>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onToggleMute}>{selectedPrefs.isMuted ? '🔔 Unmute notifications' : '🔕 Mute notifications'}</button>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onToggleDisappearing}>{selectedPrefs.disappearingMode === '24h' ? '⏱️ Disable disappearing messages' : '⏳ Disappearing messages (24h)'}</button>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onToggleFavorite}>{selectedPrefs.isFavorite ? '☆ Remove from favorite' : '⭐ Add to favorite'}</button>
+                        <button type="button" className="ghost-btn" style={{ width: '100%', justifyContent: 'flex-start', color: '#b91c1c', borderColor: '#fecaca' }} onClick={onOpenReport}>🚩 Report</button>
+                      </div>
+                    ) : null}
+                  </div>
                 </header>
 
-                <div style={{ padding: '0.9rem', overflowY: 'auto', background: '#f9fafb' }}>
+                <div style={{ padding: '0.9rem', overflowY: 'auto', overscrollBehavior: 'contain', minHeight: 0, background: '#f9fafb' }}>
                   {renderMessageList()}
                   <div ref={messagesEndRef} />
                 </div>
@@ -424,6 +599,7 @@ export default function Chat() {
                       onKeyDown={onKeyDownMessage}
                       placeholder="Type a message..."
                       rows={1}
+                      disabled={selectedPrefs.isBlocked}
                       style={{
                         minHeight: '42px',
                         maxHeight: '120px',
@@ -437,6 +613,7 @@ export default function Chat() {
                     <button
                       type="button"
                       onClick={onSendMessage}
+                      disabled={selectedPrefs.isBlocked}
                       style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', background: '#16a34a', color: '#fff', cursor: 'pointer', fontSize: '1rem' }}
                     >
                       ➤
@@ -456,6 +633,41 @@ export default function Chat() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.85)', zIndex: 400, display: 'grid', placeItems: 'center', padding: '1rem' }}
         >
           <img src={imageViewer} alt="full" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '10px' }} />
+        </div>
+      ) : null}
+
+      {reportOpen ? (
+        <div role="presentation" onClick={() => setReportOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'grid', placeItems: 'center', zIndex: 80, padding: '1rem' }}>
+          <section role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()} style={{ width: 'min(520px, 100%)', borderRadius: '14px', border: '1px solid #e5e7eb', background: '#fff', padding: '1rem' }}>
+            <h3 style={{ marginTop: 0 }}>Report User</h3>
+            <p className="page-muted" style={{ marginTop: '-0.25rem' }}>Tell us what happened. Your report will be saved for review.</p>
+
+            <label style={{ display: 'grid', gap: '0.35rem', marginBottom: '0.7rem' }}>
+              Reason
+              <select value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
+                <option value="Spam">Spam</option>
+                <option value="Abusive language">Abusive language</option>
+                <option value="Fraud or scam">Fraud or scam</option>
+                <option value="Harassment">Harassment</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+
+            <label style={{ display: 'grid', gap: '0.35rem' }}>
+              Details
+              <textarea
+                rows={4}
+                value={reportDetails}
+                onChange={(event) => setReportDetails(event.target.value)}
+                placeholder="Add useful details for investigation"
+              />
+            </label>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.9rem' }}>
+              <button type="button" className="ghost-btn" onClick={() => setReportOpen(false)}>Cancel</button>
+              <button type="button" className="primary-btn" onClick={onSubmitReport}>Submit Report</button>
+            </div>
+          </section>
         </div>
       ) : null}
     </div>

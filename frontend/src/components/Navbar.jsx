@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RiLeafFill, RiTranslate2 } from 'react-icons/ri';
 import { RiLogoutBoxRLine } from 'react-icons/ri';
@@ -11,10 +11,15 @@ import { useRole } from '../context/RoleContext';
 import { supabase } from '../lib/supabase';
 
 const roleMeta = {
-  farmer: { label: '🌾 Farmer', color: '#16a34a', route: '/app' },
-  buyer: { label: '🛒 Buyer', color: '#f97316', route: '/app/buyer' },
-  transporter: { label: '🚛 Transporter', color: '#3b82f6', route: '/app/transporter' },
+  farmer: { color: '#16a34a', route: '/app' },
+  buyer: { color: '#f97316', route: '/app/buyer' },
+  transporter: { color: '#3b82f6', route: '/app/transporter' },
+  labour: { color: '#8b5cf6', route: '/app/labour' },
+  machinery: { color: '#0ea5e9', route: '/app/machinery' },
+  admin: { color: '#b91c1c', route: '/app/authority' },
 };
+
+const ADMIN_EMAIL = 'gowdaroshan49@gmail.com';
 
 const typeColor = {
   success: '#16a34a',
@@ -23,15 +28,15 @@ const typeColor = {
   info: '#2563eb',
 };
 
-const timeAgo = (dateText) => {
-  if (!dateText) return 'Just now';
+const timeAgo = (dateText, t) => {
+  if (!dateText) return t('navbar.time.justNow', { defaultValue: 'Just now' });
   const diffMs = Date.now() - new Date(dateText).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('navbar.time.justNow', { defaultValue: 'Just now' });
+  if (mins < 60) return t('navbar.time.minutesAgo', { count: mins, defaultValue: `${mins}m ago` });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return t('navbar.time.hoursAgo', { count: hours, defaultValue: `${hours}h ago` });
+  return t('navbar.time.daysAgo', { count: Math.floor(hours / 24), defaultValue: `${Math.floor(hours / 24)}d ago` });
 };
 
 export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
@@ -44,8 +49,21 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
   const [totalUnread, setTotalUnread] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [profilePreview, setProfilePreview] = useState({ name: '', avatar_url: '' });
+  const [profileDbName, setProfileDbName] = useState('');
   const notificationRef = useRef(null);
   const activeLanguage = supportedLanguages.find((item) => item.code === language);
+  const roleLabels = {
+    farmer: `🌾 ${t('navbar.roles.farmer', { defaultValue: 'Farmer' })}`,
+    buyer: `🛒 ${t('navbar.roles.buyer', { defaultValue: 'Buyer' })}`,
+    transporter: `🚛 ${t('navbar.roles.transporter', { defaultValue: 'Transporter' })}`,
+    labour: `👷 ${t('navbar.roles.labour', { defaultValue: 'Labour' })}`,
+    machinery: `🛠️ ${t('navbar.roles.machinery', { defaultValue: 'Machinery' })}`,
+    admin: `🛡️ ${t('navbar.roles.admin', { defaultValue: 'Admin' })}`,
+  };
+
+  const isAdminUser = String(user?.email || '').toLowerCase() === ADMIN_EMAIL;
+  const availableRoles = Object.keys(roleMeta).filter((roleName) => roleName !== 'admin' || isAdminUser);
 
   useEffect(() => {
     const onScroll = () => {
@@ -97,7 +115,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
       },
       (payload) => {
         setNotifications((prev) => [payload.new, ...prev]);
-        toast.success(payload.new?.title || 'New notification');
+        toast.success(payload.new?.title || t('navbar.notifications.newNotification', { defaultValue: 'New notification' }));
       }
     ).subscribe();
 
@@ -114,6 +132,80 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
       window.removeEventListener('focus', focusReload);
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadNavbarProfileName = async () => {
+      if (!user?.id) {
+        setProfileDbName('');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!ignore && !error) {
+        setProfileDbName(data?.name || '');
+      }
+    };
+
+    loadNavbarProfileName();
+
+    return () => {
+      ignore = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    const hydrateProfilePreview = () => {
+      try {
+        const raw = localStorage.getItem('krishimitra_profile');
+        const parsed = raw ? JSON.parse(raw) : null;
+        setProfilePreview({
+          name: parsed?.name || '',
+          avatar_url: parsed?.avatar_url || '',
+        });
+      } catch {
+        setProfilePreview({ name: '', avatar_url: '' });
+      }
+    };
+
+    const onProfileUpdated = (event) => {
+      const next = event?.detail || {};
+      setProfilePreview((prev) => ({
+        name: next.name || prev.name,
+        avatar_url: next.avatar_url || prev.avatar_url,
+      }));
+    };
+
+    hydrateProfilePreview();
+    window.addEventListener('focus', hydrateProfilePreview);
+    window.addEventListener('krishimitra-profile-updated', onProfileUpdated);
+
+    return () => {
+      window.removeEventListener('focus', hydrateProfilePreview);
+      window.removeEventListener('krishimitra-profile-updated', onProfileUpdated);
+    };
+  }, [user?.id]);
+
+  const profileDisplayName = useMemo(() => (
+    profileDbName
+    || profilePreview.name
+    || user?.user_metadata?.name
+    || user?.user_metadata?.full_name
+    || user?.email?.split('@')[0]
+    || t('navbar.profile.user', { defaultValue: 'User' })
+  ), [profileDbName, profilePreview.name, user?.user_metadata?.name, user?.user_metadata?.full_name, user?.email, t]);
+
+  const profileAvatarUrl = useMemo(() => (
+    profilePreview.avatar_url
+    || user?.user_metadata?.avatar_url
+    || ''
+  ), [profilePreview.avatar_url, user?.user_metadata?.avatar_url]);
 
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -186,7 +278,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
             padding: 4,
           }}
         >
-          {Object.keys(roleMeta).map((roleName) => {
+          {availableRoles.map((roleName) => {
             const isActive = role === roleName;
             return (
               <button
@@ -204,7 +296,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
                   background: isActive ? roleMeta[roleName].color : 'transparent',
                 }}
               >
-                {roleMeta[roleName].label}
+                {roleLabels[roleName]}
               </button>
             );
           })}
@@ -232,7 +324,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
               width: '40px',
               height: '40px',
             }}
-            title="Open notifications"
+            title={t('navbar.notifications.open', { defaultValue: 'Open notifications' })}
           >
             🔔
             {notifications.length > 0 ? (
@@ -276,15 +368,15 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0 }}>Notifications</h4>
+                <h4 style={{ margin: 0 }}>{t('navbar.notifications.title', { defaultValue: 'Notifications' })}</h4>
                 <button type="button" onClick={markAllRead} style={{ border: 'none', background: 'transparent', color: '#2563eb', cursor: 'pointer', fontWeight: 600 }}>
-                  Mark all read
+                  {t('navbar.notifications.markAllRead', { defaultValue: 'Mark all read' })}
                 </button>
               </div>
 
               <div style={{ display: 'grid', gap: '0.55rem', marginTop: '0.6rem' }}>
                 {notifications.length === 0 ? (
-                  <p className="page-muted" style={{ margin: 0 }}>No new notifications</p>
+                  <p className="page-muted" style={{ margin: 0 }}>{t('navbar.notifications.none', { defaultValue: 'No new notifications' })}</p>
                 ) : (
                   notifications.map((item) => (
                     <button
@@ -301,10 +393,10 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
                         cursor: 'pointer',
                       }}
                     >
-                      <p style={{ margin: 0, fontWeight: 700 }}>{item.title || 'Notification'}</p>
+                      <p style={{ margin: 0, fontWeight: 700 }}>{item.title || t('navbar.notifications.itemTitle', { defaultValue: 'Notification' })}</p>
                       <p className="page-muted" style={{ margin: '0.2rem 0 0', fontSize: '0.82rem' }}>{item.message}</p>
                       <p className="page-muted" style={{ margin: '0.3rem 0 0', fontSize: '0.75rem' }}>
-                        {timeAgo(item.created_at)}{item.link ? ' -> Open' : ''}
+                        {timeAgo(item.created_at, t)}{item.link ? ` ${t('navbar.notifications.openLink', { defaultValue: '-> Open' })}` : ''}
                       </p>
                     </button>
                   ))
@@ -337,7 +429,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
             width: '40px',
             height: '40px',
           }}
-          title="Open chat"
+          title={t('navbar.chat.open', { defaultValue: 'Open chat' })}
         >
           💬
           {totalUnread > 0 ? (
@@ -377,7 +469,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
             background: 'white',
             transition: 'all 0.2s ease',
           }}
-          title="Open profile"
+          title={t('navbar.profile.open', { defaultValue: 'Open profile' })}
         >
           <span
             style={{
@@ -392,9 +484,18 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
               fontSize: '0.9rem',
               fontWeight: 700,
               flexShrink: 0,
+              overflow: 'hidden',
             }}
           >
-            {(user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+            {profileAvatarUrl ? (
+              <img
+                src={profileAvatarUrl}
+                alt={profileDisplayName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              (profileDisplayName || 'U').charAt(0).toUpperCase()
+            )}
           </span>
 
           <span
@@ -402,20 +503,20 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
               fontSize: '0.88rem',
               fontWeight: 500,
               color: '#1a1a1a',
-              maxWidth: '120px',
+              maxWidth: '140px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}
           >
-            {(user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User').split(' ')[0]}
+            {profileDisplayName}
           </span>
         </button>
 
         <button
           type="button"
           onClick={handleLogout}
-          title="Logout"
+          title={t('navbar.logout.title', { defaultValue: 'Logout' })}
           style={{
             minWidth: '38px',
             height: '38px',
@@ -432,7 +533,7 @@ export default function Navbar({ onToggleSidebar, onOpenLanguageModal }) {
           }}
         >
           <RiLogoutBoxRLine />
-          <span className="hide-mobile" style={{ fontSize: '0.76rem', fontWeight: 600 }}>Logout</span>
+          <span className="hide-mobile" style={{ fontSize: '0.76rem', fontWeight: 600 }}>{t('navbar.logout.title', { defaultValue: 'Logout' })}</span>
         </button>
       </div>
     </header>
